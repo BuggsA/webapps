@@ -53,9 +53,20 @@ When it finishes, paste the three printed values (`BUCKET`, `DIST_ID`,
 If you'd rather run it by hand, the equivalent steps are: make a venv in
 `hosting\`, `pip install -r requirements.txt`, prepend `.venv\Scripts` to
 `PATH`, set `JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1`, then
-`cdk deploy WebappsHostingStack -c alert_email=<email>`, then
-`s3 sync hosting\site-root\ s3://<bucket>/ --delete` + a `/*`
-invalidation.
+`cdk deploy WebappsHostingStack -c alert_email=<email>`, then the
+landing-page sync below.
+
+### Updating just the landing page later
+
+```powershell
+.\scripts\deploy-site-root.ps1
+```
+
+> **Never** run `aws s3 sync hosting\site-root\ s3://<bucket>/ --delete`
+> by hand. `site-root/` holds only the root `index.html` + `404.html`,
+> so `--delete` at the bucket root deletes **every app folder**. The
+> script uses `--delete --exclude "*/*"`, which confines deletion to
+> root-level files. If you must do it manually, include that exclude.
 
 ---
 

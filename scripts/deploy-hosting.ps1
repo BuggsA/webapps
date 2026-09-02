@@ -62,7 +62,10 @@ try {
   Write-Host "`nWrote $envFile:"
   Get-Content $envFile | Write-Host
 
-  & $aws s3 sync (Join-Path $hosting 'site-root') "s3://$($o.BucketName)/" --delete
+  # NOTE: --exclude "*/*" is load-bearing. Without it, `--delete` against the
+  # bucket root deletes every app folder (they aren't in site-root/). The
+  # exclude confines --delete to root-level files only.
+  & $aws s3 sync (Join-Path $hosting 'site-root') "s3://$($o.BucketName)/" --delete --exclude "*/*"
   if ($LASTEXITCODE -ne 0) { throw "site-root sync failed." }
   & $aws cloudfront create-invalidation --distribution-id $o.DistributionId --paths '/*' | Out-Null
 
