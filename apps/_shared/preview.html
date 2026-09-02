@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>house style preview</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .swatch { display: grid; grid-template-columns: 3rem 1fr; gap: var(--sp-3); align-items: center; }
+  .chip { width: 3rem; height: 2rem; border-radius: var(--radius-sm); border: 1px solid var(--rule); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: var(--sp-3); }
+</style>
+</head>
+<body>
+<div class="wrap stack-lg">
+
+  <header class="stack">
+    <h1>House style</h1>
+    <p class="muted">Every app links <code>_shared/style.css</code> first. This page renders the tokens and components so a change here is reviewable at a glance.</p>
+  </header>
+
+  <section class="stack">
+    <h2>Type scale</h2>
+    <div style="font-size: var(--step-4)">Step 4 — page title</div>
+    <div style="font-size: var(--step-3)">Step 3</div>
+    <div style="font-size: var(--step-2)">Step 2 — section</div>
+    <div style="font-size: var(--step-1)">Step 1</div>
+    <div style="font-size: var(--step-0)">Step 0 — body text, the default reading size</div>
+    <div style="font-size: var(--step--1)">Step -1 — small print</div>
+  </section>
+
+  <section class="stack">
+    <h2>Colour</h2>
+    <div class="grid">
+      <div class="swatch"><span class="chip" style="background:var(--bg)"></span><code>--bg</code></div>
+      <div class="swatch"><span class="chip" style="background:var(--surface)"></span><code>--surface</code></div>
+      <div class="swatch"><span class="chip" style="background:var(--fg)"></span><code>--fg</code></div>
+      <div class="swatch"><span class="chip" style="background:var(--muted)"></span><code>--muted</code></div>
+      <div class="swatch"><span class="chip" style="background:var(--rule)"></span><code>--rule</code></div>
+      <div class="swatch"><span class="chip" style="background:var(--accent)"></span><code>--accent</code></div>
+    </div>
+    <p class="small muted">Switch your OS between light and dark to check both. Palette is defined for each.</p>
+  </section>
+
+  <section class="stack">
+    <h2>Components</h2>
+    <div class="card stack">
+      <h3>A card</h3>
+      <p>Surface, hairline border, soft shadow. The default container for a chunk of app.</p>
+      <div class="row">
+        <button class="btn">Primary action</button>
+        <button class="btn btn--ghost">Secondary</button>
+      </div>
+      <label class="stack small" style="--sp-4: var(--sp-2)">
+        <span class="muted">A text field</span>
+        <input class="field" placeholder="type here…">
+      </label>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2>Prose</h2>
+    <p>Body copy sits at <code>--measure</code> (34rem) for a comfortable line length. Links look like <a href="#">this link</a>. Inline <code>code</code> gets a subtle tint.</p>
+    <pre>a code block
+  keeps its own monospaced world</pre>
+  </section>
+
+</div>
+</body>
+</html>

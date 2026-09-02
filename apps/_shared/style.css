@@ -1,0 +1,172 @@
+/* ==========================================================================
+   House style for small web apps.
+   Every app links this first, then adds its own <style> for app-specific bits.
+   Keep it small, tokenised, and framework-free. Change with care -- other
+   apps inherit it.
+   ========================================================================== */
+
+:root {
+  /* --- palette: warm paper + ember ------------------------------------- */
+  --bg:        #fbfaf7;
+  --surface:   #ffffff;
+  --fg:        #1b1a17;
+  --muted:     #6b6862;
+  --rule:      #e6e3dc;
+  --accent:    #b5451b;
+  --accent-fg: #ffffff;
+  --focus:     #2b6cb0;
+
+  /* --- type --------------------------------------------------------------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+               "Liberation Mono", monospace;
+
+  --step--1: 0.833rem;
+  --step-0:  1rem;
+  --step-1:  1.2rem;
+  --step-2:  1.44rem;
+  --step-3:  1.728rem;
+  --step-4:  2.07rem;
+  --leading: 1.55;
+
+  /* --- space (1 = 0.25rem) --------------------------------------------- */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+
+  /* --- shape & motion ------------------------------------------------- */
+  --radius:   10px;
+  --radius-sm: 6px;
+  --shadow:   0 1px 2px rgba(27, 26, 23, 0.06),
+              0 8px 24px rgba(27, 26, 23, 0.08);
+  --ring:     0 0 0 3px color-mix(in srgb, var(--focus) 40%, transparent);
+  --ease:     180ms cubic-bezier(0.4, 0.0, 0.2, 1);
+
+  --measure: 34rem;   /* comfortable reading / app column width */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #16150f;
+    --surface:   #201e18;
+    --fg:        #ece9e0;
+    --muted:     #9a968c;
+    --rule:      #2e2c25;
+    --accent:    #e8865a;
+    --accent-fg: #1b1a17;
+    --focus:     #7cb3e8;
+    --shadow:    0 1px 2px rgba(0, 0, 0, 0.3),
+                 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* --- reset-ish ------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body, h1, h2, h3, h4, p, figure, blockquote, ul, ol, dl { margin: 0; }
+ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
+img, svg, video { max-width: 100%; height: auto; display: block; }
+input, button, textarea, select { font: inherit; color: inherit; }
+
+/* --- base -------------------------------------------------------------- */
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: var(--leading);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.011em; font-weight: 600; }
+h1 { font-size: var(--step-4); }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+
+p { max-width: var(--measure); }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.9em; }
+code { background: color-mix(in srgb, var(--fg) 8%, transparent);
+       padding: 0.1em 0.35em; border-radius: var(--radius-sm); }
+pre { background: var(--surface); border: 1px solid var(--rule);
+      border-radius: var(--radius); padding: var(--sp-4); overflow-x: auto; }
+
+hr { border: 0; border-top: 1px solid var(--rule); margin: var(--sp-6) 0; }
+
+:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--radius-sm); }
+
+/* --- layout helpers -------------------------------------------------- */
+.wrap {
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding: var(--sp-6) var(--sp-5);
+}
+.stack > * + * { margin-top: var(--sp-4); }
+.stack-lg > * + * { margin-top: var(--sp-6); }
+.row { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }
+.center-screen { display: grid; place-items: center; min-height: 100svh; }
+.muted { color: var(--muted); }
+.small { font-size: var(--step--1); }
+
+/* --- card ----------------------------------------------------------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: var(--sp-5);
+  box-shadow: var(--shadow);
+}
+
+/* --- controls ----------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 550;
+  cursor: pointer;
+  transition: transform var(--ease), filter var(--ease);
+}
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(1px); }
+.btn--ghost {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--rule);
+}
+.btn--ghost:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); filter: none; }
+
+.field {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--ease), box-shadow var(--ease);
+}
+.field::placeholder { color: var(--muted); }
+.field:focus-visible { border-color: var(--focus); }
+
+/* --- motion opt-out ------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
