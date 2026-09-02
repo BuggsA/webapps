@@ -27,6 +27,21 @@ Landing page live at https://<DISTRIBUTION_DOMAIN>/
 Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 `scripts/deploy-app.ps1` reads.
 
+## 2026-09-02 -- first app: until
+
+- `apps/until/` built by the `builder` subagent from a full spec: a
+  calm single-page countdown. Three canvas visualizations (lights /
+  orbit / horizon), live updates, past-event reversal, "keep this
+  open" ambient mode, `localStorage` persistence. Tier 1, no network.
+- Orchestrator review + fixes: mobile viewport overflow in `.setup`
+  (grid track), added a data-URI favicon (no `/favicon.ico` 403 on
+  CloudFront), hardened the ambient control-hide with `visibility`.
+  Verified in-browser: opening screen (desktop + mobile), all three
+  modes, past event, ambient.
+- Landing page (`hosting/site-root/index.html`) updated to list it.
+- **Not yet deployed.** Run `.\scripts\deploy-app.ps1 -Name until`,
+  and re-sync `site-root/` for the updated index.
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename
@@ -34,8 +49,6 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   fresh PowerShell with `AWS_PROFILE` unset and check
   `aws sts get-caller-identity` fails. That's the environment
   `Bash`-capable subagents run in.
-- **No app built.** `apps/` has only `_shared/`. The house style
-  (`apps/_shared/style.css` + `preview.html`) is in place.
 - **Budget alarm** only exists if `-c alert_email=...` was passed to
   the deploy.
 

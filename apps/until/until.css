@@ -1,0 +1,397 @@
+/* ==========================================================================
+   Until — a calm countdown. Tier 1, pure static.
+   Tokens below are copied from apps/_shared/style.css (warm paper + ember)
+   and pinned to the dark end of that palette: the app is a dark, cinematic
+   surface by design, not a document that follows the OS light/dark setting.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  --bg:        #16150f;
+  --bg-deep:   #0b0a07;
+  --surface:   #201e18;
+  --fg:        #ece9e0;
+  --muted:     #9a968c;
+  --rule:      #2e2c25;
+  --accent:    #e8865a;
+  --accent-fg: #1b1a17;
+  --focus:     #7cb3e8;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif;
+
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body, h1, p { margin: 0; }
+img, svg, canvas { display: block; max-width: 100%; }
+input, button { font: inherit; color: inherit; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- shared surfaces ---------------------------------------------------- */
+#viz {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 1;
+  transition: opacity 900ms ease;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at 50% 42%,
+              rgba(11, 10, 7, 0) 42%, rgba(11, 10, 7, 0.62) 100%);
+  transition: background 800ms ease;
+}
+
+/* --- setup ------------------------------------------------------------- */
+.setup {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  /* definite, shrinkable track — without this the auto track sizes to the
+     inner block's max-content and overflows narrow (mobile) viewports */
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--sp-6) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom));
+  background: var(--bg);
+  transition: opacity 500ms ease, transform 500ms ease;
+}
+.setup[hidden] { display: none; }
+.setup.leaving {
+  opacity: 0;
+  transform: translateY(-14px);
+  pointer-events: none;
+}
+
+.setup-inner {
+  width: 100%;
+  max-width: 30rem;
+  text-align: center;
+}
+
+h1 {
+  font-weight: 300;
+  font-size: clamp(2rem, 7vw, 3.1rem);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--sp-6);
+}
+
+.composer {
+  text-align: left;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  overflow: hidden;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+.composer:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--rule));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.c-name {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: var(--sp-4);
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+.c-name::placeholder { color: var(--muted); }
+
+.c-when {
+  display: flex;
+  border-top: 1px solid var(--rule);
+}
+.c-when input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: 1rem;
+  outline: none;
+}
+.c-when input + input { border-left: 1px solid var(--rule); }
+
+.btn {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-fg);
+  padding: var(--sp-4);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: filter 180ms ease;
+}
+.btn:hover { filter: brightness(1.07); }
+.btn:active { filter: brightness(0.96); }
+.btn:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+
+.shortcuts {
+  margin-top: var(--sp-5);
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.shortcuts button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 0;
+  font-size: inherit;
+  transition: color 180ms ease;
+}
+.shortcuts button:hover { color: var(--fg); }
+.shortcuts span { opacity: 0.35; }
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  30%, 70% { transform: translateX(2px); }
+  50%      { transform: translateX(-3px); }
+}
+.composer.shake { animation: shake 400ms ease; }
+
+/* --- result --------------------------------------------------------- */
+.result {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+}
+.result[hidden] { display: none; }
+
+/* entrance fade — #viz is a body-level sibling, so key off <body> */
+body.entering #viz { opacity: 0; }
+body.entering .readout { opacity: 0; transform: translateY(12px); }
+
+.back {
+  position: fixed;
+  top: calc(var(--sp-5) + env(safe-area-inset-top));
+  left: calc(var(--sp-5) + env(safe-area-inset-left));
+  z-index: 4;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  transition: opacity 400ms ease, visibility 0s, color 180ms ease;
+}
+.back:hover { color: var(--fg); }
+
+.readout {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 13vh;
+  z-index: 3;
+  text-align: center;
+  padding: 0 var(--sp-5);
+  transition: opacity 800ms ease, transform 800ms ease;
+}
+
+.event-name {
+  font-size: clamp(0.8rem, 2.6vw, 1.15rem);
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.big-time {
+  margin-top: var(--sp-4);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+.big-time .value {
+  display: block;
+  font-size: clamp(2.1rem, 8.5vw, 4.6rem);
+  color: var(--fg);
+}
+.big-time .affix {
+  display: block;
+  font-size: clamp(0.62rem, 1.8vw, 0.8rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.big-time .pre  { margin-bottom: var(--sp-3); }
+.big-time .post { margin-top: var(--sp-3); }
+.big-time:not(.past) .affix { display: none; }
+
+.controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--sp-6) + env(safe-area-inset-bottom));
+  z-index: 4;
+  display: flex;
+  gap: var(--sp-5);
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0 var(--sp-5);
+  transition: opacity 500ms ease, visibility 0s;
+}
+
+.modes { display: flex; gap: var(--sp-4); }
+.modes button {
+  position: relative;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: lowercase;
+  padding: var(--sp-2) 0;
+  transition: color 180ms ease;
+}
+.modes button:hover { color: var(--fg); }
+.modes button.is-active { color: var(--fg); }
+.modes button.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: var(--accent);
+}
+
+.unit-note:empty { display: none; }
+.unit-note {
+  font-size: 0.75rem;
+  letter-spacing: 0.13em;
+  text-transform: lowercase;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.keep {
+  border: 1px solid var(--rule);
+  background: none;
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: 999px;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+.keep:hover {
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  border-color: var(--muted);
+}
+
+.exit {
+  position: fixed;
+  top: calc(var(--sp-5) + env(safe-area-inset-top));
+  right: calc(var(--sp-5) + env(safe-area-inset-right));
+  z-index: 6;
+  border: 1px solid var(--rule);
+  background: rgba(11, 10, 7, 0.6);
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+.exit[hidden] { display: none; }
+.exit.show { opacity: 1; }
+
+/* --- ambient mode ------------------------------------------------------ */
+body.ambient .back,
+body.ambient .controls {
+  opacity: 0;
+  visibility: hidden;              /* commit the hidden state even if the fade is interrupted */
+  pointer-events: none;
+  transition-delay: 0s, 500ms;     /* hold visibility until the fade finishes */
+}
+body.ambient .scrim {
+  background: radial-gradient(130% 90% at 50% 46%,
+              rgba(11, 10, 7, 0) 58%, rgba(11, 10, 7, 0.4) 100%);
+}
+body.ambient .readout {
+  top: auto;
+  bottom: calc(var(--sp-6) + env(safe-area-inset-bottom));
+  left: calc(var(--sp-6) + env(safe-area-inset-left));
+  right: auto;
+  text-align: left;
+  padding: 0;
+  transform: scale(0.82);
+  transform-origin: left bottom;
+  opacity: 0.72;
+}
+body.ambient .big-time .value { font-size: clamp(1.6rem, 5vw, 2.4rem); }
+
+/* --- responsive ------------------------------------------------------ */
+@media (max-width: 480px) {
+  .readout { top: 10vh; }
+  .controls { gap: var(--sp-3); }
+  .unit-note { order: 3; width: 100%; text-align: center; }
+}
+
+/* --- motion opt-out ------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
