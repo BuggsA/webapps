@@ -27,6 +27,20 @@ Landing page live at https://<DISTRIBUTION_DOMAIN>/
 Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 `scripts/deploy-app.ps1` reads.
 
+## 2026-09-02 -- until redesign (installation-grade)
+
+- Full 5-phase redesign per `docs/until-redesign.md` (three research
+  passes -> plan -> builder -> orchestrator tuning). Fraunces + Space
+  Grotesk self-hosted (`apps/until/fonts/`, ~167 KB, SIL OFL); baked
+  SVG grain; OKLCH ramp; Canvas2D pyramid bloom for lights/orbit;
+  a raw-WebGL fragment-shader horizon (fog + marched god-rays + ACES)
+  with the Canvas2D horizon kept as the reduced-motion / no-WebGL
+  fallback. Still Tier 1, no runtime network.
+- **Deployed?** No -- run `.\scripts\deploy-app.ps1 -Name until`.
+- Note: `.claude/worktrees/agent-a444900e1c7e95828/` is an orphaned
+  builder worktree dir (git no longer tracks it; a file handle blocked
+  rmdir). Gitignored; safe to delete manually later.
+
 ## 2026-09-02 -- first app: until
 
 - `apps/until/` built by the `builder` subagent from a full spec: a
