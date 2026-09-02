@@ -33,27 +33,29 @@ Account is `<AWS_ACCOUNT_ID>`, region `us-east-1`.
 
 ## 1. One-time: deploy the hosting stack
 
+`scripts\deploy-hosting.ps1` does the whole thing -- venv, `cdk deploy`,
+capture outputs to `hosting\.hosting-outputs.env`, sync the landing page,
+invalidate. You run it:
+
 ```powershell
-cd C:\Users\you\Downloads\scratch-repo\webapps\hosting
-py -3 -m venv .venv
-.\.venv\Scripts\pip install -r requirements.txt
-$env:PATH = "$PWD\.venv\Scripts;" + $env:PATH
-$env:JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION = "1"
+cd C:\Users\you\Downloads\scratch-repo\webapps
 $env:AWS_PROFILE = "story-deploy"
-
-# CDKToolkit on <AWS_ACCOUNT_ID>/us-east-1 is already CREATE_COMPLETE -- do NOT bootstrap
-cdk deploy -c alert_email=<your-email>
+.\scripts\deploy-hosting.ps1 -AlertEmail <your-email>
 ```
 
-Record the three outputs (`BucketName`, `DistributionId`,
-`DistributionDomain`) in `PROJECT_STATE.md` -- the deployer needs them.
+CDK will prompt once to approve the IAM / OAC / CloudFront-function
+changes -- read it, type `y`. Account `<AWS_ACCOUNT_ID>` / `us-east-1` is
+already CDK-bootstrapped; do **not** bootstrap.
 
-Then push the bare-domain landing page:
+When it finishes, paste the three printed values (`BUCKET`, `DIST_ID`,
+`DIST_DOMAIN`) into `PROJECT_STATE.md`.
 
-```powershell
-aws s3 sync ..\hosting\site-root\ s3://<BucketName>/ --delete
-aws cloudfront create-invalidation --distribution-id <DistributionId> --paths "/*"
-```
+If you'd rather run it by hand, the equivalent steps are: make a venv in
+`hosting\`, `pip install -r requirements.txt`, prepend `.venv\Scripts` to
+`PATH`, set `JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1`, then
+`cdk deploy WebappsHostingStack -c alert_email=<email>`, then
+`s3 sync hosting\site-root\ s3://<bucket>/ --delete` + a `/*`
+invalidation.
 
 ---
 
@@ -62,12 +64,14 @@ aws cloudfront create-invalidation --distribution-id <DistributionId> --paths "/
 After a `builder` finishes an app and the `deployer` has reviewed it:
 
 ```powershell
+cd C:\Users\you\Downloads\scratch-repo\webapps
 $env:AWS_PROFILE = "story-deploy"
-aws s3 sync C:\Users\you\Downloads\scratch-repo\webapps\apps\<name>\ s3://<BucketName>/<name>/ --delete
-aws cloudfront create-invalidation --distribution-id <DistributionId> --paths "/<name>/*"
+.\scripts\deploy-app.ps1 -Name <name>
 ```
 
-Live at `https://<DistributionDomain>/<name>/`.
+It reads `hosting\.hosting-outputs.env`, syncs `apps\<name>\` to
+`s3://<bucket>/<name>/ --delete`, invalidates `/<name>/*`, and prints
+`https://<DistributionDomain>/<name>/`.
 
 ## Remove an app
 
