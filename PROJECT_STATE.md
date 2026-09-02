@@ -15,22 +15,32 @@ Living status file. Update it when something material changes.
   budget. Landing page + 404 in `hosting/site-root/`.
 - Tier 2 template copied to `reference/` from story-app.
 
+## 2026-09-02 -- hosting stack deployed
+
+`WebappsHostingStack` CREATE_COMPLETE in `<AWS_ACCOUNT_ID>` / `us-east-1`.
+Landing page live at https://<DISTRIBUTION_DOMAIN>/
+
+- BucketName: `<APPS_BUCKET>`
+- DistributionId: `<DISTRIBUTION_ID>`
+- DistributionDomain: `<DISTRIBUTION_DOMAIN>`
+
+Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
+`scripts/deploy-app.ps1` reads.
+
 ## Not done yet
 
-- **Credential envelope not closed.** `~/.aws/credentials` still has a
-  `[default]` profile. Do DEPLOY.md step 0 before running any subagent
-  that has `Bash`.
-- **Hosting stack not deployed.** No `cdk deploy` has run. No bucket,
-  no distribution, no budget exist yet.
+- **Credential envelope -- confirm.** DEPLOY.md step 0 (rename
+  `[default]` -> `[story-deploy]`) needs to be verified done: open a
+  fresh PowerShell with `AWS_PROFILE` unset and check
+  `aws sts get-caller-identity` fails. That's the environment
+  `Bash`-capable subagents run in.
 - **No app built.** `apps/` has only `_shared/`. The house style
-  (`apps/_shared/style.css` + `preview.html`) *is* now in place, done
-  solo by the orchestrator so parallel builders won't race to create it.
-
-## Fill in after deploying the hosting stack
-
-- BucketName: _______
-- DistributionId: _______
-- DistributionDomain: _______
+  (`apps/_shared/style.css` + `preview.html`) is in place.
+- **`site-root/` sync -- confirm.** If the hosting deploy was run by
+  hand rather than via `scripts/deploy-hosting.ps1`, the landing page +
+  404 may not be on the bucket yet. Check the URL above; if it 403s,
+  run the sync from DEPLOY.md step 1.
+- **Budget alarm** only exists if `-c alert_email=...` was passed.
 
 ## Known machine gotchas (from docs/SYSTEM_PLAN_NOTES.md §6)
 
