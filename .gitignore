@@ -1,0 +1,18 @@
+# Python / CDK
+.venv/
+__pycache__/
+*.pyc
+cdk.out/
+.cdk.staging/
+
+# Node (CDK toolchain only; apps are dependency-free)
+node_modules/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+
+# Local env
+.env
+*.local

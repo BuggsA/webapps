@@ -1,0 +1,5 @@
+# Vendored into _vendor/ by scripts/build_lambda.(ps1|sh) before `cdk deploy`.
+# The bedrock-agentcore client (invoke_agent_runtime) needs a newer boto3 than
+# the Lambda runtime ships. boto3/botocore are pure Python, so the vendored
+# copy works regardless of build-host OS or Lambda architecture.
+boto3>=1.40.0

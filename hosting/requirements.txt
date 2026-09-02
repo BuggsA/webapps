@@ -1,0 +1,7 @@
+# CDK app dependencies. Install into a venv whose Scripts/ dir is first on
+# PATH before running any `cdk` command (see README).
+#
+# aws-cdk-lib >= 2.156 is required for
+# origins.S3BucketOrigin.with_origin_access_control(...).
+aws-cdk-lib>=2.160.0,<3.0.0
+constructs>=10.0.0,<11.0.0

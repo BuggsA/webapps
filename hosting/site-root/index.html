@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>small things</title>
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --fg: #1b1a17;
+    --muted: #6b6862;
+    --rule: #e6e3dc;
+    --accent: #b5451b;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16150f;
+      --fg: #ece9e0;
+      --muted: #9a968c;
+      --rule: #2e2c25;
+      --accent: #e8865a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+    padding: 2rem;
+  }
+  main { max-width: 32rem; width: 100%; }
+  h1 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.35rem;
+  }
+  p { color: var(--muted); margin: 0 0 1.75rem; font-size: 0.95rem; }
+  ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+  li { border-bottom: 1px solid var(--rule); }
+  a {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.9rem 0.25rem;
+    color: inherit;
+    text-decoration: none;
+    transition: padding-left 120ms ease, color 120ms ease;
+  }
+  a:hover, a:focus-visible {
+    padding-left: 0.7rem;
+    color: var(--accent);
+    outline: none;
+  }
+  a .name { font-weight: 500; }
+  a .blurb { color: var(--muted); font-size: 0.85rem; text-align: right; }
+  footer { margin-top: 2rem; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>small things</h1>
+  <p>Little web apps, made a bit more considered than they need to be.</p>
+  <ul id="apps">
+    <li><a href="#"><span class="name">Nothing shipped yet</span><span class="blurb">check back soon</span></a></li>
+  </ul>
+  <footer>Static, hosted on S3 + CloudFront. No tracking.</footer>
+</main>
+</body>
+</html>
