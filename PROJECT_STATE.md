@@ -36,11 +36,14 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   `Bash`-capable subagents run in.
 - **No app built.** `apps/` has only `_shared/`. The house style
   (`apps/_shared/style.css` + `preview.html`) is in place.
-- **`site-root/` sync -- confirm.** If the hosting deploy was run by
-  hand rather than via `scripts/deploy-hosting.ps1`, the landing page +
-  404 may not be on the bucket yet. Check the URL above; if it 403s,
-  run the sync from DEPLOY.md step 1.
-- **Budget alarm** only exists if `-c alert_email=...` was passed.
+- **Budget alarm** only exists if `-c alert_email=...` was passed to
+  the deploy.
+
+## Verified live 2026-09-02
+
+- `/` serves the "small things" landing page.
+- `/does-not-exist/` serves `404.html` (URI-rewrite function + 403->404
+  error mapping both working).
 
 ## Known machine gotchas (from docs/SYSTEM_PLAN_NOTES.md §6)
 
