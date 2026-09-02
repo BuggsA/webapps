@@ -22,8 +22,9 @@ Living status file. Update it when something material changes.
   that has `Bash`.
 - **Hosting stack not deployed.** No `cdk deploy` has run. No bucket,
   no distribution, no budget exist yet.
-- **No app built.** `apps/` has only `_shared/`. `apps/_shared/style.css`
-  does not exist yet -- the first builder creates it.
+- **No app built.** `apps/` has only `_shared/`. The house style
+  (`apps/_shared/style.css` + `preview.html`) *is* now in place, done
+  solo by the orchestrator so parallel builders won't race to create it.
 
 ## Fill in after deploying the hosting stack
 
