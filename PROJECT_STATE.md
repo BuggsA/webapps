@@ -115,9 +115,22 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   reload (stale "Reston" place) and reports the tab `hidden` (rAF paused)
   -- test the sky by calling `enter()` + driving `frame()` manually. Not
   app bugs. A `visibilitychange` restart was added for real users.
-- Next: **Phase 2 (bodies)** -- moon (position + phase + lit
-  orientation), the five planets, twilight bands, tap-to-select ->
-  info card + the leader line + rule-based advice sentence.
+- **Phase 2 (bodies): DONE.** Moon (position, phase, correctly-oriented
+  crescent/gibbous via a terminator ellipse, lit limb faces the sun on
+  screen, soft additive bloom) + the five naked-eye planets (mag-scaled
+  dots, per-planet tint, visibility gated by sky darkness + magnitude,
+  off-screen culled). Recomputed at 2 Hz alongside the sun. Tap-to-select
+  (tap vs drag by movement < 6 px) opens a **card** -- a quiet overlay
+  (hairline top rule, Fraunces, chrome colours, no box) with name /
+  `alt-az` / rise-set / a rule-based advice sentence (altitude band +
+  twilight visibility + rise-set proximity; moon adds a phase phrase). A
+  canvas **leader line** tethers the card to the object (the Field Notes
+  borrow); card and placard are mutually exclusive; empty tap deselects.
+  "Twilight bands" from the plan are covered by the palette work.
+  Verified desktop + mobile (moon + Mars + Jupiter pre-dawn, Lisbon).
+- Next: **Phase 3 (stars + Milky Way)** -- bundled bright-star catalogue
+  (mag <= 4, ~500), magnitude -> size/brightness, the stylised painted
+  Milky Way band. Also carry the star seed for twinkle.
 - Tier 1; no runtime network beyond the two keyless Open-Meteo fetches.
   Deploy (later, human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
 

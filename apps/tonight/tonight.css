@@ -148,6 +148,25 @@ body {
   color: var(--chrome-soft);
 }
 
+/* --- object card: a quiet overlay tethered to a tapped object ------ */
+.card {
+  position: fixed;
+  z-index: 14;
+  width: min(17rem, calc(100vw - 2 * var(--edge)));
+  display: grid;
+  gap: 0.18em;
+  padding: var(--sp-3) 0 0;
+  border-top: 1px solid var(--chrome-line);   /* a hairline, not a box */
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.card[hidden] { display: none; }
+.card-name   { font-size: 1.5rem; font-weight: 430; letter-spacing: -0.01em; color: var(--chrome); }
+.card-pos    { font-size: 0.9rem; color: var(--chrome-soft); font-variant-numeric: lining-nums tabular-nums; }
+.card-rise   { font-size: 0.9rem; color: var(--chrome-soft); font-variant-numeric: lining-nums tabular-nums; }
+.card-advice { font-size: 0.98rem; color: var(--chrome); margin-top: 0.25em; max-width: 20rem; }
+.card-rise:empty { display: none; }
+
 /* --- time: a caption line on the field ---------------------------- */
 .controls {
   position: fixed;

@@ -50,6 +50,7 @@ const el = {
   msg:      document.getElementById('locate-msg'),
   controls: document.getElementById('controls'),
   placard:  document.getElementById('placard'),
+  card:     document.getElementById('card'),
   btnNow:   document.getElementById('btn-now'),
   btnPlay:  document.getElementById('btn-play'),
   scrub:    document.getElementById('scrub'),
@@ -559,6 +560,241 @@ function paintGraticule() {
   ctx.restore();
 }
 
+/* --- bodies: the moon and the naked-eye planets --------------------- */
+const PLANETS = [
+  { name: 'Mercury', tint: [222, 214, 200] },
+  { name: 'Venus',   tint: [255, 250, 236] },
+  { name: 'Mars',    tint: [234, 150, 112] },
+  { name: 'Jupiter', tint: [246, 238, 220] },
+  { name: 'Saturn',  tint: [236, 220, 182] },
+];
+let bodies = { moon: null, planets: [] };
+
+// how dark the sky is for spotting things — 0 in bright twilight, 1 at night
+const skyDark = () => clamp(-(sun.alt + 2) / 14, 0, 1);
+// a planet of magnitude `mag` shows once the sun is this far down
+const planetShows = mag => smooth01(((-3 - (mag + 5) * 1.35) - sun.alt) / 4);
+
+function moonState(t) {
+  const aa = altaz(A.Body.Moon, t);
+  const il = A.Illumination(A.Body.Moon, t);
+  return { alt: aa.alt, az: aa.az, illum: il.phase_fraction, phase: A.MoonPhase(t), mag: il.mag };
+}
+function recomputeBodies(t) {
+  try {
+    bodies.moon = moonState(t);
+    bodies.planets = PLANETS.map(p => {
+      const aa = altaz(A.Body[p.name], t);
+      return { ...p, alt: aa.alt, az: aa.az, mag: A.Illumination(A.Body[p.name], t).mag };
+    });
+  } catch (_) {}
+}
+
+function bloom(x, y, r, col, a) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},${a})`);
+  g.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},0)`);
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.fillStyle = g;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  ctx.restore();
+}
+
+function paintPlanets() {
+  if (!bodies.planets.length) return;
+  const dark = skyDark();
+  for (const pl of bodies.planets) {
+    if (pl.alt < -0.6) continue;
+    const p = project(pl.alt, pl.az);
+    if (!p.visible) continue;
+    const vis = clamp(planetShows(pl.mag) * (0.35 + 0.65 * dark), 0, 1);
+    if (vis < 0.03) continue;
+    pl._x = p.x; pl._y = p.y; pl._vis = vis;
+    const r = clamp(1.25 + (-pl.mag) * 0.55, 1.1, 4.2);
+    bloom(p.x, p.y, r * 4.5, pl.tint, 0.16 * vis);
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = `rgba(${pl.tint[0]},${pl.tint[1]},${pl.tint[2]},${0.55 + 0.45 * vis})`;
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function paintMoon() {
+  const m = bodies.moon;
+  if (!m || m.alt < -1.2) return;
+  const p = project(m.alt, m.az);
+  if (!p.visible) return;
+  m._x = p.x; m._y = p.y;
+  const r = Math.max(9, W * 0.017);
+  const dark = skyDark();
+  const s = project(sun.alt, sun.az);                 // sun's screen point (may be off-screen)
+  const a = Math.atan2(s.y - p.y, s.x - p.x);         // lit limb faces the sun
+
+  // soft bloom — fuller moon + darker sky => stronger
+  bloom(p.x, p.y, r * 5.5, [244, 240, 226], (0.05 + 0.16 * m.illum) * (0.3 + 0.7 * dark));
+
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(a);
+  // unlit disc (faint earthshine — a touch warm), then the lit shape
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7);
+  ctx.fillStyle = `rgba(58,60,66,${0.5 + 0.4 * dark})`;
+  ctx.fill();
+  const t = (clamp(m.illum, 0, 1) - 0.5) * 2;         // -1..1 terminator factor
+  ctx.beginPath();
+  ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2, false); // bright-limb semicircle (toward sun)
+  // crescent (t<0): terminator curves INTO the lit side; gibbous (t>0): bulges away
+  ctx.ellipse(0, 0, Math.abs(t) * r, r, 0, Math.PI / 2, -Math.PI / 2, t < 0);
+  ctx.closePath();
+  ctx.fillStyle = `rgba(236,232,220,${0.72 + 0.28 * dark})`;
+  ctx.fill();
+  ctx.restore();
+}
+
+/* --- tap to select an object -> a tethered card -------------------- */
+let selected = null;   // { kind, name, tint?, get x(), get y(), rise, set, ... }
+
+function compass(az) {
+  return ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW',
+          'WSW', 'W', 'WNW', 'NW', 'NNW'][Math.round(wrap360(az) / 22.5) % 16];
+}
+function hhmm(d) {
+  const p = tzParts(d);
+  return `${p.hour}:${p.minute}`;
+}
+function riseSetFor(bodyName) {
+  const from = new Date(state.t.getTime() - 6 * 3600e3);
+  let rise = null, set = null;
+  try { const r = A.SearchRiseSet(A.Body[bodyName], observer(), +1, from, 2); rise = r && r.date; } catch (_) {}
+  try { const s = A.SearchRiseSet(A.Body[bodyName], observer(), -1, from, 2); set = s && s.date; } catch (_) {}
+  return { rise, set };
+}
+function moonPhaseWord(phase, illum) {
+  const p = wrap360(phase);
+  if (illum > 0.985) return 'full';
+  if (illum < 0.03) return 'new';
+  const wax = p < 180;
+  if (Math.abs(p - 90) < 8) return 'at first quarter';
+  if (Math.abs(p - 270) < 8) return 'at last quarter';
+  const shape = illum < 0.5 ? 'crescent' : 'gibbous';
+  return `a ${wax ? 'waxing' : 'waning'} ${shape}`;
+}
+
+function advice(o) {
+  const t = state.t;
+  const dir = compass(o.az);
+  if (o.alt < -0.5) {
+    return o.rise && o.rise > t
+      ? `Below the horizon — up again around ${hhmm(o.rise)}.`
+      : `Below the horizon for the rest of the night.`;
+  }
+  if (o.kind === 'planet' && o._vis != null && o._vis < 0.4) {
+    return `Still washed out by the twilight — give it half an hour.`;
+  }
+  const settingSoon = o.set && o.set > t && (o.set - t) < 75 * 60e3;
+  if (settingSoon) return `Sinking toward the ${dir} — gone by about ${hhmm(o.set)}.`;
+  if (o.alt < 10) return `Low in the ${dir}; you'll want an open horizon.`;
+  if (o.kind === 'moon') {
+    const w = moonPhaseWord(o.phase, o.illum);
+    return o.alt > 45
+      ? `High in the ${dir}, ${w}.`
+      : `${w[0].toUpperCase()}${w.slice(1)}, well up in the ${dir}.`;
+  }
+  if (o.alt > 45) return `High in the ${dir} — hard to miss.`;
+  return `Well up in the ${dir}.`;
+}
+
+function openCard(sel) {
+  selected = sel;
+  el.card.querySelector('.card-name').textContent = sel.name;
+  el.card.hidden = false;
+  el.placard.hidden = true;          // one thing at a time in the lower-left
+  refreshCardRiseSet();
+  updateCardText();
+  positionCard();
+}
+function closeCard() {
+  selected = null;
+  el.card.hidden = true;
+  if (state.located && el.locate.hidden) el.placard.hidden = false;
+}
+function refreshCardRiseSet() {
+  if (!selected) return;
+  const rs = riseSetFor(selected.name);
+  selected.rise = rs.rise; selected.set = rs.set;
+}
+function updateCardText() {
+  if (!selected) return;
+  const s = selected;
+  el.card.querySelector('.card-pos').textContent =
+    s.alt > -0.5 ? `${Math.round(s.alt)}° up · ${compass(s.az)}` : `below the horizon`;
+  const soon = ms => ms && ms > state.t && (ms - state.t) < 8 * 3600e3;
+  const rsLine = s.alt >= -0.5
+    ? (soon(s.set) ? `sets ${hhmm(s.set)}` : (s.alt > 20 ? 'up for hours' : ''))
+    : (soon(s.rise) ? `rises ${hhmm(s.rise)}` : '');
+  el.card.querySelector('.card-rise').textContent = rsLine;
+  el.card.querySelector('.card-advice').textContent = advice(s);
+}
+
+function positionCard() {
+  if (!selected) return;
+  const ox = selected.x, oy = selected.y;
+  const cw = el.card.offsetWidth || 260, ch = el.card.offsetHeight || 110;
+  let cx = ox + 22, cy = oy + 20;
+  cx = clamp(cx, 12, Math.max(12, W - cw - 12));
+  cy = clamp(cy, 12, Math.max(12, H - ch - 88));      // keep clear of the controls
+  el.card.style.left = cx + 'px';
+  el.card.style.top = cy + 'px';
+  selected._cx = cx; selected._cy = cy; selected._cw = cw; selected._ch = ch;
+}
+function paintLeader() {
+  if (!selected) return;
+  positionCard();
+  const ox = selected.x, oy = selected.y;
+  // nearest corner of the card to the object
+  const cx = clamp(ox, selected._cx, selected._cx + selected._cw);
+  const cy = clamp(oy, selected._cy, selected._cy + selected._ch);
+  ctx.save();
+  ctx.strokeStyle = `rgba(${chromeRGB.join(',')},0.5)`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.lineTo(cx, cy);
+  ctx.stroke();
+  ctx.fillStyle = `rgba(${chromeRGB.join(',')},0.7)`;
+  ctx.beginPath(); ctx.arc(ox, oy, 2.5, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+// a live view of a body by name — survives the bodies cache being replaced
+function bodyRef(name) {
+  const isMoon = name === 'Moon';
+  const cur = () => isMoon ? bodies.moon : bodies.planets.find(p => p.name === name);
+  return {
+    kind: isMoon ? 'moon' : 'planet', name,
+    get alt()   { return (cur() || {}).alt ?? -99; },
+    get az()    { return (cur() || {}).az ?? 0; },
+    get x()     { return (cur() || {})._x; },
+    get y()     { return (cur() || {})._y; },
+    get illum() { return bodies.moon && bodies.moon.illum; },
+    get phase() { return bodies.moon && bodies.moon.phase; },
+    get _vis()  { return isMoon ? 1 : ((cur() || {})._vis ?? 0); },
+  };
+}
+function pickObject(x, y) {
+  let bestName = null, bestD = 30;
+  const consider = (o, name, rad) => {
+    if (!o || o._x == null) return;
+    const d = Math.hypot(o._x - x, o._y - y);
+    if (d < rad && d < bestD) { bestD = d; bestName = name; }
+  };
+  consider(bodies.moon, 'Moon', 34);
+  for (const pl of bodies.planets) consider(pl, pl.name, 20);
+  return bestName ? bodyRef(bestName) : null;
+}
+
 /* --- the loop ---------------------------------------------------------- */
 let lastFrame = 0, lastCompute = 0, running = false, rafId = 0;
 function frame(now) {
@@ -579,6 +815,7 @@ function frame(now) {
   } else if (now - lastCompute >= COMPUTE_MS || !lastCompute) {
     lastCompute = now;
     sun = altaz(A.Body.Sun, state.t);
+    recomputeBodies(state.t);
   }
 
   // graticule ease: fast in on drag, slow out after; snaps if reduced-motion
@@ -588,7 +825,12 @@ function frame(now) {
   ctx.clearRect(0, 0, W, H);
   paintField();
   paintMottle();
-  if (state.located) paintGraticule();
+  if (state.located) {
+    paintPlanets();
+    paintMoon();
+    paintGraticule();
+    if (selected) { updateCardText(); paintLeader(); }
+  }
   paintGrain();
 
   rafId = requestAnimationFrame(frame);
@@ -603,10 +845,10 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && running) startLoop();
 });
 
-/* --- drag to turn ---------------------------------------------------- */
+/* --- drag to turn · tap to select ---------------------------------- */
 let drag = null;
 el.canvas.addEventListener('pointerdown', e => {
-  drag = { x: e.clientX, az: state.viewAz };
+  drag = { x: e.clientX, y: e.clientY, az: state.viewAz, moved: 0, t: e.timeStamp };
   el.canvas.setPointerCapture(e.pointerId);
   el.canvas.classList.add('dragging');
   gratTarget = 1;                       // fade the alt/az scaffold in
@@ -614,14 +856,21 @@ el.canvas.addEventListener('pointerdown', e => {
 el.canvas.addEventListener('pointermove', e => {
   if (!drag) return;
   const dx = e.clientX - drag.x;
+  drag.moved = Math.max(drag.moved, Math.hypot(dx, e.clientY - drag.y));
   state.viewAz = wrap360(drag.az - dx * (HFOV / W));  // drag right -> turn left
 });
 function endDrag(e) {
   if (!drag) return;
+  const tap = drag.moved < 6 && (e.timeStamp - drag.t) < 500;
   drag = null;
   el.canvas.classList.remove('dragging');
   gratTarget = 0;                       // and fade it back out
   try { el.canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+  if (tap && state.located) {
+    const rect = el.canvas.getBoundingClientRect();
+    const hit = pickObject(e.clientX - rect.left, e.clientY - rect.top);
+    if (hit) openCard(hit); else closeCard();
+  }
 }
 el.canvas.addEventListener('pointerup', endDrag);
 el.canvas.addEventListener('pointercancel', endDrag);
@@ -693,6 +942,7 @@ el.btnNow.addEventListener('click', () => {
   computeDuskDawn();
   syncScrubFromT();
   updateClock();
+  refreshCardRiseSet();
 });
 el.btnPlay.addEventListener('click', () => {
   if (!state.playing && state.t >= state.dawn) state.t = new Date(state.dusk);
@@ -705,6 +955,7 @@ el.scrub.addEventListener('input', () => {
   setScrubFill();
   updateClock();
 });
+el.scrub.addEventListener('change', refreshCardRiseSet);   // once, on release
 
 /* --- location ---------------------------------------------------------- */
 function savePlace() {
@@ -730,7 +981,10 @@ function showLocate(show) {
   el.locate.hidden = !show;
   el.controls.hidden = show;
   el.placard.hidden = show;
-  if (show) { el.input.value = ''; el.results.hidden = true; el.msg.hidden = true; el.input.focus(); }
+  if (show) {
+    closeCard();
+    el.input.value = ''; el.results.hidden = true; el.msg.hidden = true; el.input.focus();
+  }
 }
 function say(text) { el.msg.textContent = text; el.msg.hidden = !text; }
 
@@ -806,11 +1060,13 @@ function enter(lat, lon, place, tz) {
   state.tz = tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
   state.located = true;
   _placardDay = '';
+  closeCard();
   savePlace();
   showLocate(false);
   resize();
   if (!state.playing) state.t = new Date();
   computeDuskDawn();
+  recomputeBodies(state.t);   // so a tap works before the first 2 Hz tick
   bakeConditions();           // seed tonight's texture from place + date
   syncScrubFromT();
   updateClock();
