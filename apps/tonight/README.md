@@ -4,10 +4,13 @@ The sky above you, right now, as a horizon panorama. It finds you (device
 location or a search box), then draws twilight, the moon, the naked-eye
 planets, the Milky Way band and the bright stars where they actually are
 above your horizon — face a direction and swipe to turn. It opens on *now*;
-a play button drifts time forward and a scrub runs dusk→dawn. One free
-weather call adds a cloud veil and a plain verdict ("mostly clear after
-11"). Tap any object for a card: name, height, rise/set, a sentence of
-advice. Everything astronomical is computed in the browser.
+the scrub runs dusk→dawn, and one button taps through the time modes —
+**Live** (tracks the real clock) → a 24-hour time-lapse at **10m / 3m /
+1m / 20s** to completion, each looping back to where you started it.
+One free weather call adds a cloud veil (toggleable) and a plain verdict
+("mostly clear after 11"). Tap any object for a card: name, height,
+rise/set, a sentence of advice. Everything astronomical is computed in
+the browser.
 
 **Design direction:** Nocturne + two borrows — see
 [`../../docs/tonight-art-direction.md`](../../docs/tonight-art-direction.md),

@@ -200,6 +200,22 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   `font-optical-sizing: auto` + `font-synthesis: none`. Fraunces was
   already self-hosted from the chrome rework. ~0.2 ms/frame day, ~0.6-0.8
   ms/frame deep night; no console errors; controls verified end to end.
+- **Post-v1 tweaks (per user feedback):**
+  - **Cloud veil rework** -- was blobby + too opaque (erased the sky).
+    Now 3-octave fbm + domain warp on a 148x96 buffer, tighter scale,
+    feathered ramp; colour flipped to a pale skyglow-lit grey that
+    *dims* stars (not a dark void); peak opacity ~0.5; regen rate-limited
+    (~4 ms, ~4x/s). New **cloud toggle** (`btn-clouds`, a cloud glyph in
+    the controls, shown only when avg cover > 12 %).
+  - **Play reworked into a tap-cycle** (one button, no crowding):
+    `Play` (frozen, only via scrubbing) then **Live** (tracks the real
+    clock -- the new default on `enter`) -> **10m / 3m / 1m / 20s** =
+    a full **24 h** cycle in that long, each **looping back to where the
+    lapse started** (start at now+5 h -> loop returns to now+5 h).
+    `Now` -> Live; scrub -> Play(frozen). Faint dust hides during the
+    fast lapses; dusk/dawn recompute on day-change. `dtReal` clamped to
+    [0, 0.05] so a clock jump / bg tab can't fling time. `PLAY_RATE`
+    const removed.
 - **v1 is ready to deploy:** `.\scripts\deploy-app.ps1 -Name tonight`
   (human-run), then re-sync `hosting/site-root/` with the app listed.
 - **Phase 6 (post-v1): ISS passes** -- committed TLE snapshot +

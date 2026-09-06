@@ -119,6 +119,7 @@ body {
   opacity: 0.32;
   transition: opacity 150ms ease;
 }
+#btn-play { min-width: 3.1rem; justify-content: center; }   /* labels cycle: Play / Live / 10m … */
 .word:hover { letter-spacing: 0.035em; }
 .word:hover::after,
 .word:focus-visible::after { opacity: 0.8; }

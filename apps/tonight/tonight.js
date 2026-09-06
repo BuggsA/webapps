@@ -36,7 +36,8 @@
                            makeVerdict(), paintVeil() (drifting cloud layer)
      THE LOOP            — frame(); startLoop(); visibilitychange restart
      INPUT               — drag to turn, tap to select, arrow keys / Esc
-     TIME MODEL          — computeDuskDawn, scrub, tzParts, updateClock, placard
+     TIME MODEL          — Play cycle (setPlayMode: Live / 10m / 3m / 1m / 20s,
+                           24 h loop), computeDuskDawn, scrub, tzParts, clock, placard
      LOCATION            — geocode, results, device, savePlace/loadPlace
      ENTRY               — enter(), init()
    ========================================================================== */
@@ -48,7 +49,6 @@ const A = window.Astronomy;
 const HFOV      = 110;      // horizontal field of view, degrees
 const ALT_TOP   = 80;       // altitude mapped to the top of the canvas
 const HORIZON_F = 0.72;     // horizon sits this far down the canvas
-const PLAY_RATE = 60;       // sim seconds advanced per real second when playing
 const COMPUTE_MS = 500;     // recompute slow-moving bodies at ~2 Hz
 const LS_KEY    = 'tonight.place.v1';
 const REDUCED   = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1188,8 +1188,15 @@ function frame(now) {
   lastFrame = now;
 
   if (state.playing) {
-    state.t = new Date(state.t.getTime() + dtReal * PLAY_RATE * 1000);
-    if (state.t >= state.dawn) { state.t = new Date(state.dawn); setPlaying(false); }
+    if (playMode === 'Live') {
+      state.t = new Date();
+    } else {
+      const step = clamp(dtReal, 0, 0.05);             // guard clock jumps / bg tabs
+      let ms = state.t.getTime() + step * LAPSE_RATE[playMode] * 1000;   // 24 h span / secs
+      if (playAnchor != null && ms >= playAnchor + 86400e3) ms = playAnchor;   // loop
+      state.t = new Date(ms);
+    }
+    if (dayKey(tzParts(state.t)) !== _lapseDay) { _lapseDay = dayKey(tzParts(state.t)); computeDuskDawn(); }
     syncScrubFromT();
     updateClock();
   }
@@ -1218,8 +1225,10 @@ function frame(now) {
     if (Math.abs(flingVel) < 5) flingVel = 0;
   }
 
-  // steadiness: dust resolves ~0.8 s after the view stops moving (instant under reduced-motion)
-  if (drag || gliding) { steadiness = 0; _stillAt = 0; }
+  // steadiness: dust resolves ~0.8 s after the view stops moving (instant under
+  // reduced-motion; suppressed while a fast time-lapse races the sky along)
+  const fastLapse = state.playing && playMode !== 'Live' && playMode !== '10m';
+  if (drag || gliding || fastLapse) { steadiness = 0; _stillAt = 0; }
   else if (REDUCED) { steadiness = 1; }
   else {
     if (!_stillAt) _stillAt = now;
@@ -1345,10 +1354,30 @@ document.addEventListener('keydown', e => {
 });
 
 /* --- time model ---------------------------------------------------------- */
-function setPlaying(on) {
-  state.playing = on;
-  el.btnPlay.setAttribute('aria-pressed', String(on));
-  el.btnPlay.textContent = on ? 'Pause' : 'Play';
+// Play is one button you tap through. 'Play' = frozen (only reached by
+// scrubbing). The rest advance state.t: 'Live' tracks the real clock; the
+// four time-lapses run a rolling 24 h window and loop back to where they
+// started ("play from now+5h" -> the loop returns to now+5h).
+const PLAY_CYCLE = ['Live', '10m', '3m', '1m', '20s'];
+const LAPSE_RATE = { '10m': 86400 / 600, '3m': 86400 / 180, '1m': 86400 / 60, '20s': 86400 / 20 };
+const LAPSE_LABEL = { '10m': 'ten minutes', '3m': 'three minutes', '1m': 'one minute', '20s': 'twenty seconds' };
+let playMode = 'Play', playAnchor = null, _lapseDay = '';
+const isLapse = n => n in LAPSE_RATE;
+
+function setPlayMode(name) {
+  const prev = playMode;
+  playMode = name;
+  state.playing = name !== 'Play';
+  el.btnPlay.textContent = name === 'Play' ? 'Play' : name;
+  el.btnPlay.setAttribute('aria-pressed', String(state.playing));
+  el.btnPlay.setAttribute('aria-label',
+    name === 'Play' ? 'Resume — start with the live sky'
+    : name === 'Live' ? 'Following the live sky. Tap for a time-lapse.'
+    : `Time-lapse — a full day every ${LAPSE_LABEL[name]}. Tap for more.`);
+  if (isLapse(name)) { if (!isLapse(prev)) playAnchor = state.t.getTime(); }
+  else playAnchor = null;
+  _lapseDay = dayKey(tzParts(state.t));
+  firstHint.active = false;
 }
 function computeDuskDawn() {
   // Anchor the search so we always get THIS night's dusk and the next dawn,
@@ -1407,8 +1436,8 @@ function updatePlacard() {
     wx && wx.verdict ? `${date} · ${wx.verdict}` : date;
 }
 el.btnNow.addEventListener('click', () => {
-  setPlaying(false);
   state.t = new Date();
+  setPlayMode('Live');       // "Now" = back to the live sky
   computeDuskDawn();
   syncScrubFromT();
   updateClock();
@@ -1416,11 +1445,11 @@ el.btnNow.addEventListener('click', () => {
   loadForecast();             // re-verdict for tonight (uses cache if fresh)
 });
 el.btnPlay.addEventListener('click', () => {
-  if (!state.playing && state.t >= state.dawn) state.t = new Date(state.dusk);
-  setPlaying(!state.playing);
+  if (playMode === 'Play') { setPlayMode('Live'); return; }
+  setPlayMode(PLAY_CYCLE[(PLAY_CYCLE.indexOf(playMode) + 1) % PLAY_CYCLE.length]);
 });
 el.scrub.addEventListener('input', () => {
-  setPlaying(false);
+  setPlayMode('Play');                       // scrubbing freezes at that moment
   const u = Number(el.scrub.value) / 1000;
   state.t = new Date(state.dusk.getTime() + u * (state.dawn - state.dusk));
   setScrubFill();
@@ -1538,18 +1567,19 @@ function enter(lat, lon, place, tz) {
   state.located = true;
   _placardKey = '';
   wx = null;                  // drop the previous place's forecast
-  firstHint.active = true; firstHint.t0 = 0;   // one-time "drag to turn" cue
   flingVel = 0;
   closeCard();
   savePlace();
   showLocate(false);
   resize();
-  if (!state.playing) state.t = new Date();
+  state.t = new Date();
   computeDuskDawn();
   recomputeBodies(state.t);   // so a tap works before the first 2 Hz tick
   bakeConditions();           // seed tonight's texture from place + date
   syncScrubFromT();
   updateClock();
+  setPlayMode('Live');        // open on the live sky, and stay current
+  firstHint.active = true; firstHint.t0 = 0;   // one-time "drag to turn" cue (after setPlayMode clears it)
   loadForecast();             // async — cloud veil + the verdict line
   startLoop();
 }
@@ -1559,7 +1589,7 @@ function init() {
   bakeConditions();           // a default seed so the pre-location sky has texture
   loadStars();                // async; the loop tolerates starCat being null
   startLoop();                // the sky renders even before a place is chosen
-  setPlaying(false);
+  setPlayMode('Play');
   if (loadPlace()) enter(state.lat, state.lon, state.place, state.tz);
   else showLocate(true);
 }
