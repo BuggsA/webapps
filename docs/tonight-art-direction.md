@@ -152,8 +152,11 @@ One seed = `hash(round(lat,2) | round(lon,2) | YYYY-MM-DD)`. Drives a
 overall chroma, grain amount), Belt-of-Venus centre height & thickness, the
 atmospheric **mottling** field (±~4% luminance, features ~40% of screen,
 domain-warped slowly by `t`). All low-amplitude — a screenshot must never
-look "randomised", just like *this* night. In Phase 4 `turbidity` gets
-driven by the real cloud-cover fetch instead of the seed.
+look "randomised", just like *this* night. **Phase 4 done:** when the
+forecast loads, `turbidity` is nudged by tonight's average cloud cover
+(`turbidity*0.45 + (0.32 + 0.42·avgCloud)`, then re-baked) so cloudy nights
+render hazier/washier and clear nights crisper — and a drifting cloud
+**veil** (`paintVeil`) covers the sky in proportion to the cloud % at `t`.
 
 ### 6. The top edge
 `<meta name="theme-color">` and `body{background}` are set from JS to the

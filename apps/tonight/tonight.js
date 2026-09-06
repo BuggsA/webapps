@@ -32,6 +32,8 @@
      BODIES              — recomputeBodies(), paintPlanets(), paintMoon() (phase)
      TAP TO SELECT       — pickObject/bodyRef/starRef, openCard/updateCardText,
                            advice(), paintLeader()
+     WEATHER             — loadForecast() (Open-Meteo, cached), cloudAt(),
+                           makeVerdict(), paintVeil() (drifting cloud layer)
      THE LOOP            — frame(); startLoop(); visibilitychange restart
      INPUT               — drag to turn, tap to select, arrow keys / Esc
      TIME MODEL          — computeDuskDawn, scrub, tzParts, updateClock, placard
@@ -1033,6 +1035,122 @@ function pickObject(x, y) {
   return kind === 'star' ? starRef(key) : bodyRef(key);
 }
 
+/* --- WEATHER: forecast fetch, the cloud veil, the verdict -------------
+   One keyless Open-Meteo call (hourly cloud cover, 2 days), cached in
+   localStorage ~1 h. Everything degrades to "no veil, date-only line" if
+   the fetch fails or hasn't returned. Never blocks the render.           */
+const WX_KEY = 'tonight.wx.v1';
+let wx = null;   // { base (epoch ms of hour 0), cloud [0..100], verdict, avgNight }
+
+function cloudAt(d) {
+  if (!wx || !wx.cloud.length) return null;
+  const idx = (d.getTime() - wx.base) / 3600e3;
+  if (idx < -0.5 || idx > wx.cloud.length - 0.5) return null;
+  const i = clamp(Math.floor(idx), 0, wx.cloud.length - 1);
+  const j = Math.min(i + 1, wx.cloud.length - 1);
+  return lerp(wx.cloud[i], wx.cloud[j], clamp(idx - i, 0, 1));
+}
+
+// one short line from the cloud series across tonight's dusk -> dawn window
+function makeVerdict() {
+  if (!wx || !state.dusk) return '';
+  const d0 = state.dusk.getTime(), d1 = state.dawn.getTime();
+  const samples = [];
+  for (let t = d0; t <= d1; t += 3600e3) { const c = cloudAt(new Date(t)); if (c != null) samples.push({ t, c }); }
+  if (samples.length < 2) return '';
+  const avg = a => a.reduce((s, x) => s + x.c, 0) / a.length;
+  const all = avg(samples), third = Math.max(1, Math.floor(samples.length / 3));
+  const early = avg(samples.slice(0, third)), late = avg(samples.slice(-third));
+  wx.avgNight = all;
+
+  const firstBelow = lim => { const s = samples.find(x => x.c < lim); return s ? hhmm(new Date(s.t)) : null; };
+  const firstAbove = lim => { const s = samples.find(x => x.c > lim); return s ? hhmm(new Date(s.t)) : null; };
+
+  if (early > 55 && late < 32) { const at = firstBelow(38); return at ? `clearing after ${at}` : 'clearing later'; }
+  if (early < 32 && late > 60) { const at = firstAbove(52); return at ? `clouding over after ${at}` : 'clouding over later'; }
+  if (all < 15) return 'clear tonight';
+  if (all < 35) return 'mostly clear tonight';
+  if (all > 80) return 'overcast tonight';
+  if (all > 62) return 'cloudy tonight';
+  return 'broken cloud tonight';
+}
+
+function applyForecast() {
+  if (!wx) return;
+  wx.verdict = makeVerdict();
+  // real cloud nudges the seeded haze — cloudy nights render softer / washier
+  const cloudTurb = 0.32 + 0.42 * clamp((wx.avgNight || 0) / 100, 0, 1);
+  conditions.turbidity = clamp(conditions.turbidity * 0.45 + cloudTurb, 0.15, 0.85);
+  bakeGrain(); bakeGrainLayer();
+  _placardKey = '';           // force the placard sub to pick up the verdict
+  updatePlacard();
+}
+
+async function loadForecast() {
+  if (!state.located || state.lat == null) return;
+  const rlat = state.lat.toFixed(2), rlon = state.lon.toFixed(2);
+  // fresh cache for this place? use it.
+  try {
+    const c = JSON.parse(localStorage.getItem(WX_KEY) || 'null');
+    if (c && c.lat === rlat && c.lon === rlon && Date.now() - c.at < 3600e3) {
+      wx = { base: c.base, cloud: c.cloud }; applyForecast(); return;
+    }
+  } catch (_) {}
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast'
+      + `?latitude=${rlat}&longitude=${rlon}&hourly=cloud_cover&forecast_days=2&timezone=auto`;
+    const j = await (await fetch(url)).json();
+    const times = j.hourly && j.hourly.time, cloud = j.hourly && j.hourly.cloud_cover;
+    if (!times || !cloud || !cloud.length) return;
+    // hourly.time[] are wall-clock strings in the place's tz; convert hour 0 to a UTC instant
+    const base = Date.parse(times[0] + ':00Z') - (j.utc_offset_seconds || 0) * 1000;
+    wx = { base, cloud: cloud.map(v => v == null ? 0 : v) };
+    try {
+      localStorage.setItem(WX_KEY, JSON.stringify({ lat: rlat, lon: rlon, at: Date.now(), base, cloud: wx.cloud }));
+    } catch (_) {}
+    applyForecast();
+  } catch (_) { /* offline — no veil, date-only line */ }
+}
+
+// the cloud veil — a soft, lumpy, drifting grey layer over everything,
+// its coverage set by the cloud % at state.t
+const veilCv = document.createElement('canvas');
+veilCv.width = 96; veilCv.height = 60;
+let _veilImg = null, _veilAt = -1;
+function paintVeil() {
+  const cc = cloudAt(state.t);
+  if (cc == null || cc < 3) return;
+  const k = cc / 100;                                   // 0..1 coverage
+  const w = veilCv.width, h = veilCv.height;
+  const vx = veilCv.getContext('2d');
+  const drift = state.t.getTime() / 1000 * 0.0009;
+  const keyN = Math.round(drift * 300);
+  if (keyN !== _veilAt || !_veilImg) {
+    _veilAt = keyN;
+    if (!_veilImg) _veilImg = vx.createImageData(w, h);
+    const img = _veilImg;
+    // cloud colour: a desaturated grey, tinted by the field so it fits the hour
+    const gc = blend(field.hor, [150, 156, 168], 0.62);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const n = 0.6 * conditions.noise(x / 13 + drift, y / 10 + 40 - drift * 0.4)
+              + 0.4 * conditions.noise(x / 5 - drift * 0.7, y / 4 + 40);
+      // more of the field becomes cloud as k rises
+      const dens = smooth01((n - (1 - k) - 0.12) / 0.4);
+      const i = (y * w + x) * 4;
+      img.data[i] = gc[0]; img.data[i + 1] = gc[1]; img.data[i + 2] = gc[2];
+      img.data[i + 3] = Math.round(clamp(dens, 0, 1) * 235);
+    }
+    vx.putImageData(img, 0, 0);
+  }
+  ctx.save();
+  ctx.globalAlpha = smooth01(k) * 0.9;
+  ctx.imageSmoothingEnabled = true;
+  ctx.filter = `blur(${Math.round(H * 0.012)}px)`;
+  ctx.drawImage(veilCv, 0, 0, w, h, 0, 0, W, H);
+  ctx.filter = 'none';
+  ctx.restore();
+}
+
 /* --- the loop ---------------------------------------------------------- */
 let lastFrame = 0, lastCompute = 0, running = false, rafId = 0, _stillAt = 0;
 function frame(now) {
@@ -1080,6 +1198,7 @@ function frame(now) {
     paintStars();
     paintPlanets();
     paintMoon();
+    paintVeil();               // clouds sit in front of everything celestial
     paintGraticule();
     if (selected) { updateCardText(); paintLeader(); }
   }
@@ -1192,15 +1311,16 @@ function updateClock() {
   updatePlacard();
 }
 
-let _placardDay = '';
+let _placardKey = '';
 function updatePlacard() {
   el.placard.querySelector('.placard-place').textContent = state.place || 'Here';
-  const k = dayKey(tzParts(state.t));
-  if (k === _placardDay) return;                   // date-line changes rarely
-  _placardDay = k;
+  const k = dayKey(tzParts(state.t)) + '|' + (wx ? wx.verdict : '');
+  if (k === _placardKey) return;                   // date + verdict change rarely
+  _placardKey = k;
+  const date = new Intl.DateTimeFormat(undefined, { timeZone: state.tz, day: 'numeric', month: 'long' })
+    .format(state.t);
   el.placard.querySelector('.placard-sub').textContent =
-    new Intl.DateTimeFormat(undefined, { timeZone: state.tz, day: 'numeric', month: 'long' })
-      .format(state.t);
+    wx && wx.verdict ? `${date} · ${wx.verdict}` : date;
 }
 el.btnNow.addEventListener('click', () => {
   setPlaying(false);
@@ -1209,6 +1329,7 @@ el.btnNow.addEventListener('click', () => {
   syncScrubFromT();
   updateClock();
   refreshCardRiseSet();
+  loadForecast();             // re-verdict for tonight (uses cache if fresh)
 });
 el.btnPlay.addEventListener('click', () => {
   if (!state.playing && state.t >= state.dawn) state.t = new Date(state.dusk);
@@ -1330,7 +1451,8 @@ function enter(lat, lon, place, tz) {
   // tz of the place; device location has none -> fall back to the viewer's
   state.tz = tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
   state.located = true;
-  _placardDay = '';
+  _placardKey = '';
+  wx = null;                  // drop the previous place's forecast
   closeCard();
   savePlace();
   showLocate(false);
@@ -1341,6 +1463,7 @@ function enter(lat, lon, place, tz) {
   bakeConditions();           // seed tonight's texture from place + date
   syncScrubFromT();
   updateClock();
+  loadForecast();             // async — cloud veil + the verdict line
   startLoop();
 }
 

@@ -173,10 +173,23 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   standalone `../tonight-app-map.md` (Downloads) is marked historical /
   unmaintained -- git + PROJECT_STATE + the art-direction doc + that
   comment are the living record now.
-- Next: **Phase 4 (weather)** -- Open-Meteo forecast fetch + ~1 h cache,
-  the cloud veil tracking cloud % across the scrubbed night, the one-line
-  verdict, and driving `conditions.turbidity` from the real cloud data
-  instead of the seed. Graceful when offline (veil just absent).
+- **Phase 4 (weather): DONE.** One keyless Open-Meteo call
+  (`hourly=cloud_cover&forecast_days=2&timezone=auto`), cached in
+  localStorage 1 h keyed by rounded lat/lon; the wall-clock hour strings
+  are converted to UTC instants via `utc_offset_seconds`. `cloudAt(t)`
+  interpolates the hourly series. `makeVerdict()` -> one short line from
+  the dusk->dawn window: clear / mostly clear / broken cloud / cloudy /
+  overcast, plus "clearing after HH" / "clouding over after HH" when it
+  turns -- shown on the placard sub ("September 6 · clear tonight").
+  `paintVeil()` lays a soft, lumpy, slowly drifting grey layer over the
+  whole sky, coverage set by cloud % at `t` (stars show through the
+  gaps). Real avg cloud nudges `conditions.turbidity` (grain re-baked) so
+  cloudy nights render washier. Graceful offline: `wx` stays null -> no
+  veil, date-only line, no throw. `btnNow` re-verdicts. ~0.5 ms/frame.
+- Next: **Phase 5 -- the final "look" pass.** OKLCH gradient refinement,
+  grain/bloom/motion-easing polish, the compass hint, a self-hosted
+  display serif, `prefers-reduced-motion` sweep, responsive/touch review.
+  Then ship v1. (ISS is phase 6, post-v1.)
 - Tier 1; no runtime network beyond the two keyless Open-Meteo fetches.
   Deploy (later, human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
 
