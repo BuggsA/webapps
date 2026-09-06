@@ -84,6 +84,31 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   legibility. No border-radius (bar the scrub knob), no backdrop-filter,
   no box-shadow. Drift check passed at day / civil dusk / deep night /
   drag / mobile.
+- **Palette rework: DONE (first pass).** Research
+  (`docs/tonight-palette-research.md`) + a divergent generation pass
+  concluded the smooth OKLab navy->amber field still read as "AI" (violet
+  midpoint, timid even ramp, flat grain, black-slab top). Replaced per the
+  new **Palette** section of `docs/tonight-art-direction.md` with **E x C**:
+  a *film response curve* (Ektachrome-at-dusk -- teal-lifted blacks,
+  warm-neutral mids never violet, amber bloom + red halation at the
+  sunward horizon) *structured* by Belt-of-Venus logic (Belt of Venus +
+  Earth's-shadow bands + sun-side glow, all **azimuth-blended** so turning
+  the view changes the palette). Plus: seeded per-night "conditions"
+  (`hash(place|date)` -> turbidity, belt geometry, drifting mottling),
+  uneven clumped grain, a +/-1-level dither tile, and `theme-color` /
+  `body-bg` driven from the live zenith (fixes the top-edge seam).
+  Daylight blends to a plain blue sky above -6 deg. Verified across
+  day / civil dusk / Belt-of-Venus / deep night / mobile.
+- **Process note added:** `docs/tonight-art-direction.md` section
+  "Process -- divergent generation" -- generate wide (forcing constraints,
+  quotas, non-web refs), then converge. Applies to every visual call.
+- Palette tuning still open (next pass): a whisper of airglow lift at deep
+  night (a touch flat now); mid-band could carry a little more life;
+  tighten the halation core.
+- **Test-env note:** the browser pane restores a localStorage snapshot on
+  reload (stale "Reston" place) and reports the tab `hidden` (rAF paused)
+  -- test the sky by calling `enter()` + driving `frame()` manually. Not
+  app bugs. A `visibilitychange` restart was added for real users.
 - Next: **Phase 2 (bodies)** -- moon (position + phase + lit
   orientation), the five planets, twilight bands, tap-to-select ->
   info card + the leader line + rule-based advice sentence.

@@ -10,6 +10,36 @@ operative parts are captured here so nothing is lost between phases.
 
 ---
 
+## Process — divergent generation ("raise the temperature")
+
+A chain of highest-probability choices **is** the median look — which is what
+reads as "AI". Counter it in the *design process*, not only in the render.
+For any visual-direction decision (palette, motion, a new phase's look — not
+every micro-choice), before converging:
+
+1. **Two passes, never one.** Divergent pass first: many rough options, no
+   usability or taste filtering. Convergent pass second: judge against the
+   checklist, the brand, and taste; kill or hybridise. Filtering *while*
+   generating collapses everything to the median.
+2. **Quotas that force spread.** Options must span the space — e.g. one
+   breaks a rule normally kept; one is colour-led, one motion-led, one
+   grid-led (rotate which axis is primary); one is deliberately slightly
+   wrong.
+3. **Forcing constraints, seeded not chaos.** Roll a `(non-web reference,
+   structure restriction, value logic)` tuple and design *genuinely to it*
+   even if it seems wrong. Then judge what survives.
+4. **Non-web references only**, and avoid *named genres* (a genre is its own
+   median — "make it look like an instrument" is still a template).
+5. **Mutate / cross-pollinate** two options; keep the interesting hybrids.
+6. **End with one recommendation + rationale.** High temperature to
+   generate, low temperature (taste + checklist + brand) to choose. Both,
+   or it just thrashes.
+
+The runtime analogue — seeded per-night "conditions" variation in the
+render — is in `docs/tonight-palette-research.md` §"Variation".
+
+---
+
 ## The direction: NOCTURNE, plus two borrows
 
 ### Thesis
@@ -65,6 +95,79 @@ screenshots an hour apart should look like different artworks.
 - Deselect fades both the line and the card.
 - Purpose: the card belongs *to the sky*, not pasted over it — keeps the
   "considered" quality bare minimalism loses.
+
+---
+
+## Palette (LOCKED 2026-09-06 — replaces the OKLCH-anchor gradient)
+
+Came out of a research pass (`docs/tonight-palette-research.md`) + a
+divergent generation pass. The old field — a smooth OKLab blend between a
+navy zenith and an amber horizon — still read as "AI": it passed straight
+through a **violet-grey midpoint** (the #1 tell), it was a *timid even ramp*
+(no value structure), it had raw banding, its grain was a flat procedural
+wash, and its top plateaued into a dark slab.
+
+**Direction: `E × C` — a film curve, structured by Belt-of-Venus logic.**
+
+### 1. Colour/value engine — a film response curve (from *Ektachrome at dusk*)
+The field colour is **not** interpolated between designer anchors. It is
+`filmCurve(x)` where `x` is a scene-luminance value (see §2). The curve has
+the character of pushed slide film at dusk:
+- **Crushed blacks lift to teal-cyan.** Deepest sky is a lifted dark
+  blue-green, never `#000` or pure navy. (Also the "night isn't black" fix.)
+- **Midtones are a muddy *warm* neutral** — grey-taupe with a faint green
+  cast, crossing to warm. **No control point sits in hue 250–330** (the
+  purple/violet band). The path is cyan → cool-grey → warm-grey → amber.
+- **Highlight bloom + red halation** where the sky clips bright (the sunward
+  horizon): an over-exposed amber-white core with an orange halation ring
+  bleeding up and out. A separate additive pass, not a curve stop.
+
+### 2. Spatial structure — Belt-of-Venus logic (from *Belt of Venus, only*)
+Scene luminance feeding the curve is **structured, not just "altitude"**:
+- **Upper sky (> ~30° alt): quiet.** Low, nearly flat scene-luminance;
+  near-neutral colour (curve's cool-grey). The zenith is **not** the darkest
+  point and **not** a flat slab — it carries the mottling (§4) and a slight
+  lift.
+- **Antisolar horizon: two bands.** A soft **Belt of Venus** (salmon/pink,
+  additive) centred ~10–18° alt, sitting above an **Earth's-shadow** band
+  (cool blue-grey, slight value dip + desaturation) at 0–6° alt.
+- **Sunward horizon:** the bright amber segment + the bloom/halation.
+- **Azimuth-blended.** Belt/shadow strongest at the antisolar azimuth, glow
+  strongest at the sun azimuth, both fading to nothing by ±90°. **Turning
+  the view genuinely changes the palette** — sunset side vs shadow side.
+
+### 3. Dithering — technical, separate from grain
+±~1.5/255 blue-noise-ish tile, static, tiny alpha, tiled over the field to
+kill 8-bit banding in the smooth curve regions. Not the grain.
+
+### 4. Grain — a deliberate, uneven decision
+Density and opacity **modulated by a low-freq mask** so it clumps — heaviest
+in the midtone band, near-absent in the bloom highlight and the deepest
+shadow. Non-grid distribution. Static (baked per place+date). Amount is
+itself seeded (hazier night → more grain).
+
+### 5. Seeded "conditions" — variation with provenance
+One seed = `hash(round(lat,2) | round(lon,2) | YYYY-MM-DD)`. Drives a
+*correlated bundle*: `turbidity` (→ halation spread & warmth, glow reach,
+overall chroma, grain amount), Belt-of-Venus centre height & thickness, the
+atmospheric **mottling** field (±~4% luminance, features ~40% of screen,
+domain-warped slowly by `t`). All low-amplitude — a screenshot must never
+look "randomised", just like *this* night. In Phase 4 `turbidity` gets
+driven by the real cloud-cover fetch instead of the seed.
+
+### 6. The top edge
+`<meta name="theme-color">` and `body{background}` are set from JS to the
+live **zenith** colour (curve output at zenith scene-luminance) so the
+browser UI blends into the sky. No flat slab; the corner vignette is
+dropped or made much subtler (the Belt-of-Venus structure weights the frame).
+
+### 7. Stays exact
+Sun altitude → the twilight brightness model → scene luminance is real. Body
+positions, rise/set, advice: real. The seed only touches **texture and
+conditions**, never **data**.
+
+**Deferred to Phase 5:** a seeded ragged horizon *silhouette* (terrain
+profile) — it interacts with where bodies clip, so not in this pass.
 
 ---
 

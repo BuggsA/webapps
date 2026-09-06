@@ -69,6 +69,7 @@ function resize() {
   el.canvas.width  = Math.round(W * dpr);
   el.canvas.height = Math.round(H * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  bakeGrainLayer();                 // grain envelope is size-dependent
 }
 window.addEventListener('resize', resize);
 
@@ -93,23 +94,6 @@ function altaz(body, date) {
   return { alt: h.altitude, az: h.azimuth };
 }
 
-/* --- sky colour: an OKLCH field derived from sun altitude --------------
-   NOCTURNE: the field IS the interface. Colour is derived here from the
-   sun-altitude model — never hand-picked as sRGB. Anchors are written in
-   OKLCH [L 0..1, C, hue deg] for legibility, but interpolation happens in
-   OKLab (rectangular): a warm→cool dusk transition then passes through a
-   naturalistic low-chroma neutral instead of swinging through magenta.   */
-const SKY = [
-  { alt:  90, zen: [0.55, 0.110, 245], hor: [0.82, 0.050, 235] }, // full day
-  { alt:  10, zen: [0.50, 0.115, 248], hor: [0.78, 0.075, 236] }, // low day
-  { alt:   0, zen: [0.42, 0.085, 255], hor: [0.68, 0.125,  62] }, // sunset gold
-  { alt:  -4, zen: [0.33, 0.080, 258], hor: [0.52, 0.120,  42] }, // golden / rose
-  { alt:  -6, zen: [0.27, 0.070, 260], hor: [0.42, 0.100,  34] }, // civil ember
-  { alt: -12, zen: [0.155, 0.050, 258], hor: [0.205, 0.055, 250] }, // nautical blue
-  { alt: -18, zen: [0.085, 0.028, 260], hor: [0.115, 0.033, 252] }, // astronomical
-  { alt: -90, zen: [0.052, 0.016, 258], hor: [0.072, 0.020, 250] }, // deep night
-];
-
 // OKLab -> sRGB (Björn Ottosson's matrices), clamped 0..255. No deps.
 function oklabToRgb(L, a, b) {
   let l = L + 0.3963377774 * a + 0.2158037573 * b;
@@ -127,52 +111,148 @@ function oklabToRgb(L, a, b) {
   });
 }
 const lchToLab = ([L, C, h]) => { const r = h * Math.PI / 180; return [L, C * Math.cos(r), C * Math.sin(r)]; };
-const rgb   = a => `rgb(${a[0]},${a[1]},${a[2]})`;
-const blend = (a, b, u) => [0, 1, 2].map(c => Math.round(lerp(a[c], b[c], u)));
+const rgb    = a => `rgb(${a[0]},${a[1]},${a[2]})`;
+const blend  = (a, b, u) => [0, 1, 2].map(c => Math.round(lerp(a[c], b[c], u)));
+const labLerp = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)];
+const smooth01 = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 
-// sun altitude -> derived field colours (interpolated in OKLab)
-function skyColors(sunAlt) {
-  let hi = SKY[0], lo = SKY[SKY.length - 1];
-  for (let i = 0; i < SKY.length - 1; i++) {
-    if (sunAlt <= SKY[i].alt && sunAlt >= SKY[i + 1].alt) { hi = SKY[i]; lo = SKY[i + 1]; break; }
+/* --- sky colour: a FILM CURVE, structured by Belt-of-Venus logic -------
+   PALETTE — see docs/tonight-art-direction.md §Palette. The field colour
+   is NOT interpolated between designer anchors; it is filmCurve(x) where x
+   is a structured scene-luminance. Character: pushed slide film at dusk —
+   teal-lifted blacks, muddy WARM-neutral mids (never violet), amber bloom
+   + red halation at the sunward horizon. The two antisolar bands (Belt of
+   Venus + Earth's shadow) and the sun-side glow are azimuth-blended passes
+   on top, so turning the view changes the palette.                        */
+
+// scene-luminance x in 0..1 -> sRGB. Control points OKLCH [L, C, hue].
+// NB: no hue in 250..330 — the path is cyan -> cool grey -> warm grey ->
+// amber -> bloom. That routing is the whole point (dodges the violet tell).
+const FILM = [
+  [0.00, [0.150, 0.020, 216]],   // crushed black, lifted to a blue-teal
+  [0.14, [0.215, 0.024, 214]],   // dark teal-slate
+  [0.34, [0.360, 0.018, 205]],   // cool grey, faint cyan cast
+  [0.54, [0.530, 0.030,  66]],   // the crossover — warm neutral taupe
+  [0.73, [0.670, 0.070,  50]],   // dusty amber-grey
+  [0.89, [0.805, 0.128,  52]],   // amber
+  [1.00, [0.950, 0.045,  70]],   // bloom, warm near-white
+];
+function filmCurve(x) {
+  x = clamp(x, 0, 1);
+  let i = 0;
+  while (i < FILM.length - 2 && x > FILM[i + 1][0]) i++;
+  const [x0, c0] = FILM[i], [x1, c1] = FILM[i + 1];
+  const u = smooth01((x - x0) / (x1 - x0 || 1));
+  const a = lchToLab(c0), b = lchToLab(c1);
+  return oklabToRgb(lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u));
+}
+
+// overall sky brightness for a sun altitude — piecewise, tuned by eye to
+// *feel* right (perceptual), not to physical luminance ratios. Floored so
+// deepest night is never black.
+function daylight(sunAlt) {
+  if (sunAlt >=  3) return 1;
+  if (sunAlt >= -6) return lerp(0.60, 1.00, (sunAlt + 6) / 9);    // civil
+  if (sunAlt >= -12) return lerp(0.30, 0.60, (sunAlt + 12) / 6);  // nautical
+  if (sunAlt >= -18) return lerp(0.12, 0.30, (sunAlt + 18) / 6);  // astronomical
+  return 0.10;                                                    // night
+}
+// scene-luminance at an altitude fraction (0 = horizon, 1 = zenith). The
+// zenith stays a clear fraction of the horizon — never a black slab.
+function sceneLum(altFrac, sunAlt) {
+  const d = daylight(sunAlt);
+  const twi = clamp(1 - (sunAlt + 2) / 16, 0, 1);        // 0 day .. 1 deep twilight
+  const zenRatio = lerp(0.72, 0.44, twi);                // zenith / horizon
+  const falloff = lerp(1, zenRatio, smooth01(altFrac));
+  return clamp(d * falloff, 0.05, 1);
+}
+// The film curve is a DUSK response — it maps "bright" to amber. In daylight
+// the sky is bright AND blue, so blend toward a plain blue day sky above the
+// sunset. dayMix: 1 above ~+2°, 0 below −6°.
+const dayMix = sunAlt => smooth01((sunAlt + 6) / 8);
+function daySky(altFrac) {
+  return blend([190, 208, 226], [68, 114, 172], smooth01(altFrac));  // horizon -> zenith
+}
+function skyColor(altFrac, sunAlt) {
+  let x = sceneLum(Math.max(altFrac, 0), sunAlt);
+  if (altFrac < 0) x *= 0.80;
+  const dm = dayMix(sunAlt);
+  return dm > 0.001 ? blend(filmCurve(x), daySky(Math.max(altFrac, 0)), dm) : filmCurve(x);
+}
+
+/* --- seeded "conditions" + value noise -----------------------------
+   One seed = hash(place | date). Drives a correlated bundle: turbidity,
+   Belt-of-Venus geometry, the atmospheric mottling field, grain amount.
+   Low-amplitude — a screenshot must never look "randomised", just like
+   THIS night. Never touches data (positions / times), only texture.     */
+function xmur3(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
   }
-  const u = clamp((hi.alt - sunAlt) / (hi.alt - lo.alt || 1), 0, 1);
-  const mix = k => {
-    const a = lchToLab(hi[k]), b = lchToLab(lo[k]);
-    return [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)];
-  };
-  const z = mix('zen'), hz = mix('hor');
-  // below the horizon: same family, darker + desaturated + a touch cooler —
-  // a temperature change, not a black fill. No hard line anywhere.
-  const gd = [hz[0] * 0.58, hz[1] * 0.45, hz[2] * 0.45 - 0.006];
-  return {
-    zenLab: z, horLab: hz, grdLab: gd,
-    zen: oklabToRgb(z[0], z[1], z[2]),
-    hor: oklabToRgb(hz[0], hz[1], hz[2]),
-    grd: oklabToRgb(gd[0], gd[1], gd[2]),
+  return () => {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^= h >>> 16) >>> 0;
   };
 }
-const labLerp = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)];
+function mulberry32(a) {
+  return () => {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+// hash-based 2D value noise, smoothstep interpolation -> 0..1
+function makeNoise(seed) {
+  const rand = mulberry32(seed);
+  const perm = new Float32Array(512);
+  for (let i = 0; i < 512; i++) perm[i] = rand();
+  const h2 = (xi, yi) => perm[((xi * 137 + yi * 311) & 511)];
+  return (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = smooth01(x - xi), yf = smooth01(y - yi);
+    const a = h2(xi, yi),       b = h2(xi + 1, yi);
+    const c = h2(xi, yi + 1),   e = h2(xi + 1, yi + 1);
+    return lerp(lerp(a, b, xf), lerp(c, e, xf), yf);
+  };
+}
+
+const conditions = { turbidity: 0.4, beltAlt: 14, beltThick: 9, noise: null, seed: 1 };
+function bakeConditions() {
+  const d = state.located ? tzParts(state.t) : { year: '2026', month: '01', day: '01' };
+  const key = `${state.lat == null ? 0 : state.lat.toFixed(2)}|`
+            + `${state.lon == null ? 0 : state.lon.toFixed(2)}|${d.year}-${d.month}-${d.day}`;
+  const seed = xmur3(key)();
+  const r = mulberry32(seed);
+  conditions.seed = seed;
+  conditions.turbidity = 0.15 + 0.62 * r();     // 0.15 crisp/clear .. 0.77 hazy
+  conditions.beltAlt   = 11 + 8 * r();          // 11..19 deg
+  conditions.beltThick = 6 + 6 * r();           // 6..12 deg
+  conditions.noise     = makeNoise(seed ^ 0x9e3779b9);
+  bakeGrain();
+  bakeGrainLayer();
+}
 
 // Relative luminance of an [r,g,b] 0..255 — used to size the bottom scrim.
 const srgbLin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
 const relLum = c => 0.2126 * srgbLin(c[0]) + 0.7152 * srgbLin(c[1]) + 0.0722 * srgbLin(c[2]);
 
-// Chrome colour, derived from the live field: a light tint carrying a hint of
-// the sky's temperature (warm at dusk, cool at midnight). Legibility at any
-// hour is held by the bottom scrim in paintField, not by flipping the chrome.
-let chromeRGB = [244, 240, 232];      // also used by the canvas graticule
+// Relative luminance helper kept; chrome colour derives from the live field:
+// a light tint carrying a hint of the sky's temperature. Legibility over a
+// bright day sky is held by the bottom scrim in paintField.
+let chromeRGB = [240, 238, 232];      // also the canvas graticule ink
 function setChromeVars() {
-  const tint = labLerp(field.zenLab, field.horLab, 0.42);
-  const a = tint[1] * 0.34, b = tint[2] * 0.34;
-  const m = oklabToRgb(0.90, a, b);
+  const z = field.zen;
+  const m = [0, 1, 2].map(k => Math.round(lerp(z[k], 236, 0.72)));
+  m[0] = clamp(m[0] + 5, 0, 255); m[2] = clamp(m[2] - 3, 0, 255);   // never cold-blue
   chromeRGB = m;
   root.style.setProperty('--chrome',      `rgba(${m[0]},${m[1]},${m[2]},0.94)`);
   root.style.setProperty('--chrome-soft', `rgba(${m[0]},${m[1]},${m[2]},0.60)`);
   root.style.setProperty('--chrome-line', `rgba(${m[0]},${m[1]},${m[2]},0.28)`);
 }
-// OKLCH wrapper — still handy for the one hand-placed warm glow colour
-const oklchToRgb = (L, C, h) => oklabToRgb(...lchToLab([L, C, h]));
 
 /* --- projection ------------------------------------------------------- */
 // (alt, az) in degrees -> canvas point, plus whether it's on screen.
@@ -183,94 +263,198 @@ function project(alt, az) {
   return { x, y, daz, visible: Math.abs(daz) < HFOV / 2 + 10 && alt > -3 };
 }
 
-/* --- grain: static, baked once, low opacity ------------------------- */
-let grainPat = null;
-function makeGrain() {
-  const s = 128;
-  const c = document.createElement('canvas');
-  c.width = c.height = s;
+/* --- grain (uneven, seeded), dither (technical), mottling (drifts) --- */
+let grainTile = null, ditherPat = null;
+const grainLayer = document.createElement('canvas');   // grain × vertical envelope, W×H
+const mottleCv = document.createElement('canvas');
+mottleCv.width = 64; mottleCv.height = 40;
+
+function bakeGrain() {
+  const s = 168;
+  const c = document.createElement('canvas'); c.width = c.height = s;
   const g = c.getContext('2d');
   const img = g.createImageData(s, s);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const v = 116 + Math.random() * 24;           // low-contrast grey noise
+  const rnd = mulberry32(conditions.seed ^ 0x5bd1e995);
+  const clump = makeNoise(conditions.seed ^ 0xa53f9c);
+  const amt = lerp(9, 26, conditions.turbidity);       // hazier night -> more grain
+  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+    const k = 0.3 + 0.7 * clump(x / 21, y / 21);       // uneven density (not a grid)
+    const v = 128 + (rnd() - 0.5) * 2 * amt * k;
+    const i = (y * s + x) * 4;
     img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
     img.data[i + 3] = 255;
   }
   g.putImageData(img, 0, 0);
-  grainPat = ctx.createPattern(c, 'repeat');
+  grainTile = ctx.createPattern(c, 'repeat');
+
+  // fine ±1-level dither tile — kills 8-bit banding, not an aesthetic grain
+  const ds = 64;
+  const dc = document.createElement('canvas'); dc.width = dc.height = ds;
+  const dg = dc.getContext('2d');
+  const dimg = dg.createImageData(ds, ds);
+  const drnd = mulberry32(0x1234abcd);
+  for (let i = 0; i < dimg.data.length; i += 4) {
+    const v = 127 + Math.round(drnd() * 2);            // 127..129
+    dimg.data[i] = dimg.data[i + 1] = dimg.data[i + 2] = v;
+    dimg.data[i + 3] = 255;
+  }
+  dg.putImageData(dimg, 0, 0);
+  ditherPat = ctx.createPattern(dc, 'repeat');
 }
-function paintGrain() {
-  if (!grainPat) return;
+
+// grain × a vertical envelope (lives in the mid band; near-absent in the
+// bloom highlight and deep zenith). Static -> bake once per size/conditions.
+function bakeGrainLayer() {
+  if (!grainTile || !W || !H) return;
+  grainLayer.width = W; grainLayer.height = H;
+  const g = grainLayer.getContext('2d');
+  g.fillStyle = grainTile;
+  g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'destination-in';
+  const env = g.createLinearGradient(0, 0, 0, H);
+  env.addColorStop(0.00, 'rgba(0,0,0,0.22)');
+  env.addColorStop(0.40, 'rgba(0,0,0,0.80)');
+  env.addColorStop(0.72, 'rgba(0,0,0,0.34)');
+  env.addColorStop(1.00, 'rgba(0,0,0,0.52)');
+  g.fillStyle = env;
+  g.fillRect(0, 0, W, H);
+}
+
+function paintMottle() {
+  if (!conditions.noise) return;
+  const w = mottleCv.width, h = mottleCv.height;
+  const mx = mottleCv.getContext('2d');
+  const img = mx.createImageData(w, h);
+  const drift = (state.t.getTime() / 1000) * 0.0016;      // very slow domain-warp
+  const amp = lerp(7, 15, conditions.turbidity);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const n = conditions.noise(x / 8.5 + drift, y / 8.5 - drift * 0.6);
+    const v = 128 + (n - 0.5) * 2 * amp;
+    const i = (y * w + x) * 4;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+    img.data[i + 3] = 255;
+  }
+  mx.putImageData(img, 0, 0);
   ctx.save();
-  ctx.globalCompositeOperation = 'soft-light';
+  ctx.globalCompositeOperation = 'overlay';
   ctx.globalAlpha = 0.5;
-  ctx.fillStyle = grainPat;
-  ctx.fillRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(mottleCv, 0, 0, w, h, 0, 0, W, H);
   ctx.restore();
+}
+
+function paintGrain() {
+  if (ditherPat) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = ditherPat;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+  if (grainLayer.width) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(grainLayer, 0, 0);
+    ctx.restore();
+  }
 }
 
 /* --- paint the field -------------------------------------------------- */
 let sun = { alt: 90, az: 180 };
-let field = skyColors(90);
+let field = { zen: [22, 28, 34], hor: [46, 48, 46], grd: [16, 22, 26] };
 
 function paintField() {
-  field = skyColors(sun.alt);
-  const glow = clamp(1 - Math.abs(sun.alt + 5) / 16, 0, 1);   // afterglow strength
-
-  // zenith -> horizon -> a short way under the horizon, sampled in OKLab
-  // across many stops so the ramp never bands.
+  // base: the film curve over a structured scene-luminance
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  const N = 12;
+  const N = 24;
+  let zenRGB = null;
   for (let i = 0; i <= N; i++) {
-    const p = i / N;                              // 0 at top .. 1 at bottom
-    let lab;
-    if (p <= HORIZON_F) lab = labLerp(field.zenLab, field.horLab, p / HORIZON_F);
-    else                lab = labLerp(field.horLab, field.grdLab,
-                                      (p - HORIZON_F) / (1 - HORIZON_F));
-    g.addColorStop(p, rgb(oklabToRgb(lab[0], lab[1], lab[2])));
+    const p = i / N;                                   // 0 top .. 1 bottom
+    const altFrac = (horizonY - p * H) / horizonY;     // 1 top, 0 horizon, <0 below
+    const c = skyColor(altFrac, sun.alt);
+    g.addColorStop(p, rgb(c));
+    if (i === 0) zenRGB = c;
   }
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
+  const horRGB = skyColor(0, sun.alt);
+  field = { zen: zenRGB, hor: horRGB, grd: skyColor(-0.12, sun.alt) };
 
-  // afterglow pooled toward the sun's azimuth, strongest around alt 0..-10
+  // azimuth blend — what is the view facing?
+  const dSun = wrap180(sun.az - state.viewAz) * Math.PI / 180;
+  const sunFace  = clamp(Math.cos(dSun), 0, 1);
+  const antiFace = clamp(-Math.cos(dSun), 0, 1);
+  const twil = clamp(1 - Math.abs(sun.alt + 6) / 17, 0, 1);   // twilight strength
+
+  // sunward horizon: bright segment + bloom + red halation
+  const glow = clamp(1 - Math.abs(sun.alt + 3) / 20, 0, 1) * (0.32 + 0.68 * sunFace);
   if (glow > 0.01) {
-    const gx = clamp(project(0, sun.az).x, -0.4 * W, 1.4 * W);
-    const warm = oklchToRgb(0.72, 0.145, 52);
-    const rgG = ctx.createRadialGradient(gx, horizonY, 0, gx, horizonY, W * 0.85);
-    rgG.addColorStop(0, `rgba(${warm[0]},${warm[1]},${warm[2]},${0.34 * glow})`);
-    rgG.addColorStop(1, `rgba(${warm[0]},${warm[1]},${warm[2]},0)`);
-    ctx.fillStyle = rgG;
-    ctx.fillRect(0, horizonY - H * 0.5, W, H);
+    const gx = clamp(project(0, sun.az).x, -0.5 * W, 1.5 * W);
+    const reach = W * (0.55 + 0.55 * conditions.turbidity);
+    const gcore = Math.round(196 - 26 * conditions.turbidity);
+    const gwarm = Math.round(148 + 44 * conditions.turbidity);
+    const core = ctx.createRadialGradient(gx, horizonY + 8, 0, gx, horizonY + 8, reach);
+    core.addColorStop(0.00, `rgba(255,${gcore},${gwarm},${0.52 * glow})`);
+    core.addColorStop(0.34, `rgba(255,124,80,${0.16 * glow})`);   // halation ring
+    core.addColorStop(1.00, 'rgba(255,124,80,0)');
+    ctx.fillStyle = core;
+    ctx.fillRect(0, 0, W, H);
   }
 
-  // the seam: the horizon is a soft brighter band, never a drawn line
-  const sc = blend(field.hor, [255, 255, 255], 0.16);
-  const seam = ctx.createLinearGradient(0, horizonY - 24, 0, horizonY + 12);
-  seam.addColorStop(0,   `rgba(${sc[0]},${sc[1]},${sc[2]},0)`);
-  seam.addColorStop(0.62, `rgba(${sc[0]},${sc[1]},${sc[2]},${0.09 + 0.11 * glow})`);
-  seam.addColorStop(1,   `rgba(${sc[0]},${sc[1]},${sc[2]},0)`);
+  // antisolar horizon: Belt of Venus above the Earth's shadow
+  if (twil > 0.02 && antiFace > 0.02) {
+    const bA = antiFace * twil;
+    const by = horizonY - (conditions.beltAlt / ALT_TOP) * horizonY;
+    const bh = (conditions.beltThick / ALT_TOP) * horizonY;
+    const belt = ctx.createLinearGradient(0, by - bh, 0, by + bh);
+    belt.addColorStop(0.0, 'rgba(228,152,150,0)');
+    belt.addColorStop(0.5, `rgba(230,150,146,${0.20 * bA})`);      // salmon
+    belt.addColorStop(1.0, 'rgba(228,152,150,0)');
+    ctx.fillStyle = belt;
+    ctx.fillRect(0, by - bh, W, bh * 2);
+
+    const sh = (7 / ALT_TOP) * horizonY;
+    const shadow = ctx.createLinearGradient(0, horizonY - sh, 0, horizonY + 6);
+    shadow.addColorStop(0, 'rgba(30,42,64,0)');
+    shadow.addColorStop(1, `rgba(28,40,62,${0.30 * bA})`);         // cool dip
+    ctx.fillStyle = shadow;
+    ctx.fillRect(0, horizonY - sh, W, sh + 6);
+  }
+
+  // the seam: a soft brightening at the horizon, never a drawn line
+  const sc = blend(field.hor, [255, 250, 240], 0.18);
+  const seam = ctx.createLinearGradient(0, horizonY - 22, 0, horizonY + 12);
+  seam.addColorStop(0,    `rgba(${sc[0]},${sc[1]},${sc[2]},0)`);
+  seam.addColorStop(0.62, `rgba(${sc[0]},${sc[1]},${sc[2]},${0.07 + 0.10 * glow})`);
+  seam.addColorStop(1,    `rgba(${sc[0]},${sc[1]},${sc[2]},0)`);
   ctx.fillStyle = seam;
-  ctx.fillRect(0, horizonY - 24, W, 36);
+  ctx.fillRect(0, horizonY - 22, W, 34);
 
-  // a breath of vignette — weight the frame low, keep the edges quiet
-  const vg = ctx.createRadialGradient(W / 2, H * 0.62, Math.min(W, H) * 0.2,
-                                      W / 2, H * 0.62, Math.max(W, H) * 0.78);
-  vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(1, 'rgba(0,0,0,0.30)');
-  ctx.fillStyle = vg;
-  ctx.fillRect(0, 0, W, H);
-
-  // bottom scrim: keep the lower field dark enough for the light chrome at any
-  // hour. Invisible at night (field already dark); a soft ground-dusk by day.
-  const scrimA = clamp(0.12 + relLum(field.hor) * 1.05, 0.12, 0.66);
+  // bottom scrim: hold light-chrome legibility over a bright day sky
+  const scrimA = clamp(0.10 + relLum(field.hor) * 1.0, 0.10, 0.60);
   const sg = ctx.createLinearGradient(0, H * 0.55, 0, H);
-  sg.addColorStop(0, 'rgba(4,5,12,0)');
-  sg.addColorStop(0.7, `rgba(4,5,12,${(scrimA * 0.6).toFixed(3)})`);
-  sg.addColorStop(1, `rgba(4,5,12,${scrimA.toFixed(3)})`);
+  sg.addColorStop(0, 'rgba(4,6,10,0)');
+  sg.addColorStop(0.7, `rgba(4,6,10,${(scrimA * 0.6).toFixed(3)})`);
+  sg.addColorStop(1, `rgba(4,6,10,${scrimA.toFixed(3)})`);
   ctx.fillStyle = sg;
   ctx.fillRect(0, H * 0.55, W, H * 0.45);
 
   setChromeVars();
+  syncBrowserChrome();
+}
+
+// browser UI blends into the sky — theme-color + body bg from the zenith
+let _lastChrome = 0;
+function syncBrowserChrome() {
+  const now = performance.now();
+  if (now - _lastChrome < 900) return;
+  _lastChrome = now;
+  const z = rgb(field.zen);
+  document.body.style.background = z;
+  const m = document.querySelector('meta[name=theme-color]');
+  if (m) m.setAttribute('content', z);
 }
 
 /* --- graticule: alt/az scaffold, visible ONLY during a drag ---------- */
@@ -324,7 +508,7 @@ function paintGraticule() {
 }
 
 /* --- the loop ---------------------------------------------------------- */
-let lastFrame = 0, lastCompute = 0, running = false;
+let lastFrame = 0, lastCompute = 0, running = false, rafId = 0;
 function frame(now) {
   if (!running) return;
   const dtReal = lastFrame ? (now - lastFrame) / 1000 : 0;
@@ -351,16 +535,21 @@ function frame(now) {
 
   ctx.clearRect(0, 0, W, H);
   paintField();
+  paintMottle();
   if (state.located) paintGraticule();
   paintGrain();
 
-  requestAnimationFrame(frame);
+  rafId = requestAnimationFrame(frame);
 }
 function startLoop() {
-  if (running) return;
   running = true; lastFrame = 0; lastCompute = 0;
-  requestAnimationFrame(frame);
+  cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(frame);
 }
+// a rAF chain scheduled while the tab is hidden can be dropped — restart on return
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && running) startLoop();
+});
 
 /* --- drag to turn ---------------------------------------------------- */
 let drag = null;
@@ -570,6 +759,7 @@ function enter(lat, lon, place, tz) {
   resize();
   if (!state.playing) state.t = new Date();
   computeDuskDawn();
+  bakeConditions();           // seed tonight's texture from place + date
   syncScrubFromT();
   updateClock();
   startLoop();
@@ -577,8 +767,8 @@ function enter(lat, lon, place, tz) {
 
 function init() {
   resize();
-  makeGrain();
-  startLoop();               // the sky renders even before a place is chosen
+  bakeConditions();           // a default seed so the pre-location sky has texture
+  startLoop();                // the sky renders even before a place is chosen
   setPlaying(false);
   if (loadPlace()) enter(state.lat, state.lon, state.place, state.tz);
   else showLocate(true);
