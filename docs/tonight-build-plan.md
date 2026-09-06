@@ -87,7 +87,20 @@ Each is independently viewable.
    tonight's visible passes (satellite sunlit, observer dark, above the
    horizon), a callout line and a moving mark on the panorama. *~1 day.*
 
-## Decisions still open
+## Decisions — RESOLVED 2026-09-06
+
+All six below are settled. Visual direction is **Nocturne + two borrows** —
+see **`docs/tonight-art-direction.md`** (the anchor; every phase commit
+references it).
+
+1. Astronomy library → **vendor `astronomy-engine`** (`apps/tonight/lib/astronomy.js`, 116 KB, MIT).
+2. Star catalogue depth → **bright only, mag ≤ 4.0 (~500)**.
+3. Turning the view → **drag + a compass strip that only appears during a drag**; on load **face due south**.
+4. Milky Way → **stylised painted band** (a breath of lighter field, per Nocturne).
+5. ISS data → **committed TLE snapshot**, refreshed on deploy — keeps phase 6 Tier 1.
+6. ISS timing → **phase 6 / post-v1**, confirmed.
+
+<details><summary>Original open questions (kept for context)</summary>
 
 1. **Astronomy library** — vendor `astronomy-engine` (recommended: one
    MIT file, accurate, no deps) vs. hand-roll Meeus formulae (smaller,
@@ -103,6 +116,8 @@ Each is independently viewable.
    (keeps it Tier 1), or a tiny relay (Tier 2) for always-live elements?
 6. **Confirm:** ISS is phase 6 (post-v1), per pick #09. If it belongs in
    v1, say so.
+
+</details>
 
 ## Stays true to the system
 

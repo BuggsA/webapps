@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tonight</title>
+<meta name="description" content="Tonight's sky where you are — a horizon panorama of twilight, the moon and the planets, computed in your browser.">
+<meta name="theme-color" content="#0b1020">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b1020'/%3E%3Cpath d='M21 6a10 10 0 1 0 0 20 8 8 0 0 1 0-20z' fill='%23f2efe6'/%3E%3Ccircle cx='9' cy='9' r='1.1' fill='%23f2efe6'/%3E%3Ccircle cx='24' cy='23' r='1' fill='%23f2efe6'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="tonight.css">
+</head>
+<body>
+<canvas id="sky"></canvas>
+
+<!-- Place name set into the field, lower-left (Nocturne hero) -->
+<div id="placard" class="placard" hidden>
+  <span class="placard-place"></span>
+  <span class="placard-sub"></span>
+</div>
+
+<!-- Location prompt — shown until we have a place -->
+<div id="locate" class="locate" hidden>
+  <form id="place-form" class="locate-card" autocomplete="off">
+    <h1>Tonight</h1>
+    <p class="muted small">The sky above you, right now. Where are you?
+      This stays on your device.</p>
+    <div class="locate-search">
+      <input id="place-input" class="field" type="text" inputmode="search"
+             placeholder="Town or city" aria-label="Place name" spellcheck="false">
+      <ul id="place-results" class="place-results" role="listbox" hidden></ul>
+    </div>
+    <div class="row">
+      <button class="btn" type="submit">Search</button>
+      <button class="btn btn--ghost" type="button" id="use-device">Use my location</button>
+    </div>
+    <p id="locate-msg" class="locate-msg small" role="status" hidden></p>
+  </form>
+</div>
+
+<!-- Time controls — shown once located -->
+<div id="controls" class="controls" hidden>
+  <button id="btn-now" class="ctl" type="button">Now</button>
+  <button id="btn-play" class="ctl ctl--play" type="button" aria-pressed="false">
+    <span class="ctl-play-i" aria-hidden="true"></span><span class="ctl-play-t">Play</span>
+  </button>
+  <input id="scrub" class="scrub" type="range" min="0" max="1000" step="1" value="0"
+         aria-label="Time from dusk to dawn">
+  <output id="clock" class="clock" for="scrub"></output>
+  <button id="btn-where" class="ctl ctl--icon" type="button" title="Change location"
+          aria-label="Change location">&#9737;</button>
+</div>
+
+<script src="lib/astronomy.js"></script>
+<script src="tonight.js"></script>
+</body>
+</html>

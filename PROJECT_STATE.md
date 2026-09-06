@@ -56,6 +56,28 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - **Not yet deployed.** Run `.\scripts\deploy-app.ps1 -Name until`,
   and re-sync `site-root/` for the updated index.
 
+## 2026-09-06 -- second app: tonight (in progress)
+
+- `apps/tonight/` -- the sky above you as a horizon panorama (twilight,
+  moon, planets, Milky Way, bright stars; now/play/scrub; cloud verdict;
+  tap for a card). Plan: `docs/tonight-build-plan.md`. Structural map
+  (built to cut rebuild cost): `../tonight-app-map.md` (in Downloads).
+- **Art direction LOCKED: Nocturne + two borrows** --
+  `docs/tonight-art-direction.md`. Chosen from five directions. Every
+  phase commit references that file; it carries a per-phase checklist.
+- All six "decisions still open" in the build plan are now resolved
+  (table in the art-direction doc). Astronomy: vendored
+  `astronomy-engine` (`lib/astronomy.js`, 116 KB, MIT).
+- **Phase 1 (skeleton)**: location (device/search/remembered), horizon
+  canvas + drag-to-turn, time model (now/play/scrub), sun-altitude
+  gradient. Functional, verified in-browser (Reykjavik dusk/dawn math
+  checks out). Visual layer is still the pre-Nocturne skeleton -- being
+  reworked to the art direction next. Not committed yet.
+- Known Phase 1 bug: clock shows the *viewer's* timezone, not the
+  selected place's. Fix in Phase 1 polish.
+- Tier 1; no runtime network beyond the two keyless Open-Meteo fetches.
+  Deploy (later, human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename
