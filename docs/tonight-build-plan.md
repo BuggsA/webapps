@@ -79,10 +79,17 @@ Each is independently viewable.
 4. **Weather** — Open-Meteo forecast fetch + cache, the veil tracking
    cloud % across the scrubbed night, the one-line verdict computed from
    the hourly series. Graceful when offline (veil just absent). *~½ day.*
-5. **The look** — OKLCH sky gradients per twilight state, grain overlay,
+5. **The look** — ~~OKLCH sky gradients per twilight state, grain overlay,
    soft bloom on the moon/planets/bright stars, motion easing, a compass
-   hint on the horizon, `prefers-reduced-motion`, responsive + touch.
-   *~1–1.5 days.* → **ship v1.**
+   hint on the horizon, `prefers-reduced-motion`, responsive + touch.~~
+   **DONE 2026-09-06.** Palette landed earlier (film curve + Belt-of-Venus
+   + seeded conditions, see the art-direction doc §Palette); this phase
+   added the always-on faint compass hint + a one-time "drag to turn"
+   cue, drag glide/fling with gentle friction, a full reduced-motion
+   sweep (all ambient drift frozen, glide & dust-resolve disabled), and
+   a responsive/touch pass (scroll caps on the locate prompt + result
+   list, small-screen + landscape media queries, safe-area for the card,
+   `font-optical-sizing`). **v1 ready to ship.**
 6. **ISS (post-v1)** — vendored TLE snapshot + `satellite.js` SGP4,
    tonight's visible passes (satellite sunlit, observer dark, above the
    horizon), a callout line and a moving mark on the panorama. *~1 day.*

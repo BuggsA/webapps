@@ -21,12 +21,12 @@ Fraunces written onto the field: no boxes, blur, shadows or radii. A faint
 alt/az graticule appears only while you drag; a hairline leader line tethers
 a tapped object to its card.
 
-**Status:** in progress. Phases 1–4 built (location, time model, the sky,
-the moon and naked-eye planets, ~500 bright stars + a stylised Milky Way,
-tap-to-select cards, and a cloud-cover veil + one-line verdict from a
-keyless Open-Meteo forecast). Phase 5 — the final "look" pass — is next.
-See `../../docs/tonight-build-plan.md` for the phase plan and
-`../../PROJECT_STATE.md` for current state.
+**Status:** v1 complete (phases 1–5). Location, time model, the film-curve
+sky, the moon and naked-eye planets, ~500 bright stars + a stylised Milky
+Way, tap-to-select cards, a cloud-cover veil + one-line verdict, a faint
+compass hint, drag-glide, a full `prefers-reduced-motion` path, and a
+responsive/touch pass. ISS passes are phase 6 (post-v1). See
+`../../docs/tonight-build-plan.md` and `../../PROJECT_STATE.md`.
 
 `data/stars.json` is a compact HYG subset (mag ≤ 4.0, ~519 stars: RA/Dec
 J2000, magnitude, B−V, proper name for the bright ones), derived from the

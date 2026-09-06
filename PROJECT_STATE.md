@@ -186,10 +186,24 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   gaps). Real avg cloud nudges `conditions.turbidity` (grain re-baked) so
   cloudy nights render washier. Graceful offline: `wx` stays null -> no
   veil, date-only line, no throw. `btnNow` re-verdicts. ~0.5 ms/frame.
-- Next: **Phase 5 -- the final "look" pass.** OKLCH gradient refinement,
-  grain/bloom/motion-easing polish, the compass hint, a self-hosted
-  display serif, `prefers-reduced-motion` sweep, responsive/touch review.
-  Then ship v1. (ISS is phase 6, post-v1.)
+- **Phase 5 (the look): DONE -- v1 complete.** The palette landed earlier
+  (film curve); this phase added: a faint always-on **compass hint**
+  (facing letter + a horizon tick, hides while the graticule is up) plus
+  a one-time "drag to turn the sky" cue that clears on first
+  drag/arrow-key; **drag glide** -- a released flick carries a clamped
+  velocity and eases to a stop over ~1 s (never under reduced-motion);
+  a full **`prefers-reduced-motion`** sweep -- mottle + veil domain-warp
+  frozen, twinkle off, glide off, dust-resolve instant, graticule snaps;
+  a **responsive/touch** pass -- `overflow-y:auto` + max-height on the
+  locate prompt and the result list, `<22rem` and `max-height:34rem`
+  (landscape) media queries, `--sat` safe-area read into the card clamp,
+  `font-optical-sizing: auto` + `font-synthesis: none`. Fraunces was
+  already self-hosted from the chrome rework. ~0.2 ms/frame day, ~0.6-0.8
+  ms/frame deep night; no console errors; controls verified end to end.
+- **v1 is ready to deploy:** `.\scripts\deploy-app.ps1 -Name tonight`
+  (human-run), then re-sync `hosting/site-root/` with the app listed.
+- **Phase 6 (post-v1): ISS passes** -- committed TLE snapshot +
+  `satellite.js` SGP4, tonight's visible passes, a callout + moving mark.
 - Tier 1; no runtime network beyond the two keyless Open-Meteo fetches.
   Deploy (later, human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
 

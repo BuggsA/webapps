@@ -85,12 +85,13 @@ const ctx = el.canvas.getContext('2d');
 const root = document.documentElement;
 
 /* --- canvas sizing (DPR-aware) ------------------------------------------- */
-let W = 0, H = 0, horizonY = 0, dpr = 1;
+let W = 0, H = 0, horizonY = 0, dpr = 1, safeTop = 0;
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   W = el.canvas.clientWidth;
   H = el.canvas.clientHeight;
   horizonY = Math.round(H * HORIZON_F);
+  safeTop = parseFloat(getComputedStyle(root).getPropertyValue('--sat')) || 0;
   el.canvas.width  = Math.round(W * dpr);
   el.canvas.height = Math.round(H * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -375,7 +376,8 @@ function paintMottle() {
   if (!conditions.noise) return;
   const w = mottleCv.width, h = mottleCv.height;
   const mx = mottleCv.getContext('2d');
-  const drift = (state.t.getTime() / 1000) * 0.0016;      // very slow domain-warp
+  // very slow domain-warp — frozen under reduced-motion
+  const drift = REDUCED ? 407.1 : (state.t.getTime() / 1000) * 0.0016;
   const key = Math.round(drift * 400);                    // changes ~every 0.25 s of sim drift
   if (key !== _mottleAt) {
     _mottleAt = key;
@@ -967,9 +969,10 @@ function positionCard() {
   if (!selected) return;
   const ox = selected.x, oy = selected.y;
   const cw = el.card.offsetWidth || 260, ch = el.card.offsetHeight || 110;
+  const m = 14, top = Math.max(m, safeTop + 4);
   let cx = ox + 22, cy = oy + 20;
-  cx = clamp(cx, 12, Math.max(12, W - cw - 12));
-  cy = clamp(cy, 12, Math.max(12, H - ch - 88));      // keep clear of the controls
+  cx = clamp(cx, m, Math.max(m, W - cw - m));
+  cy = clamp(cy, top, Math.max(top, H - ch - 88));    // clear of the notch & the controls
   el.card.style.left = cx + 'px';
   el.card.style.top = cy + 'px';
   selected._cx = cx; selected._cy = cy; selected._cw = cw; selected._ch = ch;
@@ -1123,7 +1126,7 @@ function paintVeil() {
   const k = cc / 100;                                   // 0..1 coverage
   const w = veilCv.width, h = veilCv.height;
   const vx = veilCv.getContext('2d');
-  const drift = state.t.getTime() / 1000 * 0.0009;
+  const drift = REDUCED ? 812.3 : state.t.getTime() / 1000 * 0.0009;
   const keyN = Math.round(drift * 300);
   if (keyN !== _veilAt || !_veilImg) {
     _veilAt = keyN;
@@ -1181,13 +1184,28 @@ function frame(now) {
   if (REDUCED) gratT = gratTarget;
   else gratT += (gratTarget - gratT) * clamp(dtReal * (gratTarget > gratT ? 15 : 4), 0, 1);
 
-  // steadiness: dust resolves ~0.8 s after the view stops moving
-  if (drag) { steadiness = 0; _stillAt = 0; }
+  // fling: a released drag glides to a gentle stop (never under reduced-motion)
+  const gliding = !drag && Math.abs(flingVel) > 5;
+  if (gliding) {
+    state.viewAz = wrap360(state.viewAz + flingVel * Math.min(dtReal, 0.05));
+    flingVel *= Math.exp(-Math.min(dtReal, 0.05) / 0.4);
+    if (Math.abs(flingVel) < 5) flingVel = 0;
+  }
+
+  // steadiness: dust resolves ~0.8 s after the view stops moving (instant under reduced-motion)
+  if (drag || gliding) { steadiness = 0; _stillAt = 0; }
+  else if (REDUCED) { steadiness = 1; }
   else {
     if (!_stillAt) _stillAt = now;
     const settled = clamp((now - _stillAt - 280) / 520, 0, 1);
     steadiness += (settled - steadiness) * clamp(dtReal * 3.5, 0, 1);
-    if (REDUCED) steadiness = settled;
+  }
+
+  // first-run "swipe to turn" hint — 3.5 s solid, fades over 1.5 s, gone at 5 s
+  if (firstHint.active) {
+    if (!firstHint.t0) firstHint.t0 = now;
+    firstHint.a = clamp(1 - (now - firstHint.t0 - 3500) / 1500, 0, 1);
+    if (now - firstHint.t0 > 5000) firstHint.active = false;
   }
 
   ctx.clearRect(0, 0, W, H);
@@ -1199,6 +1217,7 @@ function frame(now) {
     paintPlanets();
     paintMoon();
     paintVeil();               // clouds sit in front of everything celestial
+    paintCompassHint();        // faint facing-direction cue at the horizon
     paintGraticule();
     if (selected) { updateCardText(); paintLeader(); }
   }
@@ -1216,10 +1235,39 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && running) startLoop();
 });
 
-/* --- drag to turn · tap to select ---------------------------------- */
-let drag = null;
+/* --- drag to turn (with a little glide) · tap to select ------------ */
+let drag = null, flingVel = 0;
+const firstHint = { active: false, t0: 0, a: 1 };
+
+// faint "you're facing X" cue on the horizon, plus a one-time swipe hint
+function paintCompassHint() {
+  const o = (1 - gratT);
+  if (o < 0.02) return;
+  const C = chromeRGB.join(',');
+  const x = W / 2, y = horizonY;
+  ctx.save();
+  ctx.strokeStyle = `rgba(${C},${(0.14 * o).toFixed(3)})`;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x, y - 7); ctx.lineTo(x, y + 5); ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = `rgba(${C},${(0.42 * o).toFixed(3)})`;
+  ctx.font = `12px ${GFONT}`;
+  ctx.fillText(compass(state.viewAz), x, y - 12);         // just above the horizon
+  if (firstHint.active && firstHint.a > 0.01) {
+    ctx.fillStyle = `rgba(${C},${(0.42 * firstHint.a).toFixed(3)})`;
+    ctx.font = `italic 13px ${GFONT}`;
+    ctx.textBaseline = 'top';
+    ctx.fillText('drag to turn the sky', x, y + 12);
+  }
+  ctx.restore();
+}
+
 el.canvas.addEventListener('pointerdown', e => {
-  drag = { x: e.clientX, y: e.clientY, az: state.viewAz, moved: 0, t: e.timeStamp };
+  drag = { x: e.clientX, y: e.clientY, az: state.viewAz, moved: 0,
+           t: e.timeStamp, lastT: e.timeStamp, vel: 0 };
+  flingVel = 0;
+  firstHint.active = false;
   el.canvas.setPointerCapture(e.pointerId);
   el.canvas.classList.add('dragging');
   gratTarget = 1;                       // fade the alt/az scaffold in
@@ -1228,11 +1276,20 @@ el.canvas.addEventListener('pointermove', e => {
   if (!drag) return;
   const dx = e.clientX - drag.x;
   drag.moved = Math.max(drag.moved, Math.hypot(dx, e.clientY - drag.y));
+  const prev = state.viewAz;
   state.viewAz = wrap360(drag.az - dx * (HFOV / W));  // drag right -> turn left
+  const dt = (e.timeStamp - drag.lastT) / 1000;
+  if (dt > 0.001) {
+    drag.vel = lerp(drag.vel, wrap180(state.viewAz - prev) / dt, 0.45);
+    drag.lastT = e.timeStamp;
+  }
 });
 function endDrag(e) {
   if (!drag) return;
   const tap = drag.moved < 6 && (e.timeStamp - drag.t) < 500;
+  if (!tap && !REDUCED && Math.abs(e.timeStamp - drag.lastT) < 90) {
+    flingVel = clamp(drag.vel, -180, 180);         // carry the release velocity, gently
+  }
   drag = null;
   el.canvas.classList.remove('dragging');
   gratTarget = 0;                       // and fade it back out
@@ -1254,6 +1311,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
     if (inControl(e.target)) return;
     state.viewAz = wrap360(state.viewAz + (e.key === 'ArrowLeft' ? -10 : 10));
+    firstHint.active = false;
     e.preventDefault();
   } else if (e.key === 'Escape' && selected) {
     closeCard();
@@ -1453,6 +1511,8 @@ function enter(lat, lon, place, tz) {
   state.located = true;
   _placardKey = '';
   wx = null;                  // drop the previous place's forecast
+  firstHint.active = true; firstHint.t0 = 0;   // one-time "drag to turn" cue
+  flingVel = 0;
   closeCard();
   savePlace();
   showLocate(false);

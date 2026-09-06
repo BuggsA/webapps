@@ -260,8 +260,8 @@ that phase's scope):
 - [ ] Grain present: static, low-opacity, baked (not animated).
 - [ ] Bloom **only** on moon / planets / brightest stars — additive, soft, low-alpha. No glow blobs.
 - [ ] Chrome is minimal, bottom-weighted, translucent. Nothing persistent mid-screen.
-- [ ] Graticule appears **only during drag**; leader line appears **only on selection**.
-- [ ] Motion is continuous / cross-fade. Nothing pulses, blinks or bounces. `prefers-reduced-motion` honoured.
+- [ ] Graticule appears **only during drag**; leader line appears **only on selection**. A *faint* always-on compass hint (facing letter + one tick) at the horizon is OK; it hides while the graticule is up.
+- [ ] Motion is continuous / cross-fade. Nothing pulses, blinks or bounces. Under `prefers-reduced-motion`: all ambient drift frozen (mottle, veil), no twinkle, no drag-glide, dust resolves instantly, graticule snaps.
 - [ ] Type is the one display serif (Fraunces), large + sparse — **including all chrome**; times as lining figures.
 - [ ] Layout is asymmetric, lower-weighted, full-bleed. No centred hero, no centred prompt.
 - [ ] **Chrome banned list holds:** no `border-radius`, no `backdrop-filter`, no `box-shadow`, no system-UI font, no centred container, no pill/ghost buttons, no toolbar `<div>` background, no hover wash.
