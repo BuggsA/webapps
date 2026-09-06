@@ -129,21 +129,24 @@ const smooth01 = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 // NB: no hue in 250..330 — the path is cyan -> cool grey -> warm grey ->
 // amber -> bloom. That routing is the whole point (dodges the violet tell).
 const FILM = [
-  [0.00, [0.150, 0.020, 216]],   // crushed black, lifted to a blue-teal
-  [0.14, [0.215, 0.024, 214]],   // dark teal-slate
-  [0.34, [0.360, 0.018, 205]],   // cool grey, faint cyan cast
-  [0.54, [0.530, 0.030,  66]],   // the crossover — warm neutral taupe
-  [0.73, [0.670, 0.070,  50]],   // dusty amber-grey
-  [0.89, [0.805, 0.128,  52]],   // amber
-  [1.00, [0.950, 0.045,  70]],   // bloom, warm near-white
+  [0.00, [0.150, 0.022, 216]],   // crushed black, lifted to a blue-teal
+  [0.14, [0.215, 0.026, 214]],   // dark teal-slate
+  [0.34, [0.360, 0.026, 206]],   // cool grey, a little cyan life
+  [0.54, [0.530, 0.044,  64]],   // the crossover — warm neutral, not dead
+  [0.73, [0.670, 0.074,  50]],   // dusty amber-grey
+  [0.89, [0.805, 0.130,  52]],   // amber
+  [1.00, [0.950, 0.046,  70]],   // bloom, warm near-white
 ];
+const oklchToRgb = (L, C, h) => oklabToRgb(...lchToLab([L, C, h]));
 function filmCurve(x) {
   x = clamp(x, 0, 1);
   let i = 0;
   while (i < FILM.length - 2 && x > FILM[i + 1][0]) i++;
   const [x0, c0] = FILM[i], [x1, c1] = FILM[i + 1];
   const u = smooth01((x - x0) / (x1 - x0 || 1));
-  const a = lchToLab(c0), b = lchToLab(c1);
+  const ts = conditions.tempShift;                        // per-night warm/cool bias
+  const a = lchToLab([c0[0], c0[1], c0[2] + ts]);
+  const b = lchToLab([c1[0], c1[1], c1[2] + ts]);
   return oklabToRgb(lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u));
 }
 
@@ -157,27 +160,36 @@ function daylight(sunAlt) {
   if (sunAlt >= -18) return lerp(0.12, 0.30, (sunAlt + 18) / 6);  // astronomical
   return 0.10;                                                    // night
 }
-// scene-luminance at an altitude fraction (0 = horizon, 1 = zenith). The
-// zenith stays a clear fraction of the horizon — never a black slab.
-function sceneLum(altFrac, sunAlt) {
+// scene-luminance at an altitude fraction (0 = horizon, 1 = zenith) for a
+// given sun altitude and azBright (0 = view faces away from the sun, 1 =
+// straight at it). The bright segment concentrates toward the sun; the
+// antisolar horizon goes dark (Earth's-shadow territory). Zenith stays a
+// clear fraction of the horizon — never a black slab.
+function sceneLum(altFrac, sunAlt, azBright) {
   const d = daylight(sunAlt);
   const twi = clamp(1 - (sunAlt + 2) / 16, 0, 1);        // 0 day .. 1 deep twilight
-  const zenRatio = lerp(0.72, 0.44, twi);                // zenith / horizon
-  const falloff = lerp(1, zenRatio, smooth01(altFrac));
-  return clamp(d * falloff, 0.05, 1);
+  const zenRatio = lerp(0.74, 0.50, twi);
+  let base = lerp(1, zenRatio, smooth01(altFrac));       // horizon -> zenith
+  // azimuth-weighted horizon term — only near the horizon, only at twilight
+  const nearH = 1 - smooth01(clamp(altFrac / 0.55, 0, 1));
+  base += twi * nearH * lerp(-0.34, 0.44, azBright);     // sunward brighter, antisolar darker
+  return clamp(d * clamp(base, 0.12, 1.25), 0.04, 1);
 }
 // The film curve is a DUSK response — it maps "bright" to amber. In daylight
 // the sky is bright AND blue, so blend toward a plain blue day sky above the
 // sunset. dayMix: 1 above ~+2°, 0 below −6°.
 const dayMix = sunAlt => smooth01((sunAlt + 6) / 8);
-function daySky(altFrac) {
-  return blend([190, 208, 226], [68, 114, 172], smooth01(altFrac));  // horizon -> zenith
+function daySky(altFrac, azBright) {
+  const c = blend([190, 208, 226], [68, 114, 172], smooth01(altFrac));  // horizon -> zenith
+  return blend(c, [236, 238, 240], azBright * 0.22 * (1 - smooth01(altFrac)));  // brighter toward the sun
 }
-function skyColor(altFrac, sunAlt) {
-  let x = sceneLum(Math.max(altFrac, 0), sunAlt);
+function skyColor(altFrac, sunAlt, azBright) {
+  let x = sceneLum(Math.max(altFrac, 0), sunAlt, azBright);
   if (altFrac < 0) x *= 0.80;
   const dm = dayMix(sunAlt);
-  return dm > 0.001 ? blend(filmCurve(x), daySky(Math.max(altFrac, 0)), dm) : filmCurve(x);
+  return dm > 0.001
+    ? blend(filmCurve(x), daySky(Math.max(altFrac, 0), azBright), dm)
+    : filmCurve(x);
 }
 
 /* --- seeded "conditions" + value noise -----------------------------
@@ -220,7 +232,10 @@ function makeNoise(seed) {
   };
 }
 
-const conditions = { turbidity: 0.4, beltAlt: 14, beltThick: 9, noise: null, seed: 1 };
+const conditions = {
+  turbidity: 0.4, beltAlt: 14, beltThick: 9, beltHue: 26,
+  tempShift: 0, airglowHue: 120, airglowAmt: 0.06, noise: null, seed: 1,
+};
 function bakeConditions() {
   const d = state.located ? tzParts(state.t) : { year: '2026', month: '01', day: '01' };
   const key = `${state.lat == null ? 0 : state.lat.toFixed(2)}|`
@@ -231,6 +246,11 @@ function bakeConditions() {
   conditions.turbidity = 0.15 + 0.62 * r();     // 0.15 crisp/clear .. 0.77 hazy
   conditions.beltAlt   = 11 + 8 * r();          // 11..19 deg
   conditions.beltThick = 6 + 6 * r();           // 6..12 deg
+  conditions.beltHue   = 20 + 16 * r();         // 20 salmon .. 36 rose-pink
+  conditions.tempShift = -4 + 9 * r();          // per-night warm/cool bias, small
+  conditions.airglowHue = r() < 0.72 ? 108 + 34 * r()   // usually green airglow
+                                     : 38 + 16 * r();    // sometimes sodium skyglow
+  conditions.airglowAmt = 0.05 + 0.07 * r();
   conditions.noise     = makeNoise(seed ^ 0x9e3779b9);
   bakeGrain();
   bakeGrainLayer();
@@ -366,68 +386,100 @@ let sun = { alt: 90, az: 180 };
 let field = { zen: [22, 28, 34], hor: [46, 48, 46], grd: [16, 22, 26] };
 
 function paintField() {
-  // base: the film curve over a structured scene-luminance
+  // what is the view facing? (drives the azimuth-weighted horizon + passes)
+  const dSun = wrap180(sun.az - state.viewAz) * Math.PI / 180;
+  const azBright = 0.5 + 0.5 * Math.cos(dSun);          // 1 at the sun, 0 opposite
+  const sunFace  = clamp(Math.cos(dSun), 0, 1);
+  const antiFace = clamp(-Math.cos(dSun), 0, 1);
+  const twil  = clamp(1 - Math.abs(sun.alt + 6) / 17, 0, 1);   // twilight strength
+  const night = clamp(1 - (sun.alt + 11) / 9, 0, 1);           // 0 at −11° .. 1 at −20°
+
+  // base: the film curve over a structured, azimuth-weighted scene-luminance
   const g = ctx.createLinearGradient(0, 0, 0, H);
   const N = 24;
   let zenRGB = null;
   for (let i = 0; i <= N; i++) {
     const p = i / N;                                   // 0 top .. 1 bottom
     const altFrac = (horizonY - p * H) / horizonY;     // 1 top, 0 horizon, <0 below
-    const c = skyColor(altFrac, sun.alt);
+    const c = skyColor(altFrac, sun.alt, azBright);
     g.addColorStop(p, rgb(c));
     if (i === 0) zenRGB = c;
   }
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  const horRGB = skyColor(0, sun.alt);
-  field = { zen: zenRGB, hor: horRGB, grd: skyColor(-0.12, sun.alt) };
+  field = {
+    zen: zenRGB,
+    hor: skyColor(0, sun.alt, azBright),
+    grd: skyColor(-0.12, sun.alt, azBright),
+  };
 
-  // azimuth blend — what is the view facing?
-  const dSun = wrap180(sun.az - state.viewAz) * Math.PI / 180;
-  const sunFace  = clamp(Math.cos(dSun), 0, 1);
-  const antiFace = clamp(-Math.cos(dSun), 0, 1);
-  const twil = clamp(1 - Math.abs(sun.alt + 6) / 17, 0, 1);   // twilight strength
+  // faint airglow / skyglow low at the horizon once it's properly dark
+  if (night > 0.02) {
+    const ag = oklchToRgb(0.42, 0.05, conditions.airglowHue);
+    const gy = horizonY - (22 / ALT_TOP) * horizonY;
+    const air = ctx.createLinearGradient(0, gy, 0, horizonY + 8);
+    air.addColorStop(0, `rgba(${ag[0]},${ag[1]},${ag[2]},0)`);
+    air.addColorStop(1, `rgba(${ag[0]},${ag[1]},${ag[2]},${conditions.airglowAmt * night})`);
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = air;
+    ctx.fillRect(0, gy, W, horizonY - gy + 8);
+    ctx.restore();
+  }
 
-  // sunward horizon: bright segment + bloom + red halation
-  const glow = clamp(1 - Math.abs(sun.alt + 3) / 20, 0, 1) * (0.32 + 0.68 * sunFace);
+  // sunward horizon: a bright, tight bloom core + a wider red halation.
+  // Additive ('screen') so it reads as light, not paint.
+  const glow = clamp(1 - Math.abs(sun.alt + 3) / 20, 0, 1) * (0.28 + 0.72 * sunFace);
   if (glow > 0.01) {
     const gx = clamp(project(0, sun.az).x, -0.5 * W, 1.5 * W);
-    const reach = W * (0.55 + 0.55 * conditions.turbidity);
-    const gcore = Math.round(196 - 26 * conditions.turbidity);
-    const gwarm = Math.round(148 + 44 * conditions.turbidity);
-    const core = ctx.createRadialGradient(gx, horizonY + 8, 0, gx, horizonY + 8, reach);
-    core.addColorStop(0.00, `rgba(255,${gcore},${gwarm},${0.52 * glow})`);
-    core.addColorStop(0.34, `rgba(255,124,80,${0.16 * glow})`);   // halation ring
-    core.addColorStop(1.00, 'rgba(255,124,80,0)');
+    const reach = W * (0.42 + 0.5 * conditions.turbidity);
+    const gcore = Math.round(206 - 30 * conditions.turbidity);
+    const gwarm = Math.round(150 + 46 * conditions.turbidity);
+    const core = ctx.createRadialGradient(gx, horizonY + 6, 0, gx, horizonY + 6, reach);
+    core.addColorStop(0.00, `rgba(255,242,220,${0.60 * glow})`);         // hot near-white core
+    core.addColorStop(0.13, `rgba(255,${gcore},${gwarm},${0.40 * glow})`);
+    core.addColorStop(0.36, `rgba(255,120,78,${0.15 * glow})`);          // halation ring
+    core.addColorStop(0.70, `rgba(255,120,78,${0.04 * glow})`);
+    core.addColorStop(1.00, 'rgba(255,120,78,0)');
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
     ctx.fillStyle = core;
     ctx.fillRect(0, 0, W, H);
+    ctx.restore();
   }
 
   // antisolar horizon: Belt of Venus above the Earth's shadow
   if (twil > 0.02 && antiFace > 0.02) {
     const bA = antiFace * twil;
+    const bc = oklchToRgb(0.74, 0.105, conditions.beltHue);   // salmon .. rose
     const by = horizonY - (conditions.beltAlt / ALT_TOP) * horizonY;
     const bh = (conditions.beltThick / ALT_TOP) * horizonY;
     const belt = ctx.createLinearGradient(0, by - bh, 0, by + bh);
-    belt.addColorStop(0.0, 'rgba(228,152,150,0)');
-    belt.addColorStop(0.5, `rgba(230,150,146,${0.20 * bA})`);      // salmon
-    belt.addColorStop(1.0, 'rgba(228,152,150,0)');
+    belt.addColorStop(0.0, `rgba(${bc[0]},${bc[1]},${bc[2]},0)`);
+    belt.addColorStop(0.5, `rgba(${bc[0]},${bc[1]},${bc[2]},${0.27 * bA})`);
+    belt.addColorStop(1.0, `rgba(${bc[0]},${bc[1]},${bc[2]},0)`);
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
     ctx.fillStyle = belt;
     ctx.fillRect(0, by - bh, W, bh * 2);
+    ctx.restore();
 
     const sh = (7 / ALT_TOP) * horizonY;
     const shadow = ctx.createLinearGradient(0, horizonY - sh, 0, horizonY + 6);
-    shadow.addColorStop(0, 'rgba(30,42,64,0)');
-    shadow.addColorStop(1, `rgba(28,40,62,${0.30 * bA})`);         // cool dip
+    shadow.addColorStop(0, 'rgba(26,38,60,0)');
+    shadow.addColorStop(1, `rgba(24,36,58,${0.34 * bA})`);         // cool dip
     ctx.fillStyle = shadow;
     ctx.fillRect(0, horizonY - sh, W, sh + 6);
   }
 
-  // the seam: a soft brightening at the horizon, never a drawn line
+  // the seam: a soft brightening at the horizon, never a drawn line —
+  // mostly a sunward effect (scaled by azBright so it doesn't lift the
+  // antisolar / Earth's-shadow horizon)
   const sc = blend(field.hor, [255, 250, 240], 0.18);
+  const seamA = (0.05 + 0.10 * glow) * (0.35 + 0.65 * azBright);
   const seam = ctx.createLinearGradient(0, horizonY - 22, 0, horizonY + 12);
   seam.addColorStop(0,    `rgba(${sc[0]},${sc[1]},${sc[2]},0)`);
-  seam.addColorStop(0.62, `rgba(${sc[0]},${sc[1]},${sc[2]},${0.07 + 0.10 * glow})`);
+  seam.addColorStop(0.62, `rgba(${sc[0]},${sc[1]},${sc[2]},${seamA.toFixed(3)})`);
   seam.addColorStop(1,    `rgba(${sc[0]},${sc[1]},${sc[2]},0)`);
   ctx.fillStyle = seam;
   ctx.fillRect(0, horizonY - 22, W, 34);

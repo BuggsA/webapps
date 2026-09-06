@@ -102,9 +102,15 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - **Process note added:** `docs/tonight-art-direction.md` section
   "Process -- divergent generation" -- generate wide (forcing constraints,
   quotas, non-web refs), then converge. Applies to every visual call.
-- Palette tuning still open (next pass): a whisper of airglow lift at deep
-  night (a touch flat now); mid-band could carry a little more life;
-  tighten the halation core.
+- **Palette tuning pass: DONE.** The bright segment now concentrates
+  toward the sun's azimuth (base scene-luminance is azimuth-weighted;
+  antisolar horizon goes dark = Earth's-shadow territory) rather than a
+  uniform horizon band -- turning the view genuinely changes it. Tighter
+  hot halation core (additive `screen`). Faint seeded airglow / skyglow
+  band at deep night (usually green, sometimes sodium). Mid-band carries a
+  little more chroma + a per-night warm/cool `tempShift`. Belt of Venus
+  more present, hue seeded salmon..rose. Daytime brightens toward the
+  sun's side. Seam no longer lifts the antisolar horizon.
 - **Test-env note:** the browser pane restores a localStorage snapshot on
   reload (stale "Reston" place) and reports the tab `hidden` (rAF paused)
   -- test the sky by calling `enter()` + driving `frame()` manually. Not
