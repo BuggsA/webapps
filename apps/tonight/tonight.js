@@ -75,6 +75,7 @@ const el = {
   controls: document.getElementById('controls'),
   placard:  document.getElementById('placard'),
   card:     document.getElementById('card'),
+  btnClouds:document.getElementById('btn-clouds'),
   btnNow:   document.getElementById('btn-now'),
   btnPlay:  document.getElementById('btn-play'),
   scrub:    document.getElementById('scrub'),
@@ -1078,6 +1079,15 @@ function makeVerdict() {
   return 'broken cloud tonight';
 }
 
+// the cloud toggle only appears when there's cloud worth toggling
+function syncCloudBtn() {
+  const show = !!wx && (wx.avgNight || 0) > 12;
+  el.btnClouds.hidden = !show;
+  el.btnClouds.setAttribute('aria-pressed', String(veilOn));
+  el.btnClouds.style.opacity = veilOn ? '' : '0.4';
+}
+el.btnClouds.addEventListener('click', () => { veilOn = !veilOn; syncCloudBtn(); });
+
 function applyForecast() {
   if (!wx) return;
   wx.verdict = makeVerdict();
@@ -1087,6 +1097,7 @@ function applyForecast() {
   bakeGrain(); bakeGrainLayer();
   _placardKey = '';           // force the placard sub to pick up the verdict
   updatePlacard();
+  syncCloudBtn();
 }
 
 async function loadForecast() {
@@ -1115,40 +1126,55 @@ async function loadForecast() {
   } catch (_) { /* offline — no veil, date-only line */ }
 }
 
-// the cloud veil — a soft, lumpy, drifting grey layer over everything,
-// its coverage set by the cloud % at state.t
+// fractal noise over the seeded value noise — 3 octaves + one coarse domain
+// warp, so cloud looks billowy and fractal rather than like round blobs
+function fbm(nz, x, y) {
+  x += (nz(x * 0.5 + 19, y * 0.5) - 0.5) * 2.4;
+  y += (nz(x * 0.5, y * 0.5 + 7) - 0.5) * 2.4;
+  return (0.5 * nz(x, y) + 0.28 * nz(x * 2.03, y * 2.03)
+        + 0.14 * nz(x * 4.11, y * 4.11)) / 0.92;
+}
+
+// the cloud veil — a soft, fractal, slowly drifting layer over everything;
+// how much of the sky it covers is set by the cloud % at state.t. The noise
+// buffer only regenerates when the drift key moves AND at most ~4x/second.
 const veilCv = document.createElement('canvas');
-veilCv.width = 96; veilCv.height = 60;
-let _veilImg = null, _veilAt = -1;
+veilCv.width = 148; veilCv.height = 96;
+let _veilImg = null, _veilKey = '', _veilRegenAt = 0, veilOn = true;
 function paintVeil() {
+  if (!veilOn) return;
   const cc = cloudAt(state.t);
   if (cc == null || cc < 3) return;
   const k = cc / 100;                                   // 0..1 coverage
   const w = veilCv.width, h = veilCv.height;
   const vx = veilCv.getContext('2d');
   const drift = REDUCED ? 812.3 : state.t.getTime() / 1000 * 0.0009;
-  const keyN = Math.round(drift * 300);
-  if (keyN !== _veilAt || !_veilImg) {
-    _veilAt = keyN;
+  const key = Math.round(drift * 160) + ':' + Math.round(k * 40);
+  const nowMs = performance.now();
+  if ((key !== _veilKey && nowMs - _veilRegenAt > 250) || !_veilImg) {
+    _veilKey = key; _veilRegenAt = nowMs;
     if (!_veilImg) _veilImg = vx.createImageData(w, h);
-    const img = _veilImg;
-    // cloud colour: a desaturated grey, tinted by the field so it fits the hour
-    const gc = blend(field.hor, [150, 156, 168], 0.62);
+    const img = _veilImg, nz = conditions.noise;
+    // cloud is LIT by skyglow — a pale grey that dims the stars, not a void.
+    // Tinted by the hour: warm-grey at dusk, cool-grey at midnight.
+    const body = blend(field.hor, [150, 156, 166], 0.82);   // cloud mass
+    const wisp = blend(body, [190, 194, 202], 0.55);        // thin edges, lighter
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const n = 0.6 * conditions.noise(x / 13 + drift, y / 10 + 40 - drift * 0.4)
-              + 0.4 * conditions.noise(x / 5 - drift * 0.7, y / 4 + 40);
-      // more of the field becomes cloud as k rises
-      const dens = smooth01((n - (1 - k) - 0.12) / 0.4);
+      const n = fbm(nz, x / 20 + drift, y / 15 - drift * 0.55);
+      let d = clamp((n - (1 - k) + 0.04) * 2.1, 0, 1);
+      d = d * d * (3 - 2 * d);                              // feathered, not clipped
+      const c = blend(wisp, body, d);
       const i = (y * w + x) * 4;
-      img.data[i] = gc[0]; img.data[i + 1] = gc[1]; img.data[i + 2] = gc[2];
-      img.data[i + 3] = Math.round(clamp(dens, 0, 1) * 235);
+      img.data[i] = c[0]; img.data[i + 1] = c[1]; img.data[i + 2] = c[2];
+      img.data[i + 3] = Math.round(d * 200);
     }
     vx.putImageData(img, 0, 0);
   }
   ctx.save();
-  ctx.globalAlpha = smooth01(k) * 0.9;
+  // a veil that *dims* the sky, never erases it — peaks around half opacity
+  ctx.globalAlpha = smooth01(k) * 0.55;
   ctx.imageSmoothingEnabled = true;
-  ctx.filter = `blur(${Math.round(H * 0.012)}px)`;
+  ctx.filter = `blur(${Math.round(H * 0.016)}px)`;          // hide the upscale
   ctx.drawImage(veilCv, 0, 0, w, h, 0, 0, W, H);
   ctx.filter = 'none';
   ctx.restore();
@@ -1427,6 +1453,7 @@ function showLocate(show) {
   el.controls.hidden = show;
   el.placard.hidden = show;
   if (show) {
+    el.btnClouds.hidden = true;
     closeCard();
     el.input.value = ''; el.results.hidden = true; el.msg.hidden = true; el.input.focus();
   }
