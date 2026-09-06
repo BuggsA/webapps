@@ -68,6 +68,82 @@ screenshots an hour apart should look like different artworks.
 
 ---
 
+## Chrome (added 2026-09-06, research-backed)
+
+The sky rendering already carries the direction. The **chrome** — buttons,
+inputs, the time bar, the locate prompt — was the part that still "looked
+like an AI site". This is why, and what to do instead.
+
+**Why it drifted:** homogenised UI is a documented phenomenon (CHI 2021,
+Goree et al., *Investigating the Homogenization of Web Design* — designs
+~30% more similar 2007→2020, driven by shared libraries, not content; the
+AI wave — "Tailwind indigo-500", the "beige internet" — accelerated it).
+Tools hand everyone the same defaults, so the defaults *become* the look.
+The repo's tokens (`ink`/`ember`) were already right; the chrome went
+generic anyway because it **reached for the patterns**: a frosted pill bar,
+`border-radius` everywhere, drop shadows, a centred card, system-UI type,
+a filled-primary + ghost-secondary button pair.
+
+**Principle:** chrome is *marginalia written onto the field*, not components
+placed on top of it. Tonight's hero is a real sky computed for the viewer's
+location — "yours and no one else's". The chrome's job is to get out of its
+way, not compete with it.
+
+### Banned in chrome (hard rules — in the checklist)
+- **No `border-radius`** on any control, input, or container. The only
+  curves are the type itself and the scrub knob (a circle).
+- **No `backdrop-filter` / blur.** Anywhere.
+- **No `box-shadow` / drop shadows.** Depth is the field + type weight/contrast.
+- **No system-UI / Inter / Geist font.** All chrome is the display serif.
+- **No centred containers or modals.** Chrome hangs on the lower-left optical
+  margin, asymmetric, aligned to the placard.
+- **No bordered pill buttons; no filled-primary + ghost-secondary pair.**
+- **No `<div>` toolbar with its own background.** Controls sit on the field.
+- **No background-colour hover wash.** (See feedback, below.)
+
+### Positive spec
+- **Type:** Fraunces, self-hosted woff2 in `apps/tonight/fonts/` (SIL OFL,
+  same font as `apps/until/`). Used for *all* chrome — words, clock, prompt,
+  the Phase-2 object card. `font-display: swap`; `ui-serif` first paint.
+  Numerals: Fraunces lining figures — one family, for unity.
+- **Time controls = a caption line** on the field, one baseline near the
+  bottom, aligned to the placard's left edge (not centred). *Now* and
+  *Play* are words with a thin underline; real `<button>`s underneath.
+- **Scrub = a hairline timeline** + a small filled knob. Native
+  `<input type="range">` kept for keyboard/AT, visually reduced to a ~1 px
+  rule; elapsed portion a touch brighter.
+- **Clock =** set serif text beside the words, in the *place's* timezone.
+- **Locate prompt =** a line of serif text into the field ("Where are you
+  tonight?"), the input rendered as a bare **bottom-border writing line**
+  (no box, no radius), results as a plain hairline-separated list, "use my
+  location" as an underlined phrase. Same lower-left margin as the placard.
+  Sky renders live behind it.
+- **Chrome colour is derived from the live field:** take the zenith colour,
+  raise L, drop C, clamp to ≥ 4.5:1 contrast against the darkest field
+  state it sits over. Chrome is warm at dusk, cool at midnight — in the scene.
+- **Feedback:** underline draws in / letter-spacing opens a hair / the word
+  dims on press. Never a background wash. All collapse to instant under
+  `prefers-reduced-motion`.
+- **Voice:** unhurried, concrete, a little warm. No "Empower / Unlock /
+  Seamless / two abstract nouns". Say what's true, plainly.
+
+### Accessibility floor (so "beautiful" never breaks "usable")
+- Real semantic elements, keyboard operable, **visible focus** as a
+  hairline/underline state (not a rounded ring).
+- Every chrome text colour ≥ 4.5:1 against the worst-case field behind it.
+- Full `prefers-reduced-motion` path.
+- Interactive hit target ≥ 44 px even when the visible mark is a word or a
+  hairline — pad the hit area.
+
+### Drift check (do this, periodically)
+At each phase, before commit: screenshot at **≥ 3 times of night**, then ask
+out loud — *"does any part of this look like it came from a component
+library?"* If yes, name it and fix it before committing. Keep the tells
+list in view: Inter · rounded-2xl · shadow-lg · glass blur · indigo/violet ·
+centred stack · filled+ghost button pair · abstract 3D blob.
+
+---
+
 ## Per-phase design checklist
 
 Run this before every phase commit. All must hold (or be explicitly N/A for
@@ -80,18 +156,24 @@ that phase's scope):
 - [ ] Chrome is minimal, bottom-weighted, translucent. Nothing persistent mid-screen.
 - [ ] Graticule appears **only during drag**; leader line appears **only on selection**.
 - [ ] Motion is continuous / cross-fade. Nothing pulses, blinks or bounces. `prefers-reduced-motion` honoured.
-- [ ] Type is the one display serif, large + sparse; times as lining figures.
-- [ ] Layout is asymmetric, lower-weighted, full-bleed. No centred hero.
+- [ ] Type is the one display serif (Fraunces), large + sparse — **including all chrome**; times as lining figures.
+- [ ] Layout is asymmetric, lower-weighted, full-bleed. No centred hero, no centred prompt.
+- [ ] **Chrome banned list holds:** no `border-radius`, no `backdrop-filter`, no `box-shadow`, no system-UI font, no centred container, no pill/ghost buttons, no toolbar `<div>` background, no hover wash.
+- [ ] Chrome text colour is derived from the field and ≥ 4.5:1 contrast; focus is a hairline/underline, not a ring.
+- [ ] Interactive hit targets ≥ 44 px even where the mark is a word or hairline.
+- [ ] **Drift check done:** screenshots at ≥ 3 times of night; nothing reads as component-library.
 - [ ] Anti-patterns absent (see below).
 - [ ] Commit message references `docs/tonight-art-direction.md`.
 
 ## Anti-patterns — keep out, every phase
 
 centred hero + CTA · 3-card / feature grids · excessive cards · giant rounded
-containers · purple/blue gradients · glowing blobs · glassmorphism · generic
-SaaS dashboard imagery · excessive pills · stock photos · default shadcn look ·
-generic Inter/Geist type · perfectly symmetrical layouts · repetitive section
-structures.
+containers · `border-radius` reflex · `shadow-lg` drop shadows · purple/blue
+gradients · Tailwind indigo/violet accents · glowing blobs · glassmorphism /
+`backdrop-filter` · frosted pill toolbars · generic SaaS dashboard imagery ·
+excessive pills · filled-primary + ghost-secondary button pair · stock photos ·
+default shadcn look · system-UI / Inter / Geist type · perfectly symmetrical
+layouts · repetitive section structures.
 
 Originality must not hurt usability: **familiar interaction patterns**
 (drag to turn, a scrub, tap for detail), **distinctive** type / composition /

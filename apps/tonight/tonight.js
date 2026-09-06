@@ -36,14 +36,14 @@ const state = {
   t: new Date(),
   viewAz: 180,              // start facing due south
   playing: false,
+  located: false,           // false until a place is chosen (sky still renders)
   dusk: null, dawn: null,   // civil-twilight bounds for the scrub, for t's day
 };
 
 /* --- element handles ------------------------------------------------- */
 const el = {
   canvas:   document.getElementById('sky'),
-  locate:   document.getElementById('locate'),
-  form:     document.getElementById('place-form'),
+  locate:   document.getElementById('locate'),   // this element IS the <form>
   input:    document.getElementById('place-input'),
   results:  document.getElementById('place-results'),
   useDevice:document.getElementById('use-device'),
@@ -57,6 +57,7 @@ const el = {
   btnWhere: document.getElementById('btn-where'),
 };
 const ctx = el.canvas.getContext('2d');
+const root = document.documentElement;
 
 /* --- canvas sizing (DPR-aware) ------------------------------------------- */
 let W = 0, H = 0, horizonY = 0, dpr = 1;
@@ -152,6 +153,24 @@ function skyColors(sunAlt) {
   };
 }
 const labLerp = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)];
+
+// Relative luminance of an [r,g,b] 0..255 — used to size the bottom scrim.
+const srgbLin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+const relLum = c => 0.2126 * srgbLin(c[0]) + 0.7152 * srgbLin(c[1]) + 0.0722 * srgbLin(c[2]);
+
+// Chrome colour, derived from the live field: a light tint carrying a hint of
+// the sky's temperature (warm at dusk, cool at midnight). Legibility at any
+// hour is held by the bottom scrim in paintField, not by flipping the chrome.
+let chromeRGB = [244, 240, 232];      // also used by the canvas graticule
+function setChromeVars() {
+  const tint = labLerp(field.zenLab, field.horLab, 0.42);
+  const a = tint[1] * 0.34, b = tint[2] * 0.34;
+  const m = oklabToRgb(0.90, a, b);
+  chromeRGB = m;
+  root.style.setProperty('--chrome',      `rgba(${m[0]},${m[1]},${m[2]},0.94)`);
+  root.style.setProperty('--chrome-soft', `rgba(${m[0]},${m[1]},${m[2]},0.60)`);
+  root.style.setProperty('--chrome-line', `rgba(${m[0]},${m[1]},${m[2]},0.28)`);
+}
 // OKLCH wrapper — still handy for the one hand-placed warm glow colour
 const oklchToRgb = (L, C, h) => oklabToRgb(...lchToLab([L, C, h]));
 
@@ -240,6 +259,18 @@ function paintField() {
   vg.addColorStop(1, 'rgba(0,0,0,0.30)');
   ctx.fillStyle = vg;
   ctx.fillRect(0, 0, W, H);
+
+  // bottom scrim: keep the lower field dark enough for the light chrome at any
+  // hour. Invisible at night (field already dark); a soft ground-dusk by day.
+  const scrimA = clamp(0.12 + relLum(field.hor) * 1.05, 0.12, 0.66);
+  const sg = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  sg.addColorStop(0, 'rgba(4,5,12,0)');
+  sg.addColorStop(0.7, `rgba(4,5,12,${(scrimA * 0.6).toFixed(3)})`);
+  sg.addColorStop(1, `rgba(4,5,12,${scrimA.toFixed(3)})`);
+  ctx.fillStyle = sg;
+  ctx.fillRect(0, H * 0.55, W, H * 0.45);
+
+  setChromeVars();
 }
 
 /* --- graticule: alt/az scaffold, visible ONLY during a drag ---------- */
@@ -247,18 +278,20 @@ const DIRS = [
   { az: 0, s: 'N' }, { az: 45, s: 'NE' }, { az: 90, s: 'E' }, { az: 135, s: 'SE' },
   { az: 180, s: 'S' }, { az: 225, s: 'SW' }, { az: 270, s: 'W' }, { az: 315, s: 'NW' },
 ];
-const GFONT = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+const GFONT = 'ui-serif, "Iowan Old Style", Georgia, serif';
 let gratT = 0, gratTarget = 0;   // eased 0..1 — fast in on drag, slow out after
 
 function paintGraticule() {
   if (gratT < 0.012) return;
   const k = gratT;
+  const C = chromeRGB.join(',');            // graticule ink = the chrome colour
+  const ink = alpha => `rgba(${C},${alpha})`;
   ctx.save();
   ctx.lineWidth = 1;
   ctx.textBaseline = 'alphabetic';
 
   // faint horizon reference — only here, never at rest
-  ctx.strokeStyle = `rgba(255,255,255,${0.13 * k})`;
+  ctx.strokeStyle = ink(0.13 * k);
   ctx.beginPath(); ctx.moveTo(0, horizonY + 0.5); ctx.lineTo(W, horizonY + 0.5); ctx.stroke();
 
   // compass ticks + labels along the horizon
@@ -267,24 +300,24 @@ function paintGraticule() {
     const p = project(0, d.az);
     if (!p.visible) continue;
     const major = d.s.length === 1;
-    ctx.strokeStyle = `rgba(255,255,255,${(major ? 0.34 : 0.18) * k})`;
+    ctx.strokeStyle = ink((major ? 0.34 : 0.18) * k);
     ctx.beginPath();
     ctx.moveTo(p.x, horizonY - (major ? 9 : 5));
     ctx.lineTo(p.x, horizonY + (major ? 9 : 5));
     ctx.stroke();
-    ctx.fillStyle = `rgba(255,255,255,${(major ? 0.62 : 0.34) * k})`;
+    ctx.fillStyle = ink((major ? 0.66 : 0.38) * k);
     ctx.font = `${major ? 13 : 11}px ${GFONT}`;
     ctx.fillText(d.s, p.x, horizonY + (major ? 25 : 19));
   }
 
   // altitude scale up the left edge (borrowed from Signal)
   ctx.textAlign = 'left';
-  ctx.font = `11px ${GFONT}`;
+  ctx.font = `12px ${GFONT}`;
   for (const a of [30, 60]) {
     const y = horizonY - (a / ALT_TOP) * horizonY;
-    ctx.strokeStyle = `rgba(255,255,255,${0.15 * k})`;
+    ctx.strokeStyle = ink(0.15 * k);
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(18, y); ctx.stroke();
-    ctx.fillStyle = `rgba(255,255,255,${0.4 * k})`;
+    ctx.fillStyle = ink(0.42 * k);
     ctx.fillText(a + '°', 22, y + 4);
   }
   ctx.restore();
@@ -304,7 +337,10 @@ function frame(now) {
     updateClock();
   }
 
-  if (now - lastCompute >= COMPUTE_MS || !lastCompute) {
+  if (!state.located) {
+    // no place yet — hold a calm nautical-twilight sky behind the prompt
+    sun = { alt: -8, az: 245 };
+  } else if (now - lastCompute >= COMPUTE_MS || !lastCompute) {
     lastCompute = now;
     sun = altaz(A.Body.Sun, state.t);
   }
@@ -315,7 +351,7 @@ function frame(now) {
 
   ctx.clearRect(0, 0, W, H);
   paintField();
-  paintGraticule();
+  if (state.located) paintGraticule();
   paintGrain();
 
   requestAnimationFrame(frame);
@@ -353,7 +389,7 @@ el.canvas.addEventListener('pointercancel', endDrag);
 function setPlaying(on) {
   state.playing = on;
   el.btnPlay.setAttribute('aria-pressed', String(on));
-  el.btnPlay.querySelector('.ctl-play-t').textContent = on ? 'Pause' : 'Play';
+  el.btnPlay.textContent = on ? 'Pause' : 'Play';
 }
 function computeDuskDawn() {
   // Anchor the search so we always get THIS night's dusk and the next dawn,
@@ -378,6 +414,10 @@ function syncScrubFromT() {
   const span = state.dawn - state.dusk;
   const u = span > 0 ? (state.t - state.dusk) / span : 0;
   el.scrub.value = String(Math.round(clamp(u, 0, 1) * 1000));
+  setScrubFill();
+}
+function setScrubFill() {
+  el.scrub.style.setProperty('--p', (Number(el.scrub.value) / 10) + '%');
 }
 // date/time parts in the PLACE's timezone (not the viewer's)
 function tzParts(d) {
@@ -421,6 +461,7 @@ el.scrub.addEventListener('input', () => {
   setPlaying(false);
   const u = Number(el.scrub.value) / 1000;
   state.t = new Date(state.dusk.getTime() + u * (state.dawn - state.dusk));
+  setScrubFill();
   updateClock();
 });
 
@@ -492,7 +533,7 @@ el.input.addEventListener('input', () => {
     } catch (_) { if (mine === searchSeq) say('Search is offline — try "Use my location".'); }
   }, 250);
 });
-el.form.addEventListener('submit', async e => {
+el.locate.addEventListener('submit', async e => {
   e.preventDefault();
   const q = el.input.value.trim();
   if (q.length < 2) return;
@@ -522,6 +563,7 @@ function enter(lat, lon, place, tz) {
   state.lat = lat; state.lon = lon; state.place = place || '';
   // tz of the place; device location has none -> fall back to the viewer's
   state.tz = tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  state.located = true;
   _placardDay = '';
   savePlace();
   showLocate(false);
@@ -536,6 +578,7 @@ function enter(lat, lon, place, tz) {
 function init() {
   resize();
   makeGrain();
+  startLoop();               // the sky renders even before a place is chosen
   setPlaying(false);
   if (loadPlace()) enter(state.lat, state.lon, state.place, state.tz);
   else showLocate(true);

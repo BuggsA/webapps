@@ -68,13 +68,25 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - All six "decisions still open" in the build plan are now resolved
   (table in the art-direction doc). Astronomy: vendored
   `astronomy-engine` (`lib/astronomy.js`, 116 KB, MIT).
-- **Phase 1 (skeleton)**: location (device/search/remembered), horizon
-  canvas + drag-to-turn, time model (now/play/scrub), sun-altitude
-  gradient. Functional, verified in-browser (Reykjavik dusk/dawn math
-  checks out). Visual layer is still the pre-Nocturne skeleton -- being
-  reworked to the art direction next. Not committed yet.
-- Known Phase 1 bug: clock shows the *viewer's* timezone, not the
-  selected place's. Fix in Phase 1 polish.
+- **Phase 1 (skeleton): DONE, committed 3cdd073.** Location
+  (device/search/remembered, tz-aware), horizon canvas + drag-to-turn,
+  time model (now/play/scrub), and the sky as an OKLab colour field
+  derived from sun altitude -- Nocturne (seam horizon, baked grain,
+  drag-only graticule, place name in the field).
+- **Chrome rework: DONE.** The bottom pill / glass blur / rounded card /
+  system-sans / shadcn button pair all read as "generic AI site" -- see
+  the research-backed **CHROME section** now in
+  `docs/tonight-art-direction.md` (banned list, per-phase drift check).
+  Rebuilt: Fraunces self-hosted for *all* chrome; time controls are a
+  caption line on the field (underlined words + a hairline scrub);
+  locate is a prompt written into the field, not a card; chrome colour
+  derived from the live field each frame; a bottom scrim holds daytime
+  legibility. No border-radius (bar the scrub knob), no backdrop-filter,
+  no box-shadow. Drift check passed at day / civil dusk / deep night /
+  drag / mobile.
+- Next: **Phase 2 (bodies)** -- moon (position + phase + lit
+  orientation), the five planets, twilight bands, tap-to-select ->
+  info card + the leader line + rule-based advice sentence.
 - Tier 1; no runtime network beyond the two keyless Open-Meteo fetches.
   Deploy (later, human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
 
