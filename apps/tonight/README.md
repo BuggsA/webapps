@@ -41,5 +41,16 @@ only runtime network is two keyless, CORS-open Open-Meteo calls — geocoding
 sky still renders fully offline without them. Vendors `astronomy-engine`
 (`lib/astronomy.js`, ~116 KB, MIT) locally; no CDNs.
 
+**Telemetry:** `telemetry.js` (a copy of `apps/_shared/telemetry.js`) is a
+tiny, portable event logger, loaded before `tonight.js`. It is **off by
+default** — `ENDPOINT = ''`, so nothing is sent; events only accumulate in a
+capped in-memory buffer (`window.__telemetry.buf`, or load with
+`?debug=telemetry`). It is **PII-free**: no latitude/longitude, no stable
+identifier — a random per-load session id plus coarse context (viewport,
+dpr, timezone name, language, reduced-motion, touch, referrer host). The app
+records interaction and one per-session frame-time sample. To actually
+collect, point `ENDPOINT` at a POST collector and add a line to the privacy
+copy above.
+
 **To remove:** delete `apps/tonight/` and run
 `aws s3 rm s3://<bucket>/tonight/ --recursive`.

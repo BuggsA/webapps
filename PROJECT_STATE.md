@@ -216,6 +216,21 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
     fast lapses; dusk/dawn recompute on day-change. `dtReal` clamped to
     [0, 0.05] so a clock jump / bg tab can't fling time. `PLAY_RATE`
     const removed.
+  - **Telemetry added** (`apps/_shared/telemetry.js`, canonical, copied to
+    `apps/tonight/telemetry.js` and loaded before `tonight.js`). Portable,
+    **off by default** -- `ENDPOINT = ''` so nothing leaves the device;
+    events accumulate in a capped in-memory ring only (`window.__telemetry.buf`,
+    or `?debug=telemetry` to log them). **PII-free**: no lat/lon, no stable
+    id -- a random per-load session id plus coarse context (viewport, dpr,
+    timezone *name*, lang, reduced-motion, touch, referrer host). ~20
+    `track()` calls in `tonight.js`: `located` (with a `via` source),
+    `play` mode changes, `scrub`, `turn` (drag/key), `select`, `forecast`
+    ok/cache/fail, `geo`/`geocode`, `clouds` toggle, `relocate`, and one
+    per-session `perf` sample (median / p95 frame time + fps over 120 real
+    frames). To actually collect: set `ENDPOINT` to a POST collector and
+    add a line to the privacy copy. `track()` merges `base()` context
+    first then caller props on top, so a metric key always wins over a
+    same-named context field.
 - **v1 is ready to deploy:** `.\scripts\deploy-app.ps1 -Name tonight`
   (human-run), then re-sync `hosting/site-root/` with the app listed.
 - **Phase 6 (post-v1): ISS passes** -- committed TLE snapshot +

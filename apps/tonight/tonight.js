@@ -34,6 +34,9 @@
                            advice(), paintLeader()
      WEATHER             — loadForecast() (Open-Meteo, cached), cloudAt(),
                            makeVerdict(), paintVeil() (drifting cloud layer)
+     TELEMETRY           — track() calls throughout; see telemetry.js (off by
+                           default, PII-free, sendBeacon on hide when an
+                           endpoint is set). Portable: apps/_shared/telemetry.js
      THE LOOP            — frame(); startLoop(); visibilitychange restart
      INPUT               — drag to turn, tap to select, arrow keys / Esc
      TIME MODEL          — Play cycle (setPlayMode: Live / 10m / 3m / 1m / 20s,
@@ -44,6 +47,8 @@
 'use strict';
 
 const A = window.Astronomy;
+// telemetry.js loads first; degrade to a no-op if it somehow didn't
+const track = (window.Telemetry && window.Telemetry.track) || function () {};
 
 /* --- tunables --------------------------------------------------------- */
 const HFOV      = 110;      // horizontal field of view, degrees
@@ -934,6 +939,7 @@ function advice(o) {
 }
 
 function openCard(sel) {
+  track('select', { kind: sel.kind, name: sel.name });
   selected = sel;
   el.card.querySelector('.card-name').textContent = sel.name;
   el.card.hidden = false;
@@ -1086,7 +1092,7 @@ function syncCloudBtn() {
   el.btnClouds.setAttribute('aria-pressed', String(veilOn));
   el.btnClouds.style.opacity = veilOn ? '' : '0.4';
 }
-el.btnClouds.addEventListener('click', () => { veilOn = !veilOn; syncCloudBtn(); });
+el.btnClouds.addEventListener('click', () => { veilOn = !veilOn; syncCloudBtn(); track('clouds', { on: veilOn ? 1 : 0 }); });
 
 function applyForecast() {
   if (!wx) return;
@@ -1107,7 +1113,9 @@ async function loadForecast() {
   try {
     const c = JSON.parse(localStorage.getItem(WX_KEY) || 'null');
     if (c && c.lat === rlat && c.lon === rlon && Date.now() - c.at < 3600e3) {
-      wx = { base: c.base, cloud: c.cloud }; applyForecast(); return;
+      wx = { base: c.base, cloud: c.cloud }; applyForecast();
+      track('forecast', { ok: 1, cache: 1, avg: Math.round(wx.avgNight || 0) });
+      return;
     }
   } catch (_) {}
   try {
@@ -1115,7 +1123,7 @@ async function loadForecast() {
       + `?latitude=${rlat}&longitude=${rlon}&hourly=cloud_cover&forecast_days=2&timezone=auto`;
     const j = await (await fetch(url)).json();
     const times = j.hourly && j.hourly.time, cloud = j.hourly && j.hourly.cloud_cover;
-    if (!times || !cloud || !cloud.length) return;
+    if (!times || !cloud || !cloud.length) { track('forecast', { ok: 0, reason: 'empty' }); return; }
     // hourly.time[] are wall-clock strings in the place's tz; convert hour 0 to a UTC instant
     const base = Date.parse(times[0] + ':00Z') - (j.utc_offset_seconds || 0) * 1000;
     wx = { base, cloud: cloud.map(v => v == null ? 0 : v) };
@@ -1123,7 +1131,8 @@ async function loadForecast() {
       localStorage.setItem(WX_KEY, JSON.stringify({ lat: rlat, lon: rlon, at: Date.now(), base, cloud: wx.cloud }));
     } catch (_) {}
     applyForecast();
-  } catch (_) { /* offline — no veil, date-only line */ }
+    track('forecast', { ok: 1, cache: 0, avg: Math.round(wx.avgNight || 0) });
+  } catch (_) { track('forecast', { ok: 0, reason: 'fetch' }); /* offline — no veil */ }
 }
 
 // fractal noise over the seeded value noise — 3 octaves + one coarse domain
@@ -1182,10 +1191,28 @@ function paintVeil() {
 
 /* --- the loop ---------------------------------------------------------- */
 let lastFrame = 0, lastCompute = 0, running = false, rafId = 0, _stillAt = 0;
+const _perf = [];
 function frame(now) {
   if (!running) return;
   const dtReal = lastFrame ? (now - lastFrame) / 1000 : 0;
   lastFrame = now;
+
+  // one performance sample per session: median frame time over ~120 real
+  // frames once a place is set (median shrugs off stalls / tab switches)
+  if (state.located && _perf.length < 120 && dtReal > 0.004 && dtReal < 0.1) {
+    _perf.push(dtReal * 1000);
+    if (_perf.length === 120) {
+      // sort a fresh, finite-only copy — a stray non-finite sample would
+      // otherwise poison the comparator and misorder the array
+      const s = _perf.filter(n => n > 0 && n < 1000).sort((a, b) => a - b);
+      if (s.length >= 40) {
+        const med = s[s.length >> 1];
+        const p95 = s[Math.min(s.length - 1, Math.floor(s.length * 0.95))];
+        // key is medMs (not ms) — telemetry base() owns `ms` (session age)
+        track('perf', { medMs: +med.toFixed(1), p95Ms: +p95.toFixed(1), fps: Math.round(1000 / med) });
+      }
+    }
+  }
 
   if (state.playing) {
     if (playMode === 'Live') {
@@ -1271,7 +1298,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* --- drag to turn (with a little glide) · tap to select ------------ */
-let drag = null, flingVel = 0;
+let drag = null, flingVel = 0, _turnedKey = false;
 const firstHint = { active: false, t0: 0, a: 1 };
 
 // faint "you're facing X" cue on the horizon, plus a one-time swipe hint
@@ -1333,6 +1360,8 @@ function endDrag(e) {
     const rect = el.canvas.getBoundingClientRect();
     const hit = pickObject(e.clientX - rect.left, e.clientY - rect.top);
     if (hit) openCard(hit); else closeCard();
+  } else if (!tap) {
+    track('turn', { via: 'drag', fling: Math.abs(flingVel) > 5 ? 1 : 0 });
   }
 }
 el.canvas.addEventListener('pointerup', endDrag);
@@ -1347,6 +1376,7 @@ document.addEventListener('keydown', e => {
     if (inControl(e.target)) return;
     state.viewAz = wrap360(state.viewAz + (e.key === 'ArrowLeft' ? -10 : 10));
     firstHint.active = false;
+    if (!_turnedKey) { _turnedKey = true; track('turn', { via: 'key' }); }
     e.preventDefault();
   } else if (e.key === 'Escape' && selected) {
     closeCard();
@@ -1366,6 +1396,7 @@ const isLapse = n => n in LAPSE_RATE;
 
 function setPlayMode(name) {
   const prev = playMode;
+  if (name !== prev && state.located) track('play', { mode: name });
   playMode = name;
   state.playing = name !== 'Play';
   el.btnPlay.textContent = name === 'Play' ? 'Play' : name;
@@ -1455,7 +1486,7 @@ el.scrub.addEventListener('input', () => {
   setScrubFill();
   updateClock();
 });
-el.scrub.addEventListener('change', refreshCardRiseSet);   // once, on release
+el.scrub.addEventListener('change', () => { refreshCardRiseSet(); track('scrub'); });
 
 /* --- location ---------------------------------------------------------- */
 function savePlace() {
@@ -1514,7 +1545,7 @@ function renderResults(list) {
     b.innerHTML = `<span class="p-name"></span> <span class="p-sub"></span>`;
     b.querySelector('.p-name').textContent = item.name;
     b.querySelector('.p-sub').textContent = item.sub;
-    b.addEventListener('click', () => enter(item.lat, item.lon, item.name, item.tz));
+    b.addEventListener('click', () => enter(item.lat, item.lon, item.name, item.tz, 'search'));
     li.appendChild(b);
     el.results.appendChild(li);
   }
@@ -1530,8 +1561,10 @@ el.input.addEventListener('input', () => {
   el.input._t = setTimeout(async () => {
     try {
       const list = await geocode(q);
-      if (mine === searchSeq) renderResults(list);
-    } catch (_) { if (mine === searchSeq) say('Search is offline — try "Use my location".'); }
+      if (mine === searchSeq) { renderResults(list); track('geocode', { ok: 1, n: list.length }); }
+    } catch (_) {
+      if (mine === searchSeq) { say('Search is offline — try "Use my location".'); track('geocode', { ok: 0 }); }
+    }
   }, 250);
 });
 el.locate.addEventListener('submit', async e => {
@@ -1542,25 +1575,30 @@ el.locate.addEventListener('submit', async e => {
   try {
     const list = await geocode(q);
     say('');
-    if (list.length === 1) enter(list[0].lat, list[0].lon, list[0].name, list[0].tz);
+    if (list.length === 1) enter(list[0].lat, list[0].lon, list[0].name, list[0].tz, 'search');
     else renderResults(list);
   } catch (_) { say('Search is offline — try "Use my location".'); }
 });
 el.useDevice.addEventListener('click', () => {
-  if (!navigator.geolocation) { say('This device has no location service.'); return; }
+  track('geo', { ask: 1 });
+  if (!navigator.geolocation) { say('This device has no location service.'); track('geo', { ok: 0, reason: 'unsupported' }); return; }
   say('Asking your device…');
   navigator.geolocation.getCurrentPosition(
-    pos => { say(''); enter(pos.coords.latitude, pos.coords.longitude, 'My location'); },
-    err => say(err.code === err.PERMISSION_DENIED
-      ? 'Location permission denied — search for a place instead.'
-      : 'Could not get your location — search for a place instead.'),
+    pos => { say(''); enter(pos.coords.latitude, pos.coords.longitude, 'My location', null, 'device'); },
+    err => {
+      const denied = err.code === err.PERMISSION_DENIED;
+      say(denied ? 'Location permission denied — search for a place instead.'
+                 : 'Could not get your location — search for a place instead.');
+      track('geo', { ok: 0, reason: denied ? 'denied' : 'failed' });
+    },
     { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
   );
 });
-el.btnWhere.addEventListener('click', () => showLocate(true));
+el.btnWhere.addEventListener('click', () => { track('relocate'); showLocate(true); });
 
 /* --- entry ----------------------------------------------------------- */
-function enter(lat, lon, place, tz) {
+function enter(lat, lon, place, tz, via) {
+  track('located', { via: via || 'unknown' });
   state.lat = lat; state.lon = lon; state.place = place || '';
   // tz of the place; device location has none -> fall back to the viewer's
   state.tz = tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -1590,7 +1628,7 @@ function init() {
   loadStars();                // async; the loop tolerates starCat being null
   startLoop();                // the sky renders even before a place is chosen
   setPlayMode('Play');
-  if (loadPlace()) enter(state.lat, state.lon, state.place, state.tz);
+  if (loadPlace()) enter(state.lat, state.lon, state.place, state.tz, 'remembered');
   else showLocate(true);
 }
 
