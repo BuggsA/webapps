@@ -17,6 +17,26 @@
    Model:  state = { lat, lon, tz, place, t, viewAz, playing, located }
            t is the master variable — everything visual derives from it
            plus (lat, lon). viewAz is presentation only (facing direction).
+
+   MAP OF THIS FILE (search the ALL-CAPS tag to jump):
+     TUNABLES / STATE / ELEMENTS / CANVAS SIZING / SMALL MATH
+     ASTRONOMY GLUE      — observer(), altaz()  (equatorial -> horizontal via the lib)
+     SKY COLOUR          — FILM curve, sceneLum (azimuth-aware), daySky, skyColor
+     SEEDED CONDITIONS   — xmur3/mulberry32, value noise, bakeConditions()
+     GRAIN / DITHER / MOTTLE
+     PAINT THE FIELD     — paintField(): base gradient + glow/halation + belt/shadow
+                           + airglow + seam + scrim; setChromeVars, syncBrowserChrome
+     GRATICULE           — drag-only alt/az scaffold
+     STARS + MILKY WAY   — loadStars(), buildMilkyWay(), eqAltAz() (hand-rolled LST),
+                           paintMilkyWay() (puffs + rift), paintStars() (dust)
+     BODIES              — recomputeBodies(), paintPlanets(), paintMoon() (phase)
+     TAP TO SELECT       — pickObject/bodyRef/starRef, openCard/updateCardText,
+                           advice(), paintLeader()
+     THE LOOP            — frame(); startLoop(); visibilitychange restart
+     INPUT               — drag to turn, tap to select, arrow keys / Esc
+     TIME MODEL          — computeDuskDawn, scrub, tzParts, updateClock, placard
+     LOCATION            — geocode, results, device, savePlace/loadPlace
+     ENTRY               — enter(), init()
    ========================================================================== */
 'use strict';
 
@@ -607,20 +627,29 @@ async function loadStars() {
   buildMilkyWay();
 }
 
-// galactic longitude l (b = 0) -> equatorial, J2000
+// galactic longitude l (b = 0) -> equatorial, J2000. Each sample also carries
+// its along-band brightness, a per-sample lump (seeded) so the glow is never
+// smooth, and how far the Great Rift bites here.
 function buildMilkyWay() {
   const aNGP = 192.85948 * D2R, dNGP = 27.12825 * D2R, lNCP = 122.93192 * D2R;
   const sdN = Math.sin(dNGP), cdN = Math.cos(dNGP);
+  const lump = makeNoise(0x9d1c5b);
   mwPath = [];
-  for (let l = 0; l < 360; l += 1.5) {
+  for (let l = 0; l < 360; l += 2) {
     const dl = lNCP - l * D2R;
     const dec = Math.asin(clamp(cdN * Math.cos(dl), -1, 1));
     const ra = aNGP + Math.atan2(Math.sin(dl), -sdN * Math.cos(dl));
-    const centre = Math.pow(0.5 + 0.5 * Math.cos(l * D2R), 1.7);        // Sagittarius peak
-    const cygnus = 0.4 * Math.exp(-(wrap180(l - 80) ** 2) / 800);      // a second lobe
+    const centre = Math.pow(0.5 + 0.5 * Math.cos(l * D2R), 2.1);       // Sagittarius peak
+    const cygnus = 0.28 * Math.exp(-(wrap180(l - 80) ** 2) / 700);     // a softer second lobe
+    // Great Rift: Cygnus (~l 70) round through Aquila to the centre
+    const rift = 0.95 * Math.exp(-(wrap180(l - 30) ** 2) / 4200);
+    const ln = lump(l / 24, 0) * lump(0, l / 37);
     mwPath.push({
       ra: wrap360(ra * R2D), sinDec: Math.sin(dec), cosDec: Math.cos(dec),
-      bright: clamp(0.22 + 0.78 * centre + cygnus, 0, 1),
+      bright: clamp(0.12 + 0.88 * centre + cygnus, 0, 1.25),
+      width: 0.5 + 0.9 * centre + 0.4 * cygnus,                         // band swells & narrows
+      lump: clamp(0.2 + 1.4 * ln * ln, 0, 1.1),                         // genuinely patchy
+      rift, wob: (lump(l / 55, 3.1) - 0.5) * 2,                         // centreline wander
     });
   }
 }
@@ -639,6 +668,18 @@ function eqAltAz(ra, sinDec, cosDec) {
   return { alt: alt * R2D, az: wrap360(az * R2D) };
 }
 
+// a soft round brush (white -> transparent), baked once, splatted per puff
+const mwBrush = document.createElement('canvas');
+(function bakeMwBrush() {
+  const s = 128; mwBrush.width = mwBrush.height = s;
+  const g = mwBrush.getContext('2d');
+  const rg = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  rg.addColorStop(0, 'rgba(255,255,255,1)');
+  rg.addColorStop(0.45, 'rgba(255,255,255,0.55)');
+  rg.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = rg; g.fillRect(0, 0, s, s);
+})();
+
 const mwLayer = document.createElement('canvas');
 function paintMilkyWay() {
   if (!mwPath) return;
@@ -646,34 +687,56 @@ function paintMilkyWay() {
   const k = smooth01((-sun.alt - 13) / 6);   // 0 at −13°, 1 by −19°
   if (k < 0.03) return;
 
-  // draw the band onto an offscreen with 'lighten' (no runaway accumulation),
-  // as fat round-capped strokes coloured by the along-band brightness, then
-  // blur the offscreen once and composite it low — a soft "breath", not an arch
+  // Draw it as many soft overlapping "puffs" along the galactic equator on an
+  // offscreen (lighten -> no white blow-out), carve the Great Rift out of it,
+  // then blur once and composite low. Puffs feather on every edge, so the
+  // band never reads as a shaft — even when it runs vertically.
   const Lc = mwLayer; Lc.width = W; Lc.height = H;
   const g = Lc.getContext('2d');
-  g.globalCompositeOperation = 'lighten';
-  g.lineCap = 'round'; g.lineJoin = 'round';
-  g.lineWidth = H * 0.085;
 
-  let prev = null;
-  for (let i = 0; i <= mwPath.length; i++) {
-    const s = mwPath[i % mwPath.length];
+  // project the whole ring first (also gives us the local band direction)
+  const P = mwPath.map(s => {
     const aa = eqAltAz(s.ra, s.sinDec, s.cosDec);
     const p = project(aa.alt, aa.az);
-    const on = aa.alt > -4 && Math.abs(p.daz) < HFOV * 0.62;
-    if (!on) { prev = null; continue; }
-    if (prev && Math.hypot(p.x - prev.x, p.y - prev.y) < W * 0.4) {
-      const sh = Math.round(lerp(9, 52, (prev.b + s.bright) / 2));
-      g.strokeStyle = `rgb(${sh},${sh + 4},${sh + 11})`;
-      g.beginPath(); g.moveTo(prev.x, prev.y); g.lineTo(p.x, p.y); g.stroke();
-    }
-    prev = { x: p.x, y: p.y, b: s.bright };
+    return { x: p.x, y: p.y, daz: p.daz, on: aa.alt > -5 && Math.abs(p.daz) < HFOV * 0.7, s };
+  });
+  const perp = i => {
+    const a = P[(i - 1 + P.length) % P.length], b = P[(i + 1) % P.length];
+    let dx = b.x - a.x, dy = b.y - a.y; const L = Math.hypot(dx, dy) || 1;
+    return [-dy / L, dx / L];
+  };
+
+  // fade puffs near the top and bottom of the frame so the band never reads
+  // as a shaft "going somewhere" — it dissolves into the field at the edges
+  const edgeFade = cy => smooth01(cy / (H * 0.20)) * smooth01((H - cy) / (H * 0.24));
+
+  g.globalCompositeOperation = 'lighten';
+  for (let i = 0; i < P.length; i++) {
+    const pt = P[i]; if (!pt.on) continue;
+    const s = pt.s;
+    const [nx, ny] = perp(i);
+    const r = H * (0.05 + 0.055 * clamp(s.width, 0, 2)) * (0.75 + 0.5 * s.lump);
+    const cx = pt.x + nx * s.wob * H * 0.02, cy = pt.y + ny * s.wob * H * 0.02;
+    g.globalAlpha = clamp(0.5 * s.bright * s.lump * edgeFade(cy), 0, 0.85);
+    if (g.globalAlpha < 0.01) continue;
+    g.drawImage(mwBrush, cx - r, cy - r, r * 2, r * 2);
+  }
+
+  // carve the Great Rift: dark puffs just off the band's centre
+  g.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < P.length; i++) {
+    const pt = P[i]; if (!pt.on || pt.s.rift < 0.05) continue;
+    const s = pt.s, [nx, ny] = perp(i);
+    const r = H * (0.028 + 0.03 * s.width);
+    const cx = pt.x + nx * H * 0.028, cy = pt.y + ny * H * 0.028;
+    g.globalAlpha = clamp(s.rift * (0.5 + 0.4 * s.lump), 0, 0.8);
+    g.drawImage(mwBrush, cx - r, cy - r, r * 2, r * 2);
   }
 
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  ctx.globalAlpha = 0.6 * k;
-  ctx.filter = `blur(${Math.round(H * 0.028)}px)`;
+  ctx.globalAlpha = 0.17 * k;
+  ctx.filter = `blur(${Math.round(H * 0.022)}px)`;
   ctx.drawImage(Lc, 0, 0);
   ctx.filter = 'none';
   ctx.restore();

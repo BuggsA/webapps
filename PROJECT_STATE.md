@@ -162,6 +162,17 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   Only appears from sun < -13 deg. Named stars are tappable -> the same
   card (no rise/set line for stars). ~0.3-0.5 ms/frame incl. the blur,
   desktop and mobile.
+- **MW rework** (it was reading as a searchlight beam): now drawn as many
+  soft overlapping "puffs" along the galactic equator (feathered on every
+  edge, so it never reads as a shaft even running vertically), with a
+  carved Great Rift, seeded patchy brightness, a centreline wobble, and a
+  top/bottom edge-fade so it dissolves into the field rather than exiting
+  frame. Composited much fainter (0.17). Still "stylised" -- final polish
+  is Phase 5.
+- Added a **"MAP OF THIS FILE"** index comment atop `tonight.js`. The
+  standalone `../tonight-app-map.md` (Downloads) is marked historical /
+  unmaintained -- git + PROJECT_STATE + the art-direction doc + that
+  comment are the living record now.
 - Next: **Phase 4 (weather)** -- Open-Meteo forecast fetch + ~1 h cache,
   the cloud veil tracking cloud % across the scrubbed night, the one-line
   verdict, and driving `conditions.turbidity` from the real cloud data
