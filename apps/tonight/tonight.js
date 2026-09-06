@@ -573,6 +573,142 @@ function paintGraticule() {
   ctx.restore();
 }
 
+/* --- stars + the Milky Way ------------------------------------------
+   Real bright-star positions (data/stars.json, HYG subset, mag <= 4.0),
+   but drawn as Nocturne "dust": they only fully resolve when the view is
+   still, twinkle a hair, and only the brightest carry a bloom. The Milky
+   Way is a stylised painted band along the galactic equator — a breath
+   of lighter field, not ten thousand faint points.                      */
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+let starCat = null;      // { list: [{ra, sinDec, cosDec, mag, name, tint, twPh, twRate}] }
+let mwPath = null;       // galactic-equator samples: [{ra, sinDec, cosDec, bright}]
+let steadiness = 1;      // 0 while turning -> 1 when the view settles (dust resolves)
+
+// B-V colour index -> a gentle star tint (hot blue-white .. cool warm)
+function bvTint(bv) {
+  return blend([206, 220, 255], [255, 212, 168], clamp((bv + 0.3) / 2.1, 0, 1));
+}
+// naked-eye limiting magnitude for a given sun altitude (rough, tuned)
+const limMag = sunAlt => -sunAlt * 0.5 - 3;   // sun -6 -> 0, -12 -> 3, -18 -> 6
+
+async function loadStars() {
+  try {
+    const j = await (await fetch('data/stars.json')).json();
+    const rnd = mulberry32(0x51de0001);
+    starCat = { list: j.s.map(r => {
+      const dec = r[1] * D2R;
+      return {
+        ra: r[0], sinDec: Math.sin(dec), cosDec: Math.cos(dec),
+        mag: r[2], name: r[4] || null, tint: bvTint(r[3] || 0),
+        twPh: rnd() * 6.283, twRate: 1.5 + rnd() * 2.6, _x: null, _y: null,
+      };
+    }) };
+  } catch (_) { starCat = { list: [] }; }
+  buildMilkyWay();
+}
+
+// galactic longitude l (b = 0) -> equatorial, J2000
+function buildMilkyWay() {
+  const aNGP = 192.85948 * D2R, dNGP = 27.12825 * D2R, lNCP = 122.93192 * D2R;
+  const sdN = Math.sin(dNGP), cdN = Math.cos(dNGP);
+  mwPath = [];
+  for (let l = 0; l < 360; l += 1.5) {
+    const dl = lNCP - l * D2R;
+    const dec = Math.asin(clamp(cdN * Math.cos(dl), -1, 1));
+    const ra = aNGP + Math.atan2(Math.sin(dl), -sdN * Math.cos(dl));
+    const centre = Math.pow(0.5 + 0.5 * Math.cos(l * D2R), 1.7);        // Sagittarius peak
+    const cygnus = 0.4 * Math.exp(-(wrap180(l - 80) ** 2) / 800);      // a second lobe
+    mwPath.push({
+      ra: wrap360(ra * R2D), sinDec: Math.sin(dec), cosDec: Math.cos(dec),
+      bright: clamp(0.22 + 0.78 * centre + cygnus, 0, 1),
+    });
+  }
+}
+
+// equatorial (J2000) -> horizontal, hand-rolled from local sidereal time
+let lstDeg = 0, sinLat = 0, cosLat = 1;
+function updateStarTransform() {
+  lstDeg = wrap360(A.SiderealTime(state.t) * 15 + state.lon);
+  const lat = state.lat * D2R;
+  sinLat = Math.sin(lat); cosLat = Math.cos(lat);
+}
+function eqAltAz(ra, sinDec, cosDec) {
+  const H = (lstDeg - ra) * D2R, cH = Math.cos(H), sH = Math.sin(H);
+  const alt = Math.asin(clamp(sinDec * sinLat + cosDec * cosLat * cH, -1, 1));
+  const az = Math.atan2(-cosDec * sH, sinDec * cosLat - cosDec * sinLat * cH);
+  return { alt: alt * R2D, az: wrap360(az * R2D) };
+}
+
+const mwLayer = document.createElement('canvas');
+function paintMilkyWay() {
+  if (!mwPath) return;
+  // the Milky Way only shows once the sky is genuinely dark (astronomical)
+  const k = smooth01((-sun.alt - 13) / 6);   // 0 at −13°, 1 by −19°
+  if (k < 0.03) return;
+
+  // draw the band onto an offscreen with 'lighten' (no runaway accumulation),
+  // as fat round-capped strokes coloured by the along-band brightness, then
+  // blur the offscreen once and composite it low — a soft "breath", not an arch
+  const Lc = mwLayer; Lc.width = W; Lc.height = H;
+  const g = Lc.getContext('2d');
+  g.globalCompositeOperation = 'lighten';
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  g.lineWidth = H * 0.085;
+
+  let prev = null;
+  for (let i = 0; i <= mwPath.length; i++) {
+    const s = mwPath[i % mwPath.length];
+    const aa = eqAltAz(s.ra, s.sinDec, s.cosDec);
+    const p = project(aa.alt, aa.az);
+    const on = aa.alt > -4 && Math.abs(p.daz) < HFOV * 0.62;
+    if (!on) { prev = null; continue; }
+    if (prev && Math.hypot(p.x - prev.x, p.y - prev.y) < W * 0.4) {
+      const sh = Math.round(lerp(9, 52, (prev.b + s.bright) / 2));
+      g.strokeStyle = `rgb(${sh},${sh + 4},${sh + 11})`;
+      g.beginPath(); g.moveTo(prev.x, prev.y); g.lineTo(p.x, p.y); g.stroke();
+    }
+    prev = { x: p.x, y: p.y, b: s.bright };
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = 0.6 * k;
+  ctx.filter = `blur(${Math.round(H * 0.028)}px)`;
+  ctx.drawImage(Lc, 0, 0);
+  ctx.filter = 'none';
+  ctx.restore();
+}
+
+function paintStars() {
+  if (!starCat || !starCat.list.length) return;
+  const dark = skyDark();
+  const lm = limMag(sun.alt);
+  if (dark < 0.03 || lm < -2) return;
+  const nowS = state.t.getTime() / 1000;
+  const dustK = lerp(0.22, 1, steadiness);
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  for (const st of starCat.list) {
+    st._x = st._y = null;
+    let vis = smooth01((lm - st.mag) / 1.3);
+    if (vis < 0.02) continue;
+    if (st.mag > 2.2) vis *= dustK;
+    if (vis < 0.02) continue;
+    const aa = eqAltAz(st.ra, st.sinDec, st.cosDec);
+    if (aa.alt < -0.5) continue;
+    const p = project(aa.alt, aa.az);
+    if (!p.visible) continue;
+    st._x = p.x; st._y = p.y;
+    const tw = REDUCED ? 1 : 1 + 0.16 * Math.sin(nowS * st.twRate + st.twPh);
+    const size = clamp(0.6 + (3.4 - st.mag) * 0.52, 0.55, 3.2);
+    const alpha = clamp(0.36 + (3 - st.mag) * 0.24, 0.28, 1) * vis * dark * tw;
+    if (st.mag < 1.2) bloom(p.x, p.y, size * 4.2, st.tint, 0.09 * vis * dark);
+    ctx.fillStyle = `rgba(${st.tint[0]},${st.tint[1]},${st.tint[2]},${clamp(alpha, 0, 1).toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(p.x, p.y, size, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+
 /* --- bodies: the moon and the naked-eye planets --------------------- */
 const PLANETS = [
   { name: 'Mercury', tint: [222, 214, 200] },
@@ -720,6 +856,11 @@ function advice(o) {
       ? `High in the ${dir}, ${w}.`
       : `${w[0].toUpperCase()}${w.slice(1)}, well up in the ${dir}.`;
   }
+  if (o.kind === 'star') {
+    const bright = o.mag != null && o.mag < 1.5;
+    if (o.alt > 55) return `Nearly overhead${bright ? ' — one of the bright ones' : ''}.`;
+    return `${bright ? 'A bright star, well' : 'Well'} up in the ${dir}.`;
+  }
   if (o.alt > 45) return `High in the ${dir} — hard to miss.`;
   return `Well up in the ${dir}.`;
 }
@@ -740,6 +881,7 @@ function closeCard() {
 }
 function refreshCardRiseSet() {
   if (!selected) return;
+  if (selected.kind === 'star') { selected.rise = selected.set = null; return; }
   const rs = riseSetFor(selected.name);
   selected.rise = rs.rise; selected.set = rs.set;
 }
@@ -750,7 +892,7 @@ function updateCardText() {
     s.alt > -0.5 ? `${Math.round(s.alt)}° up · ${compass(s.az)}` : `below the horizon`;
   const soon = ms => ms && ms > state.t && (ms - state.t) < 8 * 3600e3;
   const rsLine = s.alt >= -0.5
-    ? (soon(s.set) ? `sets ${hhmm(s.set)}` : (s.alt > 20 ? 'up for hours' : ''))
+    ? (soon(s.set) ? `sets ${hhmm(s.set)}` : (s.set && s.alt > 20 ? 'up for hours' : ''))
     : (soon(s.rise) ? `rises ${hhmm(s.rise)}` : '');
   el.card.querySelector('.card-rise').textContent = rsLine;
   el.card.querySelector('.card-advice').textContent = advice(s);
@@ -801,20 +943,35 @@ function bodyRef(name) {
     get _vis()  { return isMoon ? 1 : ((cur() || {})._vis ?? 0); },
   };
 }
+function starRef(name) {
+  const cur = () => starCat && starCat.list.find(s => s.name === name);
+  const aa = () => { const s = cur(); return s ? eqAltAz(s.ra, s.sinDec, s.cosDec) : { alt: -99, az: 0 }; };
+  return {
+    kind: 'star', name,
+    get alt() { return aa().alt; },
+    get az()  { return aa().az; },
+    get x()   { return (cur() || {})._x; },
+    get y()   { return (cur() || {})._y; },
+    get mag() { return (cur() || {}).mag; },
+    _vis: 1,
+  };
+}
 function pickObject(x, y) {
-  let bestName = null, bestD = 30;
-  const consider = (o, name, rad) => {
+  let key = null, kind = null, bestD = 999;
+  const consider = (o, rad, k, name) => {
     if (!o || o._x == null) return;
     const d = Math.hypot(o._x - x, o._y - y);
-    if (d < rad && d < bestD) { bestD = d; bestName = name; }
+    if (d < rad && d < bestD) { bestD = d; key = name; kind = k; }
   };
-  consider(bodies.moon, 'Moon', 34);
-  for (const pl of bodies.planets) consider(pl, pl.name, 20);
-  return bestName ? bodyRef(bestName) : null;
+  consider(bodies.moon, 34, 'moon', 'Moon');
+  for (const pl of bodies.planets) consider(pl, 20, 'planet', pl.name);
+  if (starCat) for (const st of starCat.list) if (st.name) consider(st, 13, 'star', st.name);
+  if (!key) return null;
+  return kind === 'star' ? starRef(key) : bodyRef(key);
 }
 
 /* --- the loop ---------------------------------------------------------- */
-let lastFrame = 0, lastCompute = 0, running = false, rafId = 0;
+let lastFrame = 0, lastCompute = 0, running = false, rafId = 0, _stillAt = 0;
 function frame(now) {
   if (!running) return;
   const dtReal = lastFrame ? (now - lastFrame) / 1000 : 0;
@@ -830,20 +987,34 @@ function frame(now) {
   if (!state.located) {
     // no place yet — hold a calm nautical-twilight sky behind the prompt
     sun = { alt: -8, az: 245 };
-  } else if (now - lastCompute >= COMPUTE_MS || !lastCompute) {
-    lastCompute = now;
-    sun = altaz(A.Body.Sun, state.t);
-    recomputeBodies(state.t);
+  } else {
+    if (now - lastCompute >= COMPUTE_MS || !lastCompute) {
+      lastCompute = now;
+      sun = altaz(A.Body.Sun, state.t);
+      recomputeBodies(state.t);
+    }
+    updateStarTransform();       // cheap; keeps the sky rotating smoothly
   }
 
   // graticule ease: fast in on drag, slow out after; snaps if reduced-motion
   if (REDUCED) gratT = gratTarget;
   else gratT += (gratTarget - gratT) * clamp(dtReal * (gratTarget > gratT ? 15 : 4), 0, 1);
 
+  // steadiness: dust resolves ~0.8 s after the view stops moving
+  if (drag) { steadiness = 0; _stillAt = 0; }
+  else {
+    if (!_stillAt) _stillAt = now;
+    const settled = clamp((now - _stillAt - 280) / 520, 0, 1);
+    steadiness += (settled - steadiness) * clamp(dtReal * 3.5, 0, 1);
+    if (REDUCED) steadiness = settled;
+  }
+
   ctx.clearRect(0, 0, W, H);
   paintField();
   paintMottle();
   if (state.located) {
+    paintMilkyWay();
+    paintStars();
     paintPlanets();
     paintMoon();
     paintGraticule();
@@ -1113,6 +1284,7 @@ function enter(lat, lon, place, tz) {
 function init() {
   resize();
   bakeConditions();           // a default seed so the pre-location sky has texture
+  loadStars();                // async; the loop tolerates starCat being null
   startLoop();                // the sky renders even before a place is chosen
   setPlaying(false);
   if (loadPlace()) enter(state.lat, state.lon, state.place, state.tz);

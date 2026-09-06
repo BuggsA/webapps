@@ -21,10 +21,15 @@ Fraunces written onto the field: no boxes, blur, shadows or radii. A faint
 alt/az graticule appears only while you drag; a hairline leader line tethers
 a tapped object to its card.
 
-**Status:** in progress. Phases 1–2 built (location, time model, the sky,
-the moon and naked-eye planets, tap-to-select cards); stars, the Milky Way,
-weather and the final look are next. See `../../docs/tonight-build-plan.md`
-for the phase plan and `../../PROJECT_STATE.md` for current state.
+**Status:** in progress. Phases 1–3 built (location, time model, the sky,
+the moon and naked-eye planets, ~500 bright stars + a stylised Milky Way
+band, tap-to-select cards); weather and the final look are next. See
+`../../docs/tonight-build-plan.md` for the phase plan and
+`../../PROJECT_STATE.md` for current state.
+
+`data/stars.json` is a compact HYG subset (mag ≤ 4.0, ~519 stars: RA/Dec
+J2000, magnitude, B−V, proper name for the bright ones), derived from the
+d3-celestial catalogue (MIT). ~16 KB, shipped; no runtime network.
 
 **Cost:** nothing. Pure static HTML/CSS/JS, no backend, no build step. The
 only runtime network is two keyless, CORS-open Open-Meteo calls — geocoding

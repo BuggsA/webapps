@@ -144,9 +144,28 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   (Aug 28 2026 total lunar eclipse = full moon; Sep 11 new -> Sep 6 is a
   ~22% waning crescent, as computed). Deploy-safe: no `../` refs, all
   assets inside `apps/tonight/`, one external URL (Open-Meteo geocoding).
-- Next: **Phase 3 (stars + Milky Way)** -- bundled bright-star catalogue
-  (mag <= 4, ~500), magnitude -> size/brightness, the stylised painted
-  Milky Way band. Also carry the star seed for twinkle.
+- **Phase 3 (stars + Milky Way): DONE.** `data/stars.json` -- a 16 KB HYG
+  subset (mag <= 4.0, 519 stars: RA/Dec J2000, mag, B-V, proper names for
+  the bright ones), built from the d3-celestial catalogue. Drawn as
+  Nocturne "dust": equatorial->horizontal is hand-rolled from
+  `A.SiderealTime` + local latitude (validated within ~0.25 deg of
+  astronomy-engine's DefineStar/Equator/Horizon over 26 yr of unmodelled
+  precession -- fine for naked-eye dust), magnitude -> size/alpha, a B-V
+  colour tint, a gentle seeded twinkle (off under reduced-motion), and a
+  bloom only on mag < 1.2. Faint stars (mag > 2.2) fade with a
+  `steadiness` value that eases 0 -> 1 ~0.8 s after the view stops moving
+  -- "dust that resolves when you're still". The Milky Way is a stylised
+  painted band: the galactic equator (from the galactic pole, J2000)
+  sampled every 1.5 deg, stroked fat + round onto an offscreen with
+  `lighten` (brightness varies along it -- Sagittarius peak + a Cygnus
+  lobe), blurred once via `ctx.filter` and composited low with `screen`.
+  Only appears from sun < -13 deg. Named stars are tappable -> the same
+  card (no rise/set line for stars). ~0.3-0.5 ms/frame incl. the blur,
+  desktop and mobile.
+- Next: **Phase 4 (weather)** -- Open-Meteo forecast fetch + ~1 h cache,
+  the cloud veil tracking cloud % across the scrubbed night, the one-line
+  verdict, and driving `conditions.turbidity` from the real cloud data
+  instead of the seed. Graceful when offline (veil just absent).
 - Tier 1; no runtime network beyond the two keyless Open-Meteo fetches.
   Deploy (later, human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
 
