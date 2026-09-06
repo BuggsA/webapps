@@ -283,16 +283,22 @@ body {
 
 .place-results { list-style: none; padding: 0; margin: 0; display: grid; }
 .place-results[hidden] { display: none; }
-.place-results li {
+.place-results li { border-bottom: 1px solid var(--chrome-line); }
+.place-results li:first-child { border-top: 1px solid var(--chrome-line); }
+/* each result is a real button: focusable, Enter-able, same quiet look */
+.place-pick {
+  display: block;
+  width: 100%;
+  text-align: left;
   padding: var(--sp-3) 0;
-  border-bottom: 1px solid var(--chrome-line);
+  min-height: 44px;
   color: var(--chrome-soft);
-  cursor: pointer;
+  font: inherit;
   transition: color 120ms ease, padding-left 160ms ease;
 }
-.place-results li:first-child { border-top: 1px solid var(--chrome-line); }
-.place-results li:hover,
-.place-results li[aria-selected="true"] { color: var(--chrome); padding-left: 0.5rem; }
+.place-pick:hover,
+.place-pick:focus-visible { color: var(--chrome); padding-left: 0.5rem; outline: none; }
+.place-pick:focus-visible .p-name { text-decoration: underline; text-underline-offset: 3px; }
 .place-results .p-sub { color: var(--chrome-soft); font-size: 0.82em; }
 
 .locate-actions { display: flex; gap: var(--sp-6); margin-top: var(--sp-1); }

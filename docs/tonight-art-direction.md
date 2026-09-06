@@ -56,7 +56,7 @@ screenshots an hour apart should look like different artworks.
    Place name set big, low-contrast, *into* the field. Times as small lining
    figures. Every other label is summoned, never persistent. (Self-hosted woff2,
    `font-display: swap`, system-serif first paint — same approach as `apps/until/`.)
-4. **Colour** — the entire screen is one continuously computed **OKLCH** vertical
+4. **Colour** *(the original statement — the mechanism was superseded by §Palette on 2026-09-06; the intent below still holds)* — the entire screen is one continuously computed **OKLCH** vertical
    field, shifting with sun altitude. Every colour **derived** from the sun-altitude
    model, none hand-picked. Objects are the only non-field marks.
    *This is NOT the purple/blue SaaS gradient* — it's a measured naturalistic sky,
@@ -252,7 +252,7 @@ centred stack · filled+ghost button pair · abstract 3D blob.
 Run this before every phase commit. All must hold (or be explicitly N/A for
 that phase's scope):
 
-- [ ] On-screen colour is **derived** from sun altitude in OKLCH — not picked from a palette.
+- [ ] On-screen colour is **derived** from sun altitude + view azimuth through the film curve (§Palette) — never hand-picked sRGB anchors; no control point in the violet band.
 - [ ] **No hard horizon line** — horizon reads as a seam / temperature change.
 - [ ] Grain present: static, low-opacity, baked (not animated).
 - [ ] Bloom **only** on moon / planets / brightest stars — additive, soft, low-alpha. No glow blobs.

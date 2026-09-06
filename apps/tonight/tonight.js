@@ -1,18 +1,20 @@
 /* ==========================================================================
-   Tonight — Phase 1: skeleton.
+   Tonight — the sky above you, as a horizon panorama.
 
-   Location (device -> search -> remembered), the horizon canvas with
-   drag-to-turn, the time model (now / play / scrub), and the sky gradient
-   driven by the sun's altitude. Bodies, stars, weather and the full look
-   come in later phases; the structure here is built to take them.
+   Built so far (see docs/tonight-build-plan.md): Phase 1 — location, the
+   horizon canvas with drag-to-turn, the time model (now / play / scrub);
+   Phase 2 — the moon (phase + lit orientation), the five naked-eye planets,
+   tap-to-select with a tethered card. Stars, the Milky Way, weather and the
+   final look come next; the structure here is built to take them.
 
    ART DIRECTION: NOCTURNE (+ two borrows: a graticule that shows only during
    a drag, a leader line only on selection). See docs/tonight-art-direction.md
-   and run its per-phase checklist before every commit. The gradient is the
-   interface; colour is derived in OKLCH from sun altitude; the horizon is a
-   seam, not a line; motion is continuous cross-fade, never a cut.
+   — including its CHROME and PALETTE sections — and run its per-phase
+   checklist before every commit. The field is the interface: a film-curve
+   palette over a structured, azimuth-aware scene-luminance; the horizon is a
+   seam, not a line; texture is seeded per night; motion is continuous.
 
-   Model:  state = { lat, lon, place, t, viewAz, playing }
+   Model:  state = { lat, lon, tz, place, t, viewAz, playing, located }
            t is the master variable — everything visual derives from it
            plus (lat, lon). viewAz is presentation only (facing direction).
    ========================================================================== */
@@ -114,7 +116,6 @@ function oklabToRgb(L, a, b) {
 const lchToLab = ([L, C, h]) => { const r = h * Math.PI / 180; return [L, C * Math.cos(r), C * Math.sin(r)]; };
 const rgb    = a => `rgb(${a[0]},${a[1]},${a[2]})`;
 const blend  = (a, b, u) => [0, 1, 2].map(c => Math.round(lerp(a[c], b[c], u)));
-const labLerp = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)];
 const smooth01 = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 
 /* --- sky colour: a FILM CURVE, structured by Belt-of-Venus logic -------
@@ -159,7 +160,7 @@ function daylight(sunAlt) {
   if (sunAlt >= -6) return lerp(0.60, 1.00, (sunAlt + 6) / 9);    // civil
   if (sunAlt >= -12) return lerp(0.30, 0.60, (sunAlt + 12) / 6);  // nautical
   if (sunAlt >= -18) return lerp(0.12, 0.30, (sunAlt + 18) / 6);  // astronomical
-  return 0.10;                                                    // night
+  return 0.12;                                                    // night (continuous at −18°)
 }
 // scene-luminance at an altitude fraction (0 = horizon, 1 = zenith) for a
 // given sun altitude and azBright (0 = view faces away from the sun, 1 =
@@ -261,10 +262,10 @@ function bakeConditions() {
 const srgbLin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
 const relLum = c => 0.2126 * srgbLin(c[0]) + 0.7152 * srgbLin(c[1]) + 0.0722 * srgbLin(c[2]);
 
-// Relative luminance helper kept; chrome colour derives from the live field:
-// a light tint carrying a hint of the sky's temperature. Legibility over a
-// bright day sky is held by the bottom scrim in paintField.
-let chromeRGB = [240, 238, 232];      // also the canvas graticule ink
+// Chrome colour derives from the live field: a light tint carrying a hint of
+// the sky's temperature. Legibility over a bright day sky is held by the
+// bottom scrim in paintField, not by flipping the chrome dark.
+let chromeRGB = [240, 238, 232];      // also the canvas graticule + leader ink
 function setChromeVars() {
   const z = field.zen;
   const m = [0, 1, 2].map(k => Math.round(lerp(z[k], 236, 0.72)));
@@ -307,8 +308,12 @@ function bakeGrain() {
   }
   g.putImageData(img, 0, 0);
   grainTile = ctx.createPattern(c, 'repeat');
+  if (!ditherPat) bakeDither();
+}
 
-  // fine ±1-level dither tile — kills 8-bit banding, not an aesthetic grain
+// fine ±1-level dither tile — kills 8-bit banding, not an aesthetic grain.
+// Seed is fixed, so it's baked exactly once.
+function bakeDither() {
   const ds = 64;
   const dc = document.createElement('canvas'); dc.width = dc.height = ds;
   const dg = dc.getContext('2d');
@@ -341,21 +346,29 @@ function bakeGrainLayer() {
   g.fillRect(0, 0, W, H);
 }
 
+// The mottling drifts with sim time, but only very slowly — regenerate the
+// tiny noise image at most a few times a second, blit it every frame.
+let _mottleImg = null, _mottleAt = -1;
 function paintMottle() {
   if (!conditions.noise) return;
   const w = mottleCv.width, h = mottleCv.height;
   const mx = mottleCv.getContext('2d');
-  const img = mx.createImageData(w, h);
   const drift = (state.t.getTime() / 1000) * 0.0016;      // very slow domain-warp
-  const amp = lerp(7, 15, conditions.turbidity);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const n = conditions.noise(x / 8.5 + drift, y / 8.5 - drift * 0.6);
-    const v = 128 + (n - 0.5) * 2 * amp;
-    const i = (y * w + x) * 4;
-    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
-    img.data[i + 3] = 255;
+  const key = Math.round(drift * 400);                    // changes ~every 0.25 s of sim drift
+  if (key !== _mottleAt) {
+    _mottleAt = key;
+    if (!_mottleImg) _mottleImg = mx.createImageData(w, h);
+    const img = _mottleImg;
+    const amp = lerp(7, 15, conditions.turbidity);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const n = conditions.noise(x / 8.5 + drift, y / 8.5 - drift * 0.6);
+      const v = 128 + (n - 0.5) * 2 * amp;
+      const i = (y * w + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+      img.data[i + 3] = 255;
+    }
+    mx.putImageData(img, 0, 0);
   }
-  mx.putImageData(img, 0, 0);
   ctx.save();
   ctx.globalCompositeOperation = 'overlay';
   ctx.globalAlpha = 0.5;
@@ -605,6 +618,7 @@ function paintPlanets() {
   if (!bodies.planets.length) return;
   const dark = skyDark();
   for (const pl of bodies.planets) {
+    pl._x = pl._y = null;                 // no stale hit-target if culled this frame
     if (pl.alt < -0.6) continue;
     const p = project(pl.alt, pl.az);
     if (!p.visible) continue;
@@ -623,7 +637,9 @@ function paintPlanets() {
 
 function paintMoon() {
   const m = bodies.moon;
-  if (!m || m.alt < -1.2) return;
+  if (!m) return;
+  m._x = m._y = null;                     // no stale hit-target if culled this frame
+  if (m.alt < -1.2 || m.illum < 0.02) return;   // below the horizon, or new (invisible)
   const p = project(m.alt, m.az);
   if (!p.visible) return;
   m._x = p.x; m._y = p.y;
@@ -664,8 +680,9 @@ function hhmm(d) {
   const p = tzParts(d);
   return `${p.hour}:${p.minute}`;
 }
+// the NEXT rise and the NEXT set after t — what the card and the advice want
 function riseSetFor(bodyName) {
-  const from = new Date(state.t.getTime() - 6 * 3600e3);
+  const from = state.t;
   let rise = null, set = null;
   try { const r = A.SearchRiseSet(A.Body[bodyName], observer(), +1, from, 2); rise = r && r.date; } catch (_) {}
   try { const s = A.SearchRiseSet(A.Body[bodyName], observer(), -1, from, 2); set = s && s.date; } catch (_) {}
@@ -686,9 +703,10 @@ function advice(o) {
   const t = state.t;
   const dir = compass(o.az);
   if (o.alt < -0.5) {
-    return o.rise && o.rise > t
+    // only promise a return if it happens before this night's dawn
+    return o.rise && o.rise > t && state.dawn && o.rise < state.dawn
       ? `Below the horizon — up again around ${hhmm(o.rise)}.`
-      : `Below the horizon for the rest of the night.`;
+      : `Below the horizon tonight.`;
   }
   if (o.kind === 'planet' && o._vis != null && o._vis < 0.4) {
     return `Still washed out by the twilight — give it half an hour.`;
@@ -875,6 +893,20 @@ function endDrag(e) {
 el.canvas.addEventListener('pointerup', endDrag);
 el.canvas.addEventListener('pointercancel', endDrag);
 
+// keyboard: ← → turn the view, Esc closes the card. Arrows are left alone
+// whenever a form control has focus (the scrub, the place input, buttons).
+const inControl = t => !!(t && t.closest && t.closest('input, button, select, textarea'));
+document.addEventListener('keydown', e => {
+  if (!state.located) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    if (inControl(e.target)) return;
+    state.viewAz = wrap360(state.viewAz + (e.key === 'ArrowLeft' ? -10 : 10));
+    e.preventDefault();
+  } else if (e.key === 'Escape' && selected) {
+    closeCard();
+  }
+});
+
 /* --- time model ---------------------------------------------------------- */
 function setPlaying(on) {
   state.playing = on;
@@ -1000,16 +1032,21 @@ async function geocode(name) {
     sub: [x.admin1, x.country].filter(Boolean).join(', '),
   }));
 }
+// each result is a real <button> so it's focusable and Enter-able, not
+// a click-only <li>
 function renderResults(list) {
   el.results.innerHTML = '';
   if (!list.length) { el.results.hidden = true; return; }
   for (const item of list) {
     const li = document.createElement('li');
-    li.setAttribute('role', 'option');
-    li.innerHTML = `<span class="p-name"></span> <span class="p-sub"></span>`;
-    li.querySelector('.p-name').textContent = item.name;
-    li.querySelector('.p-sub').textContent = item.sub;
-    li.addEventListener('click', () => enter(item.lat, item.lon, item.name, item.tz));
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'place-pick';
+    b.innerHTML = `<span class="p-name"></span> <span class="p-sub"></span>`;
+    b.querySelector('.p-name').textContent = item.name;
+    b.querySelector('.p-sub').textContent = item.sub;
+    b.addEventListener('click', () => enter(item.lat, item.lon, item.name, item.tz));
+    li.appendChild(b);
     el.results.appendChild(li);
   }
   el.results.hidden = false;

@@ -128,6 +128,22 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   borrow); card and placard are mutually exclusive; empty tap deselects.
   "Twilight bands" from the plan are covered by the palette work.
   Verified desktop + mobile (moon + Mars + Jupiter pre-dawn, Lisbon).
+- **Review pass (fresh model, full read of the code + docs).** Fixed:
+  `riseSetFor` searched from t-6h and returned *past* events, so a body
+  that rose and set earlier tonight was told "below the horizon for the
+  rest of the night" even when it rises again before dawn (now: next
+  rise/set from t; the advice only promises a return before this night's
+  dawn); culled bodies kept a stale tap target for up to 500 ms; a new moon
+  still drew as a grey disc; search results were click-only `<li>`s (now
+  real `<button>`s -- keyboard-operable, per the a11y floor); arrow keys
+  turn the view and Esc closes the card; the mottling regenerated 2,560
+  noise samples every frame (now throttled); the dither tile re-baked on
+  every conditions bake; dead `labLerp`; a step at -18 deg in `daylight()`;
+  stale "Phase 1 / OKLCH" wording in the JS header, README, checklist and
+  the Downloads map. Astronomy sanity-checked against real ephemeris
+  (Aug 28 2026 total lunar eclipse = full moon; Sep 11 new -> Sep 6 is a
+  ~22% waning crescent, as computed). Deploy-safe: no `../` refs, all
+  assets inside `apps/tonight/`, one external URL (Open-Meteo geocoding).
 - Next: **Phase 3 (stars + Milky Way)** -- bundled bright-star catalogue
   (mag <= 4, ~500), magnitude -> size/brightness, the stylised painted
   Milky Way band. Also carry the star seed for twinkle.

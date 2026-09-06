@@ -10,16 +10,21 @@ weather call adds a cloud veil and a plain verdict ("mostly clear after
 advice. Everything astronomical is computed in the browser.
 
 **Design direction:** Nocturne + two borrows — see
-[`../../docs/tonight-art-direction.md`](../../docs/tonight-art-direction.md).
-The gradient is the interface: one continuously computed OKLCH colour field
-driven by the sun's altitude, minimal bottom-weighted chrome, no hard
-horizon line, static grain, soft bloom on the moon/planets/bright stars
-only. A faint alt/az graticule appears only while you drag; a hairline
-leader line tethers a tapped object to its card.
+[`../../docs/tonight-art-direction.md`](../../docs/tonight-art-direction.md),
+including its Chrome and Palette sections. The field is the interface: a
+film-response-curve palette (teal-lifted blacks, warm-neutral mids, amber
+bloom + halation at the sunward horizon) over a structured, azimuth-aware
+scene-luminance, with Belt-of-Venus and Earth's-shadow bands on the
+antisolar side — so turning the view changes the sky. Texture (grain,
+mottling, haze, belt geometry) is seeded per place + night. Chrome is
+Fraunces written onto the field: no boxes, blur, shadows or radii. A faint
+alt/az graticule appears only while you drag; a hairline leader line tethers
+a tapped object to its card.
 
-**Status:** in progress. Phase 1 (skeleton) built; see
-`../../docs/tonight-build-plan.md` for the phase plan and
-`../../PROJECT_STATE.md` for current state.
+**Status:** in progress. Phases 1–2 built (location, time model, the sky,
+the moon and naked-eye planets, tap-to-select cards); stars, the Milky Way,
+weather and the final look are next. See `../../docs/tonight-build-plan.md`
+for the phase plan and `../../PROJECT_STATE.md` for current state.
 
 **Cost:** nothing. Pure static HTML/CSS/JS, no backend, no build step. The
 only runtime network is two keyless, CORS-open Open-Meteo calls — geocoding
