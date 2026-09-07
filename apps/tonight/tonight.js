@@ -269,7 +269,8 @@ function makeNoise(seed) {
 }
 
 const conditions = {
-  turbidity: 0.4, beltAlt: 14, beltThick: 9, beltHue: 26,
+  turbidity: 0.4, seedTurb: 0.4, wxTurb: null,   // live / seeded-clear / cloud-nudged
+  beltAlt: 14, beltThick: 9, beltHue: 26,
   tempShift: 0, airglowHue: 120, airglowAmt: 0.06, noise: null, seed: 1,
 };
 function bakeConditions() {
@@ -280,6 +281,8 @@ function bakeConditions() {
   const r = mulberry32(seed);
   conditions.seed = seed;
   conditions.turbidity = 0.15 + 0.62 * r();     // 0.15 crisp/clear .. 0.77 hazy
+  conditions.seedTurb = conditions.turbidity;   // the clear-night value — restored when the veil is toggled off
+  conditions.wxTurb = null;
   conditions.beltAlt   = 11 + 8 * r();          // 11..19 deg
   conditions.beltThick = 6 + 6 * r();           // 6..12 deg
   conditions.beltHue   = 20 + 16 * r();         // 20 salmon .. 36 rose-pink
@@ -1108,15 +1111,31 @@ function syncCloudBtn() {
   el.btnClouds.setAttribute('aria-pressed', String(veilOn));
   el.btnClouds.style.opacity = veilOn ? '' : '0.4';
 }
-el.btnClouds.addEventListener('click', () => { veilOn = !veilOn; syncCloudBtn(); track('clouds', { on: veilOn ? 1 : 0 }); });
+el.btnClouds.addEventListener('click', () => {
+  veilOn = !veilOn;
+  applyTurbidity();            // toggle also swaps the haze: cloud-nudged <-> clear
+  syncCloudBtn();
+  track('clouds', { on: veilOn ? 1 : 0 });
+});
+
+// choose the live turbidity: the cloud-nudged haze while the veil is on, the
+// seeded clear-night value while it's off — so the toggle reads as "show the
+// clear sky", not just "hide the drifting layer". Re-bakes the grain envelope.
+function applyTurbidity() {
+  conditions.turbidity = (veilOn && conditions.wxTurb != null)
+    ? conditions.wxTurb : conditions.seedTurb;
+  bakeGrain(); bakeGrainLayer();
+}
 
 function applyForecast() {
   if (!wx) return;
   wx.verdict = makeVerdict();
-  // real cloud nudges the seeded haze — cloudy nights render softer / washier
+  // real cloud nudges the seeded haze — cloudy nights render softer / washier.
+  // Derived from seedTurb (not the live value) so it stays idempotent across
+  // re-forecasts and veil toggles.
   const cloudTurb = 0.32 + 0.42 * clamp((wx.avgNight || 0) / 100, 0, 1);
-  conditions.turbidity = clamp(conditions.turbidity * 0.45 + cloudTurb, 0.15, 0.85);
-  bakeGrain(); bakeGrainLayer();
+  conditions.wxTurb = clamp(conditions.seedTurb * 0.45 + cloudTurb, 0.15, 0.85);
+  applyTurbidity();
   _placardKey = '';           // force the placard sub to pick up the verdict
   updatePlacard();
   syncCloudBtn();
@@ -1915,6 +1934,7 @@ function enter(lat, lon, place, tz, via) {
   state.located = true;
   _placardKey = '';
   wx = null;                  // drop the previous place's forecast
+  veilOn = true;              // each place starts showing its real weather
   flingVel = 0;
   closeCard();
   savePlace();
