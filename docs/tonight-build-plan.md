@@ -90,9 +90,24 @@ Each is independently viewable.
    a responsive/touch pass (scroll caps on the locate prompt + result
    list, small-screen + landscape media queries, safe-area for the card,
    `font-optical-sizing`). **v1 ready to ship.**
-6. **ISS (post-v1)** — vendored TLE snapshot + `satellite.js` SGP4,
+6. **ISS (post-v1)** — ~~vendored TLE snapshot + `satellite.js` SGP4,
    tonight's visible passes (satellite sunlit, observer dark, above the
-   horizon), a callout line and a moving mark on the panorama. *~1 day.*
+   horizon), a callout line and a moving mark on the panorama.~~
+   **DONE 2026-09-06.** `lib/satellite.min.js` (satellite.js 5.0.0 UMD,
+   MIT, 23 KB — 7.x dropped its UMD bundle) + `data/iss-tle.json`
+   (committed Celestrak snapshot) with a best-effort keyless refresh from
+   `api.wheretheiss.at` (cached ~12 h, never downgrades to older
+   elements, no location sent). `recomputePasses()` scans state.t +26 h:
+   coarse 30 s bracketing → 4 s refine, keeping intervals with the ISS
+   above 10°, sunlit (cylindrical Earth-shadow test vs the J2000 Sun
+   vector), and the observer past civil dusk; rough magnitude from range
+   + phase angle. `paintISS()` draws a hairline predicted arc (chrome
+   ink, no glow) + peak tick/time and a small mark riding state.t during
+   the pass (short trail, restrained bloom). A placard callout —
+   "ISS · 21:14, rises WNW → 61°" — plays the pass on tap (one-shot ~11 s
+   sweep of state.t; reduced-motion jumps to the peak). Tap the mark for
+   the card. No-ops entirely without the library/elements. ~0.9 ms/frame
+   (unchanged); recompute ~11 ms, deferred.
 
 ## Decisions — RESOLVED 2026-09-06
 

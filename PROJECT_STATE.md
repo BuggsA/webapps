@@ -233,10 +233,32 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
     same-named context field.
 - **v1 is ready to deploy:** `.\scripts\deploy-app.ps1 -Name tonight`
   (human-run), then re-sync `hosting/site-root/` with the app listed.
-- **Phase 6 (post-v1): ISS passes** -- committed TLE snapshot +
-  `satellite.js` SGP4, tonight's visible passes, a callout + moving mark.
-- Tier 1; no runtime network beyond the two keyless Open-Meteo fetches.
-  Deploy (later, human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
+- **Phase 6 (ISS passes): DONE 2026-09-06.** `apps/tonight/lib/satellite.min.js`
+  (satellite.js 5.0.0 UMD, MIT, 23 KB -- vendored; 7.x dropped the UMD
+  bundle, SGP4 is fixed math so the version is immaterial) +
+  `data/iss-tle.json` (committed Celestrak TLE snapshot = the offline
+  fallback) with a best-effort keyless runtime refresh from
+  `api.wheretheiss.at` (cached ~12 h in localStorage, only accepted if the
+  epoch is newer than what's held, **no location sent** -- less invasive
+  than the weather call). `recomputePasses()` scans `state.t` + 26 h
+  (coarse 30 s bracket -> 4 s refine), keeping windows where the ISS is
+  above 10 deg, in sunlight (cylindrical Earth-shadow test against the
+  J2000 Sun vector -- ~0.4 deg TEME/J2000 frame slop, immaterial), and the
+  observer is past civil dusk; magnitude from range + Sun-ISS-observer
+  phase angle. Draws a hairline predicted arc (chrome ink, **no glow** --
+  like the graticule/leader borrows) + a peak tick/time, and a small mark
+  riding `state.t` through the pass (short trail, restrained planet-grade
+  bloom). Placard callout "ISS - 21:14, rises WNW -> 61 deg"; tap it to
+  **play the pass** (one-shot ~11 s eased sweep of `state.t`; reduced-motion
+  jumps to peak, static arc). Tap the mark -> the object card. No-ops
+  entirely without the library or elements; ` - approx` suffix if elements
+  are > 6 days stale. ~0.9 ms/frame (unchanged); recompute ~11 ms, deferred
+  off `enter()` / `Now` / sim-day change (skipped during fast lapses).
+  **Deploy note:** replace `data/iss-tle.json` on deploy to keep the
+  offline path fresh (a `scripts/refresh-tle.ps1` could automate it).
+- Tier 1; runtime network is now three keyless CORS-open fetches (two
+  Open-Meteo + wheretheiss.at), all optional -- the sky renders fully
+  offline. Deploy (human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
 
 ## Not done yet
 

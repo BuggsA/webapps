@@ -151,6 +151,34 @@ body {
   letter-spacing: 0.02em;
   color: var(--chrome-soft);
 }
+/* ISS pass callout — a quiet line under the sub; tap to play the pass */
+.placard-iss {
+  justify-self: start;
+  margin-top: 0.3em;
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+  color: var(--chrome-soft);
+  font-variant-numeric: lining-nums tabular-nums;
+  pointer-events: auto;                /* the placard itself is inert */
+  cursor: pointer;
+  text-align: left;
+  transition: color 140ms ease, letter-spacing 160ms ease;
+}
+.placard-iss[hidden] { display: none; }
+.placard-iss::after {                  /* a hairline, drawn in like .word */
+  content: "";
+  display: block;
+  height: 1px;
+  margin-top: 2px;
+  background: currentColor;
+  opacity: 0.3;
+  transition: opacity 150ms ease;
+}
+.placard-iss:hover,
+.placard-iss:focus-visible { color: var(--chrome); letter-spacing: 0.045em; outline: none; }
+.placard-iss:hover::after,
+.placard-iss:focus-visible::after { opacity: 0.75; }
+.placard-iss:active { opacity: 0.6; }
 
 /* --- object card: a quiet overlay tethered to a tapped object ------ */
 .card {

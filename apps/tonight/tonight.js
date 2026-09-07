@@ -1,11 +1,12 @@
 /* ==========================================================================
    Tonight — the sky above you, as a horizon panorama.
 
-   Built so far (see docs/tonight-build-plan.md): Phase 1 — location, the
-   horizon canvas with drag-to-turn, the time model (now / play / scrub);
-   Phase 2 — the moon (phase + lit orientation), the five naked-eye planets,
-   tap-to-select with a tethered card. Stars, the Milky Way, weather and the
-   final look come next; the structure here is built to take them.
+   Built (see docs/tonight-build-plan.md): Phase 1 location + horizon canvas
+   + time model; Phase 2 moon & planets + tap-to-select card; Phase 3 stars
+   + stylised Milky Way; Phase 4 cloud veil + verdict (Open-Meteo); Phase 5
+   the look (compass hint, drag-glide, reduced-motion, responsive); Phase 6
+   ISS visible passes (SGP4 via lib/satellite.min.js, predicted arc +
+   moving mark + a placard callout). v1 = phases 1–5; phase 6 shipped after.
 
    ART DIRECTION: NOCTURNE (+ two borrows: a graticule that shows only during
    a drag, a leader line only on selection). See docs/tonight-art-direction.md
@@ -34,6 +35,9 @@
                            advice(), paintLeader()
      WEATHER             — loadForecast() (Open-Meteo, cached), cloudAt(),
                            makeVerdict(), paintVeil() (drifting cloud layer)
+     SATELLITES          — loadISS()/refreshISS() (committed TLE + keyless
+                           refresh), recomputePasses() (SGP4 via satellite.js),
+                           paintISS() (predicted arc + moving mark), playPass()
      TELEMETRY           — track() calls throughout; see telemetry.js (off by
                            default, PII-free, sendBeacon on hide when an
                            endpoint is set). Portable: apps/_shared/telemetry.js
@@ -86,6 +90,7 @@ const el = {
   scrub:    document.getElementById('scrub'),
   clock:    document.getElementById('clock'),
   btnWhere: document.getElementById('btn-where'),
+  issLine:  document.getElementById('iss-line'),
 };
 const ctx = el.canvas.getContext('2d');
 const root = document.documentElement;
@@ -911,6 +916,12 @@ function moonPhaseWord(phase, illum) {
 function advice(o) {
   const t = state.t;
   const dir = compass(o.az);
+  if (o.kind === 'iss') {
+    const mins = o.set ? Math.round((o.set - t) / 60e3) : 0;
+    return mins >= 1
+      ? `Bright and moving fast — crossing the sky for about ${mins} more minute${mins === 1 ? '' : 's'}.`
+      : `Dropping toward the ${dir} — gone in under a minute.`;
+  }
   if (o.alt < -0.5) {
     // only promise a return if it happens before this night's dawn
     return o.rise && o.rise > t && state.dawn && o.rise < state.dawn
@@ -952,9 +963,11 @@ function closeCard() {
   selected = null;
   el.card.hidden = true;
   if (state.located && el.locate.hidden) el.placard.hidden = false;
+  updateISSLine(true);
 }
 function refreshCardRiseSet() {
   if (!selected) return;
+  if (selected.kind === 'iss') return;               // pass end comes from issRef's getter
   if (selected.kind === 'star') { selected.rise = selected.set = null; return; }
   const rs = riseSetFor(selected.name);
   selected.rise = rs.rise; selected.set = rs.set;
@@ -965,9 +978,11 @@ function updateCardText() {
   el.card.querySelector('.card-pos').textContent =
     s.alt > -0.5 ? `${Math.round(s.alt)}° up · ${compass(s.az)}` : `below the horizon`;
   const soon = ms => ms && ms > state.t && (ms - state.t) < 8 * 3600e3;
-  const rsLine = s.alt >= -0.5
-    ? (soon(s.set) ? `sets ${hhmm(s.set)}` : (s.set && s.alt > 20 ? 'up for hours' : ''))
-    : (soon(s.rise) ? `rises ${hhmm(s.rise)}` : '');
+  const rsLine = s.kind === 'iss'
+    ? (s.set ? `gone by ${hhmm(s.set)}` : '')
+    : s.alt >= -0.5
+      ? (soon(s.set) ? `sets ${hhmm(s.set)}` : (s.set && s.alt > 20 ? 'up for hours' : ''))
+      : (soon(s.rise) ? `rises ${hhmm(s.rise)}` : '');
   el.card.querySelector('.card-rise').textContent = rsLine;
   el.card.querySelector('.card-advice').textContent = advice(s);
 }
@@ -1041,8 +1056,9 @@ function pickObject(x, y) {
   consider(bodies.moon, 34, 'moon', 'Moon');
   for (const pl of bodies.planets) consider(pl, 20, 'planet', pl.name);
   if (starCat) for (const st of starCat.list) if (st.name) consider(st, 13, 'star', st.name);
+  if (issMark._x != null) consider(issMark, 16, 'iss', 'ISS');
   if (!key) return null;
-  return kind === 'star' ? starRef(key) : bodyRef(key);
+  return kind === 'star' ? starRef(key) : kind === 'iss' ? issRef() : bodyRef(key);
 }
 
 /* --- WEATHER: forecast fetch, the cloud veil, the verdict -------------
@@ -1189,6 +1205,285 @@ function paintVeil() {
   ctx.restore();
 }
 
+/* --- SATELLITES: the ISS and tonight's visible passes ---------------
+   SGP4 via vendored satellite.js (window.satellite). Elements come from a
+   committed snapshot (data/iss-tle.json) with a best-effort keyless refresh
+   from api.wheretheiss.at (cached ~12 h) — the snapshot is the offline
+   fallback and no location is sent in the refresh. A "visible pass" = the
+   ISS above 10°, in sunlight, with the observer past civil dusk. The whole
+   block no-ops without the library or elements: the sky is unchanged.
+   Frame note: satellite.js positions are TEME-of-date, the Sun vector here
+   is J2000 (~0.4° off) — immaterial for a cylindrical shadow test.        */
+const SAT = window.satellite || null;
+const ISS_TLE_URL = 'https://api.wheretheiss.at/v1/satellites/25544/tles';
+const ISS_KEY = 'tonight.iss.v1';
+let issRec = null, issEpochMs = 0;
+let issPasses = [], _passKey = '';
+const issMark = { _x: null, _y: null, alt: -99, az: 0 };
+let issArcK = 0;                 // eased 0..1 — the arc fades in around a pass
+let issTween = null;             // one-shot "play the pass": { fromMs, toMs, t0, dur }
+
+function issParse(l1, l2) {
+  if (!SAT || !l1 || !l2) return false;
+  try {
+    const rec = SAT.twoline2satrec(String(l1).trim(), String(l2).trim());
+    if (!rec || rec.error) return false;
+    const ep = (rec.jdsatepoch - 2440587.5) * 86400e3;     // JD -> epoch ms
+    if (issRec && ep < issEpochMs) return false;           // never downgrade to older elements
+    issRec = rec;
+    issEpochMs = ep;
+    _passKey = '';
+    recomputePasses();
+    return true;
+  } catch (_) { return false; }
+}
+async function loadISS() {
+  if (!SAT) return;
+  try {                                   // committed snapshot — instant, offline-safe
+    const j = await (await fetch('data/iss-tle.json')).json();
+    if (j) issParse(j.line1, j.line2);
+  } catch (_) {}
+  refreshISS();                           // then try for fresher elements
+}
+async function refreshISS() {
+  if (!SAT) return;
+  try {
+    const c = JSON.parse(localStorage.getItem(ISS_KEY) || 'null');
+    if (c && c.l1 && Date.now() - c.at < 12 * 3600e3) {
+      issParse(c.l1, c.l2); track('iss.tle', { src: 'cache' }); return;
+    }
+  } catch (_) {}
+  try {
+    const j = await (await fetch(ISS_TLE_URL)).json();
+    const l1 = j && j.line1, l2 = j && j.line2;
+    if (/^1 25544/.test(l1 || '') && /^2 25544/.test(l2 || '') && issParse(l1, l2)) {
+      try { localStorage.setItem(ISS_KEY, JSON.stringify({ l1, l2, at: Date.now() })); } catch (_) {}
+      track('iss.tle', { src: 'net' });
+    }
+  } catch (_) { track('iss.tle', { src: 'fail' }); }   // keep the snapshot
+}
+
+function issGd() {
+  return { longitude: state.lon * D2R, latitude: state.lat * D2R, height: 0.03 };
+}
+// geocentric Sun unit vector (equatorial J2000)
+function sunUnit(date) {
+  const v = A.GeoVector(A.Body.Sun, date, false);
+  const L = Math.hypot(v.x, v.y, v.z) || 1;
+  return [v.x / L, v.y / L, v.z / L];
+}
+// is an ECI point (km) in sunlight — i.e. outside Earth's shadow cylinder?
+function inSunlight(p, s) {
+  const dot = p.x * s[0] + p.y * s[1] + p.z * s[2];
+  if (dot >= 0) return true;                                  // sun-facing side
+  const px = p.x - dot * s[0], py = p.y - dot * s[1], pz = p.z - dot * s[2];
+  return Math.hypot(px, py, pz) > 6378.14;                    // clear of the shadow
+}
+function issLook(date, gd) {
+  const pv = SAT.propagate(issRec, date);
+  if (!pv || !pv.position) return null;
+  const gmst = SAT.gstime(date);
+  const la = SAT.ecfToLookAngles(gd, SAT.eciToEcf(pv.position, gmst));
+  return { az: la.azimuth * R2D, el: la.elevation * R2D, range: la.rangeSat, pos: pv.position, gmst };
+}
+function sunAltAt(date) {
+  const eq = A.Equator(A.Body.Sun, date, observer(), true, true);
+  return A.Horizon(date, observer(), eq.ra, eq.dec, 'normal').altitude;
+}
+// rough visual magnitude: intrinsic −1.3 at 1000 km & half-lit, corrected for
+// range and the Sun–ISS–observer phase angle.
+function issMag(lk, gd) {
+  try {
+    const s = sunUnit(new Date(lk.ms));
+    const o = SAT.ecfToEci(SAT.geodeticToEcf(gd), lk.gmst);
+    const dx = o.x - lk.pos.x, dy = o.y - lk.pos.y, dz = o.z - lk.pos.z;
+    const dl = Math.hypot(dx, dy, dz) || 1;
+    const frac = clamp((1 + (s[0] * dx + s[1] * dy + s[2] * dz) / dl) / 2, 0.02, 1);
+    return -1.3 + 5 * Math.log10(lk.range / 1000) - 2.5 * Math.log10(frac);
+  } catch (_) { return -1.3 + 5 * Math.log10(lk.range / 1000); }
+}
+
+// tonight's visible passes, from state.t forward ~26 h. Guarded by place|day
+// so calling it on the 2 Hz tick is free when nothing changed; ~60 ms when it
+// actually runs, so callers defer it off the critical path.
+function recomputePasses(force) {
+  if (!SAT || !issRec || !state.located) { issPasses = []; return; }
+  const key = state.lat.toFixed(2) + ',' + state.lon.toFixed(2) + '|' + dayKey(tzParts(state.t));
+  if (!force && key === _passKey) return;
+  _passKey = key;
+
+  const gd = issGd();
+  const t0 = state.t.getTime(), t1 = t0 + 26 * 3600e3;
+  const brackets = [];
+  let cur = null;
+  for (let ms = t0; ms <= t1; ms += 30e3) {                   // coarse: above the horizon
+    const lk = issLook(new Date(ms), gd);
+    if (!lk) continue;
+    if (lk.el > 0) {
+      if (!cur) cur = { a: ms, b: ms, hi: lk.el };
+      cur.b = ms; cur.hi = Math.max(cur.hi, lk.el);
+    } else if (cur) { brackets.push(cur); cur = null; }
+  }
+  if (cur) brackets.push(cur);
+
+  const passes = [];
+  for (const br of brackets) {
+    if (br.hi < 9) continue;                                  // never really cleared the horizon
+    const poly = [];
+    let vis0 = null, vis1 = null, peak = null;
+    for (let ms = br.a - 30e3; ms <= br.b + 30e3; ms += 4e3) {   // refine: 4 s
+      const d = new Date(ms);
+      const lk = issLook(d, gd);
+      if (!lk || lk.el < 0) continue;
+      const on = lk.el > 10 && inSunlight(lk.pos, sunUnit(d)) && sunAltAt(d) < -6;
+      poly.push({ az: lk.az, el: lk.el, on });
+      if (on) {
+        if (vis0 == null) vis0 = ms;
+        vis1 = ms;
+        if (!peak || lk.el > peak.el) { lk.ms = ms; peak = lk; }
+      }
+    }
+    if (vis0 == null || !peak || peak.el < 12 || vis1 - vis0 < 60e3) continue;
+    const von = poly.filter(s => s.on);
+    passes.push({
+      startMs: vis0, endMs: vis1, peakMs: peak.ms,
+      peakEl: peak.el, peakAz: peak.az,
+      riseAz: von[0].az, setAz: von[von.length - 1].az,
+      mag: issMag(peak, gd), poly,
+    });
+  }
+  issPasses = passes.sort((a, b) => a.startMs - b.startMs);
+  updateISSLine(true);
+  track('iss.passes', { n: issPasses.length, peak: issPasses[0] ? Math.round(issPasses[0].peakEl) : 0 });
+}
+
+// the current-or-next pass that hasn't ended yet
+function nextPass() {
+  const now = state.t.getTime();
+  for (const p of issPasses) if (now < p.endMs + 60e3) return p;
+  return null;
+}
+
+// a faint callout by the placard — "ISS · 21:14, rises WNW → 61°"
+let _issLineKey = '';
+function updateISSLine(force) {
+  if (force) _issLineKey = '';
+  const p = (state.located && el.locate.hidden && !selected) ? nextPass() : null;
+  if (!p) { el.issLine.hidden = true; _issLineKey = ''; return; }
+  const now = state.t.getTime();
+  const active = now >= p.startMs && now <= p.endMs;
+  const stale = issEpochMs && Math.abs(now - issEpochMs) > 6 * 864e5;
+  const key = p.startMs + (active ? 'a' : '') + (stale ? 's' : '');
+  if (key === _issLineKey) return;
+  _issLineKey = key;
+  el.issLine.textContent = (active
+    ? 'ISS passing now'
+    : `ISS · ${hhmm(new Date(p.startMs))}, rises ${compass(p.riseAz)} → ${Math.round(p.peakEl)}°`)
+    + (stale ? ' · approx' : '');
+  el.issLine.hidden = false;
+}
+
+// tap the callout: play the pass (a one-shot ~11 s sweep of state.t across it).
+// Reduced-motion jumps to the peak instead; the static arc shows either way.
+function playPass() {
+  const p = nextPass();
+  if (!p) return;
+  track('iss.play', { peak: Math.round(p.peakEl) });
+  closeCard();
+  setPlayMode('Play');                        // stop the normal time advance
+  if (REDUCED) {
+    state.t = new Date(p.peakMs);
+    if (dayKey(tzParts(state.t)) !== _lapseDay) { _lapseDay = dayKey(tzParts(state.t)); computeDuskDawn(); }
+    syncScrubFromT(); updateClock();
+  } else {
+    issTween = { fromMs: p.startMs - 18e3, toMs: p.endMs + 18e3, t0: 0, dur: 11 };
+  }
+}
+if (el.issLine) el.issLine.addEventListener('click', playPass);
+
+// the predicted arc (hairline, no glow) + a mark riding state.t during the pass
+function paintISS() {
+  if (!SAT || !issRec) { issMark._x = issMark._y = null; return; }
+  const p = nextPass();
+  const now = state.t.getTime();
+  const near = p && now > p.startMs - 12 * 60e3 && now < p.endMs + 30e3;
+  const tgt = near ? 1 : 0;
+  issArcK = REDUCED ? tgt : issArcK + (tgt - issArcK) * 0.08;
+  if (!p || issArcK < 0.02) { issMark._x = issMark._y = null; return; }
+
+  const C = chromeRGB.join(',');
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = `rgba(${C},${(0.34 * issArcK).toFixed(3)})`;
+  ctx.beginPath();
+  let started = false;
+  for (const s of p.poly) {
+    if (s.el < 1) { started = false; continue; }
+    const pr = project(s.el, s.az);
+    if (!pr.visible) { started = false; continue; }
+    if (started) ctx.lineTo(pr.x, pr.y); else { ctx.moveTo(pr.x, pr.y); started = true; }
+  }
+  ctx.stroke();
+  const pk = project(p.peakEl, p.peakAz);              // a tick + time at the peak
+  if (pk.visible) {
+    ctx.strokeStyle = `rgba(${C},${(0.5 * issArcK).toFixed(3)})`;
+    ctx.beginPath(); ctx.moveTo(pk.x, pk.y - 5); ctx.lineTo(pk.x, pk.y + 5); ctx.stroke();
+    ctx.fillStyle = `rgba(${C},${(0.6 * issArcK).toFixed(3)})`;
+    ctx.font = `11px ${GFONT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(hhmm(new Date(p.peakMs)), pk.x, pk.y - 10);
+  }
+  ctx.restore();
+
+  // the mark — only while the ISS is actually up on this pass, and not during
+  // a fast time-lapse (like the dust, it would just streak)
+  const fast = state.playing && playMode !== 'Live' && playMode !== '10m';
+  if (fast || now < p.startMs - 16e3 || now > p.endMs + 16e3) { issMark._x = issMark._y = null; return; }
+  const lk = issLook(state.t, issGd());
+  if (!lk || lk.el < 0) { issMark._x = issMark._y = null; return; }
+  issMark.alt = lk.el; issMark.az = lk.az;
+  const pr = project(lk.el, lk.az);
+  if (!pr.visible) { issMark._x = issMark._y = null; return; }
+  issMark._x = pr.x; issMark._y = pr.y;
+
+  if (!REDUCED) {                                      // a short trailing wisp
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.strokeStyle = `rgba(${C},0.26)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    let ts = false;
+    for (let dt = -20e3; dt <= 0; dt += 4e3) {
+      const l2 = issLook(new Date(now + dt), issGd());
+      if (!l2 || l2.el < 0) { ts = false; continue; }
+      const q = project(l2.el, l2.az);
+      if (!q.visible) { ts = false; continue; }
+      if (ts) ctx.lineTo(q.x, q.y); else { ctx.moveTo(q.x, q.y); ts = true; }
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  bloom(pr.x, pr.y, 11, [246, 245, 239], 0.13);        // restrained, bright as a planet
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.fillStyle = 'rgba(246,245,239,0.96)';
+  ctx.beginPath(); ctx.arc(pr.x, pr.y, 1.7, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+function issRef() {
+  const p = nextPass();
+  return {
+    kind: 'iss', name: 'International Space Station',
+    get alt() { return issMark.alt; },
+    get az()  { return issMark.az; },
+    get x()   { return issMark._x; },
+    get y()   { return issMark._y; },
+    get set() { return p ? new Date(p.endMs) : null; },
+    rise: null, _vis: 1,
+  };
+}
+
 /* --- the loop ---------------------------------------------------------- */
 let lastFrame = 0, lastCompute = 0, running = false, rafId = 0, _stillAt = 0;
 const _perf = [];
@@ -1214,6 +1509,16 @@ function frame(now) {
     }
   }
 
+  // one-shot "play the pass" sweep — drives state.t itself (playMode is 'Play')
+  if (issTween) {
+    if (!issTween.t0) issTween.t0 = now;
+    const u = clamp((now - issTween.t0) / 1000 / issTween.dur, 0, 1);
+    state.t = new Date(lerp(issTween.fromMs, issTween.toMs, u * u * (3 - 2 * u)));
+    if (dayKey(tzParts(state.t)) !== _lapseDay) { _lapseDay = dayKey(tzParts(state.t)); computeDuskDawn(); }
+    syncScrubFromT(); updateClock();
+    if (u >= 1) issTween = null;
+  }
+
   if (state.playing) {
     if (playMode === 'Live') {
       state.t = new Date();
@@ -1236,6 +1541,7 @@ function frame(now) {
       lastCompute = now;
       sun = altaz(A.Body.Sun, state.t);
       recomputeBodies(state.t);
+      if (!isLapse(playMode)) recomputePasses(false);   // guarded on place|day
     }
     updateStarTransform();       // cheap; keeps the sky rotating smoothly
   }
@@ -1278,6 +1584,7 @@ function frame(now) {
     paintStars();
     paintPlanets();
     paintMoon();
+    paintISS();                // the station's arc + a mark, during a pass
     paintVeil();               // clouds sit in front of everything celestial
     paintCompassHint();        // faint facing-direction cue at the horizon
     paintGraticule();
@@ -1397,6 +1704,7 @@ const isLapse = n => n in LAPSE_RATE;
 function setPlayMode(name) {
   const prev = playMode;
   if (name !== prev && state.located) track('play', { mode: name });
+  issTween = null;                      // any mode change cancels a pass sweep
   playMode = name;
   state.playing = name !== 'Play';
   el.btnPlay.textContent = name === 'Play' ? 'Play' : name;
@@ -1453,6 +1761,7 @@ function updateClock() {
   if (dayKey(p) > dayKey(tzParts(new Date()))) s = '+1 ' + s;  // rolled past midnight
   el.clock.value = s;
   updatePlacard();
+  updateISSLine();
 }
 
 let _placardKey = '';
@@ -1468,12 +1777,13 @@ function updatePlacard() {
 }
 el.btnNow.addEventListener('click', () => {
   state.t = new Date();
-  setPlayMode('Live');       // "Now" = back to the live sky
+  setPlayMode('Live');       // "Now" = back to the live sky (also clears any pass sweep)
   computeDuskDawn();
   syncScrubFromT();
   updateClock();
   refreshCardRiseSet();
   loadForecast();             // re-verdict for tonight (uses cache if fresh)
+  setTimeout(() => recomputePasses(true), 0);   // ISS passes for today
 });
 el.btnPlay.addEventListener('click', () => {
   if (playMode === 'Play') { setPlayMode('Live'); return; }
@@ -1619,6 +1929,7 @@ function enter(lat, lon, place, tz, via) {
   setPlayMode('Live');        // open on the live sky, and stay current
   firstHint.active = true; firstHint.t0 = 0;   // one-time "drag to turn" cue (after setPlayMode clears it)
   loadForecast();             // async — cloud veil + the verdict line
+  setTimeout(() => recomputePasses(true), 60);   // ISS passes for the new place (off the critical path)
   startLoop();
 }
 
@@ -1626,6 +1937,7 @@ function init() {
   resize();
   bakeConditions();           // a default seed so the pre-location sky has texture
   loadStars();                // async; the loop tolerates starCat being null
+  loadISS();                  // async; SGP4 lib + committed elements + a keyless refresh
   startLoop();                // the sky renders even before a place is chosen
   setPlayMode('Play');
   if (loadPlace()) enter(state.lat, state.lon, state.place, state.tz, 'remembered');
