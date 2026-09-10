@@ -259,6 +259,25 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - Tier 1; runtime network is now three keyless CORS-open fetches (two
   Open-Meteo + wheretheiss.at), all optional -- the sky renders fully
   offline. Deploy (human-run): `.\scripts\deploy-app.ps1 -Name tonight`.
+- **Cloud toggle fix (`6f51dab`):** the button only gated `paintVeil()`;
+  the forecast's turbidity bump (whole-sky haze) stayed. Now
+  `bakeConditions()` stashes `seedTurb`, `applyForecast()` records
+  `wxTurb` (from the seed, idempotent), `applyTurbidity()` swaps by
+  `veilOn` + re-bakes grain, and the button calls it -- so the toggle
+  reads as "show the clear sky". Each new place resets `veilOn = true`.
+
+## 2026-09-10 -- house rules doc for new apps
+
+- **`docs/building-a-new-app.md`** added -- the briefing doc to hand a
+  builder (AI or human) alongside a per-app brief. Distilled from `until`
+  + `tonight`: the stable constraints (Tier 1, self-contained folder,
+  keyless/CORS/optional network, privacy posture, human-run deploy, the
+  a11y floor), the process that worked (research -> art-direction pass +
+  locked doc *before code* -> phased plan -> doc discipline), a
+  definition-of-done checklist, and an app-brief template. `README.md`
+  layout + status lines refreshed to match reality (`apps/_shared/` holds
+  portable modules like `telemetry.js`, not a shared stylesheet; two apps
+  built).
 
 ## Not done yet
 

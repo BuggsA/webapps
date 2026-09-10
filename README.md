@@ -8,8 +8,9 @@ machine-specific gotchas in [`docs/SYSTEM_PLAN_NOTES.md`](docs/SYSTEM_PLAN_NOTES
 ## Layout
 
 ```
-apps/<name>/        one small app each; its own index.html, its own README
-apps/_shared/       style.css -- the house style, created by the first builder
+apps/<name>/        one small app each; its own index.html, css, js, README
+apps/_shared/       portable modules an app copies in (e.g. telemetry.js).
+                    Each app still self-hosts its own CSS + fonts.
 hosting/            shared S3 + CloudFront stack (CDK). Deployed once.
 reference/          torn-down story-app code, kept as the Tier 2 template
 docs/               the plan, the notes, the deploy runbook
@@ -42,13 +43,21 @@ hand**, every time. Setup for this is step 0 of
 
 ## Adding an app
 
+Brief the builder with
+[`docs/building-a-new-app.md`](docs/building-a-new-app.md) (the house
+rules, distilled from `apps/until/` and `apps/tonight/`) plus a one-page
+brief for the specific app.
+
 1. `researcher` (if any lookups are needed) -> findings.
 2. `builder` -> `apps/<name>/` in a worktree, + `apps/<name>/README.md`.
+   If look/feel matters: an art-direction pass + a locked
+   `docs/<name>-art-direction.md` *before* code.
 3. `deployer` -> review + deploy commands.
 4. A human runs the `s3 sync` + CloudFront invalidation from PowerShell.
 
 ## Status
 
-Bootstrapped 2026-09-02: repo scaffold, three subagent definitions, and
-the hosting stack **code**. Nothing deployed yet -- the hosting stack has
-not been `cdk deploy`ed and no app has been built. See `PROJECT_STATE.md`.
+Bootstrapped 2026-09-02. Hosting stack deployed 2026-09-02
+(`WebappsHostingStack`, `<DISTRIBUTION_DOMAIN>`). Two apps built:
+`until` and `tonight` (both complete, neither deployed yet). Running
+detail in [`PROJECT_STATE.md`](PROJECT_STATE.md).
