@@ -279,6 +279,32 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   portable modules like `telemetry.js`, not a shared stylesheet; two apps
   built).
 
+
+## 2026-09-10 -- third app: tide (groundwork, no code yet)
+
+- **What it is.** The moon moving the ocean on a globe seen from the
+  moon's point of view, plus the next high/low water at your place. Chosen
+  2026-09-10 over Rivers (national gauge data, tiles, river topology),
+  Quakes (wonder but no daily utility) and a beautiful whatismyip (thin,
+  single-visit) for: deepest wonder, daily utility for anyone near a
+  coast, ad-landfill incumbents, and Tier 1 with zero exceptions.
+- **Research verified (curl, CORS headers checked):**
+  `docs/tide-data-research.md`. Open-Meteo Marine
+  `sea_level_height_msl` is global, keyless, CORS-open, 15-minutely,
+  -92 d..+15 d, matches NOAA Boston to within hourly sampling (~7 % low in
+  amplitude). NOAA CO-OPS predictions + harmonic constants keyless +
+  CORS (3,499 stations). EOT20 global tide model is CC BY 4.0 -- shipped
+  downsampled to 1 deg for the globe field. astronomy-engine already
+  vendored in Tonight. Inland points still get a series from Open-Meteo,
+  so the app needs its own distance-to-coast guard.
+- **Docs written:** `docs/tide-brief.md` (filled template),
+  `docs/tide-art-direction.md` (five directions, "Under the Moon"
+  recommended -- **pick pending, not locked**), `docs/tide-build-plan.md`
+  (phases 0-5, decisions resolved, risks).
+- **Next:** human picks the art direction and flips the status line to
+  LOCKED; then phase 0 (data-prep scripts + tide maths gated on the NOAA
+  comparison test). No code in `apps/tide/` before the lock.
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename
