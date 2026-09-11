@@ -1,0 +1,21 @@
+{
+ "src": "EOT20 ocean tide (Hart-Davis et al., 2021, DGFI-TUM), CC BY 4.0, doi:10.17882/79489; downsampled to 1\u00b0 by scripts/tide-prep-field.py",
+ "file": "tide-field.bin",
+ "constituents": [
+  "M2",
+  "S2",
+  "N2",
+  "K2",
+  "K1",
+  "O1",
+  "P1",
+  "Q1"
+ ],
+ "nlon": 360,
+ "nlat": 180,
+ "lon0": -179.5,
+ "lat0": -89.5,
+ "ampScale": 0.001,
+ "phaseScale": 1.40625,
+ "layout": "per constituent: uint16 LE amplitude (mm) x nlon*nlat, then uint8 phase (deg*256/360) x nlon*nlat; index = lat_row*nlon + lon_col, rows south\u2192north"
+}

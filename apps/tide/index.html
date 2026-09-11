@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tide</title>
+<meta name="description" content="The moon moving the ocean, on a globe seen from the moon — and the next high and low water where you are.">
+<meta name="theme-color" content="#0a1220">
+<meta name="app" content="tide">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a1220'/%3E%3Ccircle cx='16' cy='17' r='10' fill='%23223a5e'/%3E%3Cpath d='M6 17c3-2 5 2 8 0s5-2 8 0 4 2 4 2v4H6z' fill='%235d7fae'/%3E%3Ccircle cx='24' cy='6' r='2' fill='%23f2ede4'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/spacegrotesk-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="tide.css">
+</head>
+<body>
+<canvas id="globe" aria-label="The Earth seen from the moon, its oceans rising and falling with the tide" role="img"></canvas>
+
+<!-- The moon: the only icon. Drawn on the canvas; this is its hit target. -->
+<button id="moon" class="moon" type="button" aria-label="Return to the moon's view of the Earth" hidden></button>
+
+<!-- Readout: rows written onto the field, top-left. Numerals first. -->
+<section id="readout" class="readout" hidden>
+  <div class="ro-rule" id="ro-rule"></div>
+  <h1 class="ro-place" id="ro-place"></h1>
+  <p class="ro-state" id="ro-state" aria-live="polite"></p>
+  <ol class="ro-turns" id="ro-turns"></ol>
+  <p class="ro-line" id="ro-range"></p>
+  <p class="ro-line" id="ro-moon"></p>
+  <p class="ro-line" id="ro-sun"></p>
+  <p class="ro-src" id="ro-src"></p>
+  <p class="ro-src" id="ro-handoff"></p>
+</section>
+
+<!-- Locate: a prompt written into the field, not a card -->
+<form id="locate" class="locate" autocomplete="off" hidden>
+  <h1>Tide</h1>
+  <p>The moon moving the ocean. Where is your coast?
+     Your place stays on this device.</p>
+  <input id="place-input" class="field" type="text" inputmode="search"
+         placeholder="a beach, a harbour, a town" aria-label="Place name" spellcheck="false">
+  <ul id="place-results" class="place-results" role="listbox" hidden></ul>
+  <div class="locate-actions">
+    <button class="word" type="submit">Search</button>
+    <button class="word" type="button" id="use-device">Use my location</button>
+    <button class="word" type="button" id="just-look" hidden>Just look</button>
+  </div>
+  <p id="locate-msg" class="locate-msg" role="status" hidden></p>
+</form>
+
+<!-- Time: a hairline scrub across the bottom, and a few words -->
+<div id="controls" class="controls" hidden>
+  <button id="btn-now" class="word" type="button">Now</button>
+  <button id="btn-play" class="word" type="button" aria-pressed="false">Play</button>
+  <input id="scrub" class="scrub" type="range" min="0" max="1000" step="1" value="0"
+         aria-label="Time, from three days ago to fifteen days ahead">
+  <output id="clock" class="clock" for="scrub"></output>
+  <button id="btn-where" class="ctl-icon" type="button" aria-label="Change place">&#8853;</button>
+  <button id="btn-about" class="ctl-icon" type="button" aria-label="About Tide" aria-expanded="false">&#9432;</button>
+</div>
+
+<!-- About: sources, what this is not -->
+<section id="about" class="about" hidden>
+  <h2>Tide</h2>
+  <p>The Earth as the moon sees it. The sea under the moon is pulled toward it
+     and the sea opposite is left behind, so the ocean stands in two long
+     bulges. The Earth turns beneath them once a day, and the bulges, held by
+     the moon, are what we call the tide. This globe shows the real ocean tide
+     from a global model, cell by cell, as light on water.</p>
+  <p>The numbers for your place are official predictions where a NOAA station
+     is near, and a model estimate from Open-Meteo everywhere else. Estuaries
+     and harbours can differ from the model by tens of centimetres and tens of
+     minutes.</p>
+  <p><strong>This is not a navigation or safety product.</strong> For anything
+     that matters — a boat, a walk across sand that floods, a swim — use the
+     official tables for your coast and local advice.</p>
+  <p class="about-src">Global tide field: EOT20 (Hart-Davis et al., 2021,
+     DGFI-TUM), CC BY 4.0, downsampled to 1°. Coastlines: Natural Earth.
+     Astronomy: astronomy-engine (MIT). Sea level: Open-Meteo (CC BY 4.0),
+     NOAA CO-OPS. Your place never leaves this device. No account, no ads,
+     no tracking.</p>
+  <button class="word" type="button" id="about-close">Close</button>
+</section>
+
+<script src="telemetry.js"></script>
+<script src="lib/astronomy.js"></script>
+<script src="lib/harmonics.js"></script>
+<script src="tide.js"></script>
+</body>
+</html>

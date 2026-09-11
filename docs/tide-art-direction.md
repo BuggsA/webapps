@@ -1,10 +1,9 @@
 # Tide — art direction
 
-**STATUS: DRAFT — direction not yet picked (2026-09-10).** Five candidates
-below, one recommended. When the human picks, change this line to
-`LOCKED <date>: <direction>`, delete the unpicked candidates' specs (keep
-their names in a one-line "considered" list), and every phase commit
-references this file from then on. No app code before that.
+**STATUS: LOCKED 2026-09-10 — Under the Moon**, with the two borrows below.
+Picked by the human on the recommendation. Every phase commit references
+this file. The four unpicked candidates are kept as one-liners under
+"Considered and not taken".
 
 Process per `building-a-new-app.md` §2b: diverge wide first, non-web
 references, no named genres, then converge.
@@ -39,48 +38,19 @@ up) — Tide is a planet, from the moon, looking down.
 
 ### 2. Harbour Table — structure-led (breaks the globe-hero rule)
 
-*Reference:* Admiralty Tide Tables, the 1970s Swiss railway timetable,
-the margins of a marine almanac.
-
-The printed tide table as an object. Numerals lead, set large and
-tabular; hairline rules; a column per day. The globe is a **stamp-sized
-engraved inset** that expands to full screen only when touched. The
-wonder is discovered, not led with. Most honest to the utility; weakest
-on the "wow then linger" goal because the wow is behind a tap.
+*Considered.* The printed tide table as an object (Admiralty Tide Tables, Swiss timetables); globe as a stamp-sized inset. Lent the readout discipline.
 
 ### 3. Sounding Chart — colour-led
 
-*Reference:* 19th-century Admiralty charts, NOAA raster charts, Imray.
-
-Nautical-chart conventions carried whole: buff land, white shallows,
-blue-tint depth bands, tiny sounding numerals, upright capitals for water
-names. The tide field is the shallow band breathing in and out. Handsome
-and instantly "sea", but it is a genre with a median (it will read as
-"chart app"), and colour is spent on convention rather than on the tide.
+*Considered.* Nautical-chart conventions carried whole (buff land, depth bands, soundings). A genre with a median; not taken.
 
 ### 4. Cyanotype — texture-led, single hue
 
-*Reference:* Anna Atkins, *Photographs of British Algae: Cyanotype
-Impressions* (1843); blueprint paper; sun-printed fabric.
-
-Everything is one Prussian-blue ground and white light. Land is the
-unexposed white silhouette, the sea's height is brightness, paper fibre
-shows through, edges are soft where light bled. Value carries all
-information; there is no second colour anywhere. Striking and
-un-web-like; the risk is that a single hue with a globe can drift toward
-"poster", and that the place readout has to work with contrast alone.
+*Considered.* Anna Atkins' 1843 cyanotypes: one Prussian-blue ground, white light, value carries all. Lent "value carries height".
 
 ### 5. Strandline — rule-breaker
 
-*Reference:* a beach in cross-section; a bathtub ring; the wrack line
-after a spring tide.
-
-The page is the beach. The water line is the interface and it literally
-rises and falls up the page over the day, covering and uncovering the
-copy that sits on the sand. The globe floats above the horizon like a
-second moon. Breaks "content readable at all times" on purpose. The most
-memorable and the least usable; kept as a source of one borrow, not as
-the direction.
+*Considered.* The page as a beach in section, the water line as the interface. Lent the rising/falling hairline only.
 
 ---
 

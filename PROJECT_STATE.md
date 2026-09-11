@@ -305,6 +305,42 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   LOCKED; then phase 0 (data-prep scripts + tide maths gated on the NOAA
   comparison test). No code in `apps/tide/` before the lock.
 
+## 2026-09-10 -- tide built (phases 0-5), not deployed
+
+- **Art direction locked** the same day: "Under the Moon" (camera at the
+  sub-lunar point; the Earth turns under the bulge; sea height as
+  luminance of one hue; readout as table rows). `docs/tide-art-direction.md`.
+- **Phase 0.** `apps/tide/lib/harmonics.js` (Doodson arguments + Schureman
+  nodal corrections, 37 constituents) passes the NOAA gate in
+  `scripts/tide-test-harmonics.js`: Boston / Pensacola / San Francisco
+  turning points within 12 min and 0.05 m using NOAA's own constants
+  (Anchorage is informational -- NOAA uses 83 shallow-water constituents
+  there). EOT20 downloaded from SEANOE (2.3 GB outer zip, nested
+  `ocean_tides.zip`; the server ignores HTTP Range) and reduced by
+  `scripts/tide-prep-field.py` to `data/tide-field.bin` (1° grid, 8
+  constituents, 1.56 MB raw / 693 KB gzipped; amplitude outliers clipped
+  at the 99.95th percentile). Natural Earth land -> `data/land-110m.json`
+  (66 KB) + `data/land-50m.bin` (248 KB); NOAA station index 241 KB.
+- **Phases 1-4** in `apps/tide/` (`index.html`, `tide.css`, `tide.js`):
+  Canvas 2D orthographic globe with a per-pixel low-res pass (sea
+  luminance from the field, land mask from vector rings, day/night with a
+  warm terminator edge, moonlight lift), rings pre-converted to unit
+  vectors + cap culling + Sutherland-Hodgman clipping so a frame is
+  ~10-20 ms; drag with ease-back to the moon's view; wheel/pinch/dbl-tap
+  zoom; fly-to-place; readout (state line, four turning points, range,
+  springs/neaps, moon, sun, source, hand-off); Open-Meteo 15-minutely
+  series everywhere, NOAA hi/lo when a station is within 15 km (MLLW
+  minus the hi/lo mean, since subordinate stations have no MSL datum);
+  inland grace; localStorage caches; scrub -3 d..+15 d; Play at 1 h/s;
+  About panel; keyboard (Space, Esc, M, +/-); reduced-motion path;
+  narrow layout (controls wrap to two rows, moon disc top-right).
+- **Verified in the in-app browser** at 319x944 and 1280x800: NOAA path
+  (Wildwood NJ), model path (Brighton UK), fresh-launch prompt, About,
+  Play, drag, zoom. `node --check` clean.
+- **Not done:** deploy (human: `.\scripts\deploy-app.ps1 -Name tide`, then
+  re-sync the landing page, which now lists Tonight and Tide). A real-phone
+  performance pass. UK/other official-table links beyond US/GB.
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename

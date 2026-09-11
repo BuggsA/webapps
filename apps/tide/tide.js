@@ -1,0 +1,974 @@
+/* ==========================================================================
+   Tide — the moon moving the ocean, on a globe seen from the moon.
+
+   Built (see docs/tide-build-plan.md): Phase 0 data prep + harmonic engine
+   (lib/harmonics.js, gated on NOAA); Phase 1 the globe (camera at the
+   sub-lunar point, EOT20 tide field as light on water, land, day/night,
+   the moon disc); Phase 2 your place (Open-Meteo / NOAA series, the
+   readout, inland grace, offline); Phase 3 time (scrub −3 d … +15 d,
+   play at 1 h/s); Phase 4 chrome + a11y + reduced motion; Phase 5 finish.
+
+   ART DIRECTION: UNDER THE MOON (+ two borrows: the readout set as table
+   rows; height rendered as luminance of one sea hue). See
+   docs/tide-art-direction.md and run its checklist before every commit.
+
+   Model:  state.t is the master variable (ms, UTC). Everything on the
+           globe derives from t; the camera follows the sub-lunar point
+           at t unless the user has zoomed to a place. The readout derives
+           from t + the place's sea-level series.
+
+   MAP OF THIS FILE (search the ALL-CAPS tag to jump):
+     TUNABLES / STATE / ELEMENTS / SMALL MATH
+     COLOUR              — oklch → sRGB, the three luminance LUTs, the η→L map
+     ASTRONOMY GLUE      — subPoint() (sub-lunar / sub-solar), moon phase, rise/set
+     DATA                — loadLand(), loadCoast(), loadField(), loadStations()
+     FIELD               — computeField(t): η per 1° cell from the constituents
+     CAMERA              — cam / target / drag offset / ease-back / fly-to
+     PROJECTION          — project(), frame constants (sun & moon in camera frame)
+     PAINT               — paintMask(), paintSea() (per-pixel pass), paintCoast(),
+                           paintPlace(), paintMoon(), paintGrain(), paintScrim()
+     TIME MODEL          — now0, live / hold / play, scrub, clock
+     PLACE + SERIES      — geocode, device, coast distance, NOAA proximity,
+                           loadSeries() (cached), turning points, heightAt()
+     READOUT             — updateReadout(): state line, rows, range, moon, sun, source
+     INPUT               — drag, wheel, pinch, keys, buttons
+     THE LOOP / ENTRY
+   ========================================================================== */
+'use strict';
+
+const A = window.Astronomy;
+const H = window.Harmonics;
+const track = (window.Telemetry && window.Telemetry.track) || function () {};
+
+/* --- TUNABLES ---------------------------------------------------------- */
+const REDUCED    = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DAY        = 86400e3;
+const SCRUB_PAST = 3 * DAY, SCRUB_AHEAD = 15 * DAY;
+const PLAY_RATE  = 3600;             // simulated seconds per real second (1 h/s)
+const ZOOM_PLACE = 3.2;              // zoom when flying to a place
+const ZOOM_MAX   = 14;
+const EASE_BACK  = 4000;             // ms, drag offset returns to the moon's view
+const INLAND_KM  = 25;               // beyond this: "N km from the sea"
+const NOAA_KM    = 15;               // within this: official NOAA prediction
+const SEA_L0 = 0.35, SEA_LA = 0.20;  // luminance: L = L0 + LA·tanh(|η/0.6|^0.65)
+const LS_PLACE = 'tide.place';
+const FPS_CAP  = REDUCED ? 4 : 30;
+
+/* --- STATE ------------------------------------------------------------- */
+const state = {
+  t: Date.now(), now0: Date.now(), mode: 'live', playFrom: 0,
+  lat: NaN, lon: NaN, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, place: '',
+  located: false, inlandKm: 0, coastLat: NaN, coastLon: NaN,
+  series: null,           // { src, pts:[{t,v}], turns:[{t,v,type}], name, country }
+  units: /-US$/i.test(navigator.language || '') ? 'ft' : 'm',
+};
+const cam = { lat: 0, lon: 0, zoom: 1 };            // what is drawn
+const view = { mode: 'moon', off: { lat: 0, lon: 0 }, pan: { lat: 0, lon: 0 }, zoom: 1,
+               ease: null, fly: 0 };                // where it is going
+let W = 0, Hh = 0, dpr = 1;
+let R = 0, cx = 0, cy = 0;                          // globe radius/centre, CSS px
+let land110 = null, land50 = null, stations = null;
+let geo110 = null, geo50 = null;                     // rings as unit vectors + a bounding cap
+let field = null;                                   // { names, ampC[], ampS[], N, nlon, nlat, lon0, lat0 }
+const eta = new Float32Array(360 * 180);
+let etaAt = -Infinity;
+let lastFrame = 0, dirty = true;
+
+/* --- ELEMENTS ---------------------------------------------------------- */
+const $ = id => document.getElementById(id);
+const el = {
+  canvas: $('globe'), moon: $('moon'), readout: $('readout'), rule: $('ro-rule'),
+  roPlace: $('ro-place'), roState: $('ro-state'), roTurns: $('ro-turns'), roRange: $('ro-range'),
+  roMoon: $('ro-moon'), roSun: $('ro-sun'), roSrc: $('ro-src'), roHand: $('ro-handoff'),
+  locate: $('locate'), input: $('place-input'), results: $('place-results'), msg: $('locate-msg'),
+  useDevice: $('use-device'), justLook: $('just-look'),
+  controls: $('controls'), btnNow: $('btn-now'), btnPlay: $('btn-play'), scrub: $('scrub'),
+  clock: $('clock'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
+  about: $('about'), aboutClose: $('about-close'),
+};
+const ctx = el.canvas.getContext('2d', { alpha: false });
+const buf = document.createElement('canvas');       // low-res sea/land/light pass
+const bctx = buf.getContext('2d', { willReadFrequently: true });
+const mask = document.createElement('canvas');      // land mask at buffer res
+const mctx = mask.getContext('2d', { willReadFrequently: true });
+let bw = 0, bh = 0, bs = 0.5;                       // buffer size + scale (CSS px → buffer px)
+
+/* --- SMALL MATH -------------------------------------------------------- */
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
+const lerp = (a, b, u) => a + (b - a) * u;
+const smooth = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
+const wrapLon = d => ((d + 540) % 360) - 180;
+const easeOutCubic = u => 1 - Math.pow(1 - u, 3);
+function kmBetween(lat1, lon1, lat2, lon2) {
+  const x = wrapLon(lon2 - lon1) * Math.cos((lat1 + lat2) * 0.5 * D2R), y = lat2 - lat1;
+  return Math.sqrt(x * x + y * y) * 111.2;
+}
+
+/* --- COLOUR ------------------------------------------------------------ */
+function oklchToRgb(L, C, hDeg) {
+  const h = hDeg * D2R, a = C * Math.cos(h), b = C * Math.sin(h);
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+  const l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
+  const r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  const bb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+  const enc = x => { x = clamp(x, 0, 1); return Math.round(255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055)); };
+  return [enc(r), enc(g), enc(bb)];
+}
+function makeLut(C, h) {            // 256 luminance steps → rgb bytes
+  const lut = new Uint8ClampedArray(256 * 3);
+  for (let i = 0; i < 256; i++) { const [r, g, b] = oklchToRgb(i / 255, C, h); lut[i * 3] = r; lut[i * 3 + 1] = g; lut[i * 3 + 2] = b; }
+  return lut;
+}
+const LUT_SEA  = makeLut(0.080, 235);   // the sea hue (palette: deep clear water)
+const LUT_LAND = makeLut(0.020, 260);   // derived: +25°, low chroma
+const LUT_WARM = makeLut(0.060, 70);    // the terminator's warm edge
+const BG = oklchToRgb(0.13, 0.02, 250);
+// η (m) → sea luminance, precomputed at 1 cm from −8 m to +8 m
+const ETA_LUT = new Float32Array(1601);
+for (let i = 0; i <= 1600; i++) { const e = (i - 800) / 100; ETA_LUT[i] = SEA_L0 + SEA_LA * Math.tanh(Math.sign(e) * Math.pow(Math.abs(e) / 0.6, 0.65)); }
+
+/* --- ASTRONOMY GLUE ---------------------------------------------------- */
+// Sub-point (lat, lon deg) of a body: where it is straight overhead.
+function subPoint(body, ms) {
+  const time = A.MakeTime(new Date(ms));
+  const vec = A.GeoVector(body, time, true);
+  const eqd = A.RotateVector(A.Rotation_EQJ_EQD(time), vec);
+  const eq = A.EquatorFromVector(eqd);
+  const gst = A.SiderealTime(time);                       // hours
+  return { lat: eq.dec, lon: wrapLon((eq.ra - gst) * 15), dist: eq.dist };
+}
+function moonInfo(ms) {
+  const time = A.MakeTime(new Date(ms));
+  const ill = A.Illumination(A.Body.Moon, time);
+  return { phase: A.MoonPhase(time), frac: ill.phase_fraction };
+}
+function riseSet(body, lat, lon, dayStartMs) {
+  const obs = new A.Observer(lat, lon, 0), t0 = A.MakeTime(new Date(dayStartMs));
+  const r = A.SearchRiseSet(body, obs, +1, t0, 1), s = A.SearchRiseSet(body, obs, -1, t0, 1);
+  return { rise: r ? r.date.getTime() : null, set: s ? s.date.getTime() : null };
+}
+
+/* --- DATA -------------------------------------------------------------- */
+async function loadLand() {
+  const r = await fetch('data/land-110m.json'); const j = await r.json();
+  land110 = j.rings.map(f => new Float32Array(f));
+  geo110 = prepRings(land110);
+  dirty = true;
+}
+async function loadCoast() {
+  if (land50 || loadCoast.busy) return; loadCoast.busy = true;
+  try {
+    const r = await fetch('data/land-50m.bin'); const ab = await r.arrayBuffer();
+    const dv = new DataView(ab); let o = 8; const n = dv.getUint32(4, true); const rings = [];
+    for (let k = 0; k < n; k++) {
+      const m = dv.getUint32(o, true); o += 4;
+      const ring = new Float32Array(m * 2);
+      for (let i = 0; i < m; i++) { ring[i * 2] = dv.getInt16(o, true) / 100; ring[i * 2 + 1] = dv.getInt16(o + 2, true) / 100; o += 4; }
+      rings.push(ring);
+    }
+    land50 = rings; geo50 = prepRings(rings); dirty = true;
+  } catch (_) { loadCoast.busy = false; }
+}
+async function loadField() {
+  try {
+    const meta = await (await fetch('data/tide-field.json')).json();
+    const ab = await (await fetch('data/' + meta.file)).arrayBuffer();
+    const nlon = meta.nlon, nlat = meta.nlat, N = nlon * nlat, names = meta.constituents;
+    const ampC = [], ampS = []; let o = 0;
+    for (let c = 0; c < names.length; c++) {
+      const amp = new Uint16Array(ab, o, N); o += N * 2;
+      const ph = new Uint8Array(ab, o, N); o += N;
+      const C = new Float32Array(N), S = new Float32Array(N);
+      for (let k = 0; k < N; k++) {
+        const a = amp[k] * meta.ampScale, g = ph[k] * meta.phaseScale * D2R;
+        C[k] = a * Math.cos(g); S[k] = a * Math.sin(g);
+      }
+      ampC.push(C); ampS.push(S);
+    }
+    field = { names, ampC, ampS, N, nlon, nlat, lon0: meta.lon0, lat0: meta.lat0 };
+    etaAt = -Infinity; dirty = true;
+  } catch (_) { /* the globe still runs: flat sea, real light */ }
+}
+async function loadStations() {
+  if (stations) return stations;
+  try { stations = await (await fetch('data/noaa-stations.json')).json(); } catch (_) { stations = []; }
+  return stations;
+}
+
+/* --- FIELD ------------------------------------------------------------- */
+// η per cell at time t. Recomputed when t moves by more than a minute.
+function computeField(t) {
+  if (!field || Math.abs(t - etaAt) < 60e3) return;
+  etaAt = t;
+  const args = H.args(t, field.names);
+  eta.fill(0);
+  for (let c = 0; c < field.names.length; c++) {
+    const a = args[field.names[c]]; if (!a) continue;
+    const fc = a.f * Math.cos(a.arg * D2R), fs = a.f * Math.sin(a.arg * D2R);
+    const C = field.ampC[c], S = field.ampS[c];
+    for (let k = 0; k < field.N; k++) eta[k] += C[k] * fc + S[k] * fs;
+  }
+}
+// bilinear sample of η at (lat, lon) degrees
+function sampleEta(lat, lon) {
+  const nlon = field.nlon, nlat = field.nlat;
+  let u = lon - field.lon0; u -= Math.floor(u / 360) * 360;
+  let v = clamp(lat - field.lat0, 0, nlat - 1.0001);
+  const i0 = Math.floor(u) % nlon, i1 = (i0 + 1) % nlon, fu = u - Math.floor(u);
+  const j0 = Math.floor(v), j1 = Math.min(j0 + 1, nlat - 1), fv = v - j0;
+  const a = eta[j0 * nlon + i0], b = eta[j0 * nlon + i1], c = eta[j1 * nlon + i0], d = eta[j1 * nlon + i1];
+  return (a + (b - a) * fu) * (1 - fv) + (c + (d - c) * fu) * fv;
+}
+
+/* --- CAMERA ------------------------------------------------------------ */
+let sub = { lat: 0, lon: 0 }, sunPt = { lat: 0, lon: 0 }, moonI = { phase: 0, frac: 0.5 };
+function cameraTarget() {
+  if (view.mode === 'place') return { lat: view.pan.lat, lon: view.pan.lon, zoom: view.zoom };
+  let off = view.off;
+  if (view.ease) {                       // easing back to the moon's view
+    const u = clamp((performance.now() - view.ease.t0) / EASE_BACK, 0, 1);
+    const k = 1 - easeOutCubic(u);
+    off = { lat: view.ease.lat * k, lon: view.ease.lon * k };
+    view.off = off;
+    if (u >= 1) view.ease = null;
+  }
+  return { lat: clamp(sub.lat + off.lat, -89, 89), lon: wrapLon(sub.lon + off.lon), zoom: 1 };
+}
+function stepCamera(dtMs) {
+  const tg = cameraTarget();
+  if (REDUCED && !view.fly) { cam.lat = tg.lat; cam.lon = tg.lon; cam.zoom = tg.zoom; return; }
+  const tau = view.fly ? 650 : 220;
+  const k = 1 - Math.exp(-dtMs / tau);
+  cam.lat += (tg.lat - cam.lat) * k;
+  cam.lon = wrapLon(cam.lon + wrapLon(tg.lon - cam.lon) * k);
+  cam.zoom += (tg.zoom - cam.zoom) * k;
+  if (view.fly && Math.abs(tg.zoom - cam.zoom) < 0.01 && Math.abs(wrapLon(tg.lon - cam.lon)) < 0.05) view.fly = 0;
+  const moving = Math.abs(tg.lat - cam.lat) > 0.01 || Math.abs(wrapLon(tg.lon - cam.lon)) > 0.01 || Math.abs(tg.zoom - cam.zoom) > 0.002;
+  if (moving) dirty = true;
+}
+function flyToPlace() {
+  view.mode = 'place'; view.pan = { lat: state.coastLat, lon: state.coastLon }; view.zoom = ZOOM_PLACE; view.fly = 1; view.ease = null;
+  loadCoast(); dirty = true;
+}
+function backToMoon() {
+  if (view.mode === 'place') {
+    view.mode = 'moon'; view.off = { lat: cam.lat - sub.lat, lon: wrapLon(cam.lon - sub.lon) };
+  }
+  view.ease = { t0: performance.now(), lat: view.off.lat, lon: view.off.lon };
+  view.zoom = 1; view.fly = 1; dirty = true;
+  track('moon');
+}
+
+/* --- PROJECTION -------------------------------------------------------- */
+let sinP0 = 0, cosP0 = 1, lam0 = 0;
+let sunCam = [0, 0, 1], moonCam = [0, 0, 1];
+function toCam(lat, lon) {             // world unit vector → camera frame (x right, y up, z out)
+  const p = lat * D2R, l = lon * D2R, cp = Math.cos(p);
+  const v = [cp * Math.cos(l), cp * Math.sin(l), Math.sin(p)];
+  const sl = Math.sin(lam0), cl = Math.cos(lam0);
+  const right = [-sl, cl, 0], up = [-sinP0 * cl, -sinP0 * sl, cosP0], fwd = [cosP0 * cl, cosP0 * sl, sinP0];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  return [dot(v, right), dot(v, up), dot(v, fwd)];
+}
+function frameConstants() {
+  sinP0 = Math.sin(cam.lat * D2R); cosP0 = Math.cos(cam.lat * D2R); lam0 = cam.lon * D2R;
+  sunCam = toCam(sunPt.lat, sunPt.lon);
+  moonCam = toCam(sub.lat, sub.lon);
+  const sl = Math.sin(lam0), cl = Math.cos(lam0);
+  basis = { r: [-sl, cl, 0], u: [-sinP0 * cl, -sinP0 * sl, cosP0], f: [cosP0 * cl, cosP0 * sl, sinP0] };
+}
+// forward: returns [x, y, z] in unit-sphere camera coords
+function project(lat, lon) {
+  const p = lat * D2R, dl = lon * D2R - lam0, cp = Math.cos(p), sp = Math.sin(p), cdl = Math.cos(dl);
+  return [cp * Math.sin(dl), cosP0 * sp - sinP0 * cp * cdl, sinP0 * sp + cosP0 * cp * cdl];
+}
+
+/* --- PAINT ------------------------------------------------------------- */
+// Rings → unit vectors (x,y,z per vertex) + a bounding cap (centre vector,
+// angular radius) so a frame can skip rings that cannot be on screen and
+// project the rest with nine multiplies instead of four trig calls.
+function prepRings(rings) {
+  return rings.map(ring => {
+    const n = ring.length >> 1, v = new Float32Array(n * 3);
+    let sx = 0, sy = 0, sz = 0;
+    for (let i = 0; i < n; i++) {
+      const p = ring[i * 2 + 1] * D2R, l = ring[i * 2] * D2R, cp = Math.cos(p);
+      const x = cp * Math.cos(l), y = cp * Math.sin(l), z = Math.sin(p);
+      v[i * 3] = x; v[i * 3 + 1] = y; v[i * 3 + 2] = z; sx += x; sy += y; sz += z;
+    }
+    const L = Math.hypot(sx, sy, sz) || 1; const c = [sx / L, sy / L, sz / L];
+    let minDot = 1;
+    for (let i = 0; i < n; i++) { const d = v[i * 3] * c[0] + v[i * 3 + 1] * c[1] + v[i * 3 + 2] * c[2]; if (d < minDot) minDot = d; }
+    return { v, n, c, ang: Math.acos(clamp(minDot, -1, 1)) };
+  });
+}
+let basis = { r: [0, 1, 0], u: [0, 0, 1], f: [1, 0, 0] };
+function currentGeo() { return (cam.zoom >= 2.2 && geo50) ? geo50 : geo110; }
+// project the current ring set once per frame: [{ pts (unit-disc coords), n, front }]
+let projected = [];
+function projectRings() {
+  const geo = currentGeo(); projected = [];
+  if (!geo) return;
+  const { r, u, f } = basis;
+  // how much of the sphere can be on screen: the farthest viewport corner from the centre
+  const far = Math.max(Math.hypot(cx, cy), Math.hypot(W - cx, cy), Math.hypot(cx, Hh - cy), Math.hypot(W - cx, Hh - cy));
+  const half = far >= R ? Math.PI / 2 : Math.asin(far / R);
+  for (const g of geo) {
+    const cd = g.c[0] * f[0] + g.c[1] * f[1] + g.c[2] * f[2];
+    if (Math.acos(clamp(cd, -1, 1)) - g.ang > half + 0.02) continue;      // entirely off the hemisphere in view
+    // the ring's projection lies within a screen circle around its cap centre
+    const gx = g.c[0] * r[0] + g.c[1] * r[1] + g.c[2] * r[2], gy = g.c[0] * u[0] + g.c[1] * u[1] + g.c[2] * u[2];
+    const rr = R * Math.sin(Math.min(g.ang, Math.PI / 2)) + 2, px = cx + R * gx, py = cy - R * gy;
+    if (px + rr < 0 || px - rr > W || py + rr < 0 || py - rr > Hh) continue;   // off the viewport
+    const n = g.n, v = g.v, pts = new Float32Array(n * 2), zs = new Float32Array(n); let front = false;
+    for (let i = 0; i < n; i++) {
+      const vx = v[i * 3], vy = v[i * 3 + 1], vz = v[i * 3 + 2];
+      let x = vx * r[0] + vy * r[1] + vz * r[2], y = vx * u[0] + vy * u[1] + vz * u[2];
+      const z = vx * f[0] + vy * f[1] + vz * f[2];
+      if (z < 0) { const L = Math.hypot(x, y) || 1; x /= L; y /= L; } else front = true;
+      pts[i * 2] = x; pts[i * 2 + 1] = y; zs[i] = z;
+    }
+    if (front) projected.push({ pts, zs, n });
+  }
+}
+// Sutherland–Hodgman clip of a closed polygon (flat [x,y,...]) to a rect.
+// Each ring clipped on its own keeps the evenodd fill exact inside the rect,
+// and stops the rasteriser chewing on geometry thousands of px off-canvas.
+function clipRing(src, x0, y0, x1, y1) {
+  let poly = src;
+  for (let side = 0; side < 4; side++) {
+    const out = []; const n = poly.length >> 1; if (!n) return out;
+    const inside = (x, y) => side === 0 ? x >= x0 : side === 1 ? x <= x1 : side === 2 ? y >= y0 : y <= y1;
+    for (let i = 0; i < n; i++) {
+      const ax = poly[((i + n - 1) % n) * 2], ay = poly[((i + n - 1) % n) * 2 + 1], bx = poly[i * 2], by = poly[i * 2 + 1];
+      const ain = inside(ax, ay), bin = inside(bx, by);
+      if (ain !== bin) {                                   // crossing → intersection
+        let t;
+        if (side < 2) { const e = side === 0 ? x0 : x1; t = (e - ax) / (bx - ax); out.push(e, ay + (by - ay) * t); }
+        else { const e = side === 2 ? y0 : y1; t = (e - ay) / (by - ay); out.push(ax + (bx - ax) * t, e); }
+      }
+      if (bin) out.push(bx, by);
+    }
+    poly = out;
+  }
+  return poly;
+}
+function paintMask() {
+  mctx.clearRect(0, 0, bw, bh);
+  mctx.fillStyle = '#fff';
+  mctx.beginPath();
+  const ox = cx * bs, oy = cy * bs, rad = R * bs;
+  const X0 = -3, Y0 = -3, X1 = bw + 3, Y1 = bh + 3;
+  for (const p of projected) {
+    const pts = p.pts, n = p.n;
+    let flat = new Array(n * 2), minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+    for (let i = 0; i < n; i++) {
+      const sx = ox + rad * pts[i * 2], sy = oy - rad * pts[i * 2 + 1];
+      flat[i * 2] = sx; flat[i * 2 + 1] = sy;
+      if (sx < minx) minx = sx; if (sx > maxx) maxx = sx; if (sy < miny) miny = sy; if (sy > maxy) maxy = sy;
+    }
+    if (maxx < X0 || minx > X1 || maxy < Y0 || miny > Y1) continue;          // off the buffer
+    if (minx < X0 || maxx > X1 || miny < Y0 || maxy > Y1) flat = clipRing(flat, X0, Y0, X1, Y1);
+    const m = flat.length >> 1; if (m < 3) continue;
+    mctx.moveTo(flat[0], flat[1]);
+    for (let i = 1; i < m; i++) mctx.lineTo(flat[i * 2], flat[i * 2 + 1]);
+    mctx.closePath();
+  }
+  mctx.fill('evenodd');
+}
+
+function paintSea() {
+  const img = bctx.createImageData(bw, bh), d = img.data;
+  const m = mctx.getImageData(0, 0, bw, bh).data;
+  const bR = R * bs, bcx = cx * bs, bcy = cy * bs;
+  const x0 = Math.max(0, Math.floor(bcx - bR - 2)), x1 = Math.min(bw, Math.ceil(bcx + bR + 2));
+  const y0 = Math.max(0, Math.floor(bcy - bR - 2)), y1 = Math.min(bh, Math.ceil(bcy + bR + 2));
+  const [sx, sy, sz] = sunCam, [mx, my, mz] = moonCam;
+  const moonLift = 0.05 * moonI.frac;
+  const edge = 1.3 / bR, haveField = !!field;
+  // fill the background everywhere first
+  for (let i = 0; i < d.length; i += 4) { d[i] = BG[0]; d[i + 1] = BG[1]; d[i + 2] = BG[2]; d[i + 3] = 255; }
+  for (let py = y0; py < y1; py++) {
+    const Y = (bcy - (py + 0.5)) / bR;
+    for (let px = x0; px < x1; px++) {
+      const X = (px + 0.5 - bcx) / bR;
+      const r2 = X * X + Y * Y;
+      if (r2 > (1 + edge) * (1 + edge)) continue;
+      const rr = Math.sqrt(r2);
+      const aEdge = rr > 1 ? clamp((1 + edge - rr) / edge, 0, 1) : 1;
+      const Z = rr >= 1 ? 0 : Math.sqrt(1 - r2);
+      const idx = (py * bw + px) * 4;
+      const isLand = m[idx + 3] > 127;
+      const dSun = X * sx + Y * sy + Z * sz;
+      const dMoon = X * mx + Y * my + Z * mz;
+      const day = smooth(-0.12, 0.22, dSun);
+      let L;
+      if (isLand) {
+        L = 0.13 + 0.17 * day;
+      } else {
+        let e = 0;
+        if (haveField) {
+          const sp = Z * sinP0 + Y * cosP0;
+          const lat = Math.asin(clamp(sp, -1, 1)) * R2D;
+          const lon = (lam0 + Math.atan2(X, Z * cosP0 - Y * sinP0)) * R2D;
+          e = sampleEta(lat, lon);
+        }
+        const ei = clamp(Math.round(e * 100) + 800, 0, 1600);
+        L = ETA_LUT[ei] * (0.38 + 0.62 * day);     // night keeps the tide readable
+      }
+      L += moonLift * Math.max(0, dMoon);
+      L *= 0.82 + 0.18 * Z;                       // quiet limb darkening
+      const li = clamp(Math.round(L * 255), 0, 255) * 3;
+      const lut = isLand ? LUT_LAND : LUT_SEA;
+      let r = lut[li], g = lut[li + 1], b = lut[li + 2];
+      // the warm edge of the terminator, day side
+      const wd = (dSun - 0.05) / 0.11, w = 0.30 * Math.exp(-wd * wd) * (isLand ? 0.5 : 1) * Z;   // fades at the limb: never a ring
+      if (w > 0.02) { r += (LUT_WARM[li] - r) * w; g += (LUT_WARM[li + 1] - g) * w; b += (LUT_WARM[li + 2] - b) * w; }
+      if (aEdge < 1) { r = lerp(BG[0], r, aEdge); g = lerp(BG[1], g, aEdge); b = lerp(BG[2], b, aEdge); }
+      d[idx] = r; d[idx + 1] = g; d[idx + 2] = b;
+    }
+  }
+  bctx.putImageData(img, 0, 0);
+}
+
+function paintCoast() {
+  if (!geo50 || cam.zoom < 2 || currentGeo() !== geo50) return;
+  const a = clamp((cam.zoom - 2) / 2.5, 0, 1) * 0.55;
+  ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = 'rgb(243,238,228)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const p of projected) {
+    const pts = p.pts, zs = p.zs; let pen = false;
+    for (let i = 0; i < p.n; i++) {
+      if (zs[i] <= 0.02) { pen = false; continue; }
+      const sx = cx + R * pts[i * 2], sy = cy - R * pts[i * 2 + 1];
+      if (sx < -50 || sy < -50 || sx > W + 50 || sy > Hh + 50) { pen = false; continue; }
+      if (!pen) { ctx.moveTo(sx, sy); pen = true; } else ctx.lineTo(sx, sy);
+    }
+  }
+  ctx.stroke(); ctx.restore();
+}
+function paintPlace() {
+  if (!state.located) return;
+  const [x, y, z] = project(state.coastLat, state.coastLon);
+  if (z <= 0.01) return;
+  const sx = cx + R * x, sy = cy - R * y;
+  ctx.save(); ctx.strokeStyle = 'rgba(243,238,228,0.9)'; ctx.fillStyle = 'rgba(243,238,228,0.9)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(sx, sy, 6, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(sx, sy, 1.4, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function moonDiscPos() {
+  const rect = el.moon.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+}
+function paintMoon() {
+  const { x, y } = moonDiscPos(); const r = 10;
+  const P = moonI.phase, waxing = P < 180, rx = Math.abs(Math.cos(P * D2R)) * r, bulgeOut = Math.cos(P * D2R) > 0;
+  ctx.save(); ctx.translate(x, y); if (!waxing) ctx.scale(-1, 1);
+  ctx.fillStyle = 'rgba(243,238,228,0.16)'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(243,238,228,0.92)';
+  ctx.beginPath();
+  ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2, false);            // lit limb (right)
+  ctx.ellipse(0, 0, Math.max(rx, 0.01), r, 0, Math.PI / 2, -Math.PI / 2, bulgeOut);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+let grainPat = null;
+function bakeGrain() {
+  const c = document.createElement('canvas'); c.width = c.height = 96;
+  const g = c.getContext('2d'), im = g.createImageData(96, 96);
+  let s = 0x9e3779b9;
+  for (let i = 0; i < im.data.length; i += 4) {
+    s ^= s << 13; s ^= s >>> 17; s ^= s << 5;
+    const v = 128 + ((s >>> 0) % 97) - 48;
+    im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255;
+  }
+  g.putImageData(im, 0, 0);
+  grainPat = ctx.createPattern(c, 'repeat');
+}
+function paintGrain() {
+  if (!grainPat) return;
+  ctx.save(); ctx.globalAlpha = 0.05; ctx.globalCompositeOperation = 'overlay';
+  ctx.fillStyle = grainPat; ctx.fillRect(0, 0, W, Hh); ctx.restore();
+}
+// a soft darkening under the readout so type keeps 4.5:1 over high water
+function paintScrim() {
+  if (el.readout.hidden) return;
+  const rect = el.readout.getBoundingClientRect();
+  const g = ctx.createRadialGradient(rect.left + rect.width * 0.35, rect.top + rect.height * 0.4, 10,
+                                     rect.left + rect.width * 0.35, rect.top + rect.height * 0.4, Math.max(rect.width, rect.height) * 1.1);
+  g.addColorStop(0, 'rgba(5,9,18,0.55)'); g.addColorStop(1, 'rgba(5,9,18,0)');
+  ctx.save(); ctx.fillStyle = g; ctx.fillRect(0, 0, W, Hh); ctx.restore();
+}
+
+function layout() {
+  const rr = el.readout.hidden ? null : el.readout.getBoundingClientRect();
+  const base = 0.40 * Math.min(W, Hh);
+  R = base * cam.zoom;
+  cx = W / 2; cy = Hh * 0.53;
+  if (!el.locate.hidden && W < 640 && cam.zoom < 1.6) {   // the prompt is open: globe up top
+    const lr = el.locate.getBoundingClientRect();
+    const r2 = Math.min(0.42 * W, (lr.top - 40) / 2);
+    if (r2 > 60) { R = r2 * cam.zoom; cy = 40 + r2; }
+  } else if (rr && cam.zoom < 1.6) {
+    if (W < 640) {                                   // phones: globe below the readout
+      const top = rr.bottom + 8, bottom = Hh - 90;
+      const r2 = Math.min(0.42 * W, (bottom - top) / 2);
+      if (r2 > 60) { R = r2 * cam.zoom; cy = top + r2; }
+    } else if (cx - R < rr.right + 12) {
+      cx = Math.min(rr.right + 12 + R, W - R - 12);
+    }
+  }
+}
+function paint() {
+  if (!bw || !bh || !W || !Hh) { resize(); if (!bw || !bh) return; }
+  layout(); frameConstants();
+  // buffer resolution follows the globe's on-screen area (~160k px in the pass)
+  const want = clamp(Math.sqrt(120000 / Math.max(1, Math.min(Math.PI * R * R, W * Hh))), 0.25, 1);
+  if (Math.abs(want - bs) > 0.08) { bs = want; bw = Math.ceil(W * bs); bh = Math.ceil(Hh * bs); buf.width = mask.width = bw; buf.height = mask.height = bh; paint.sig = null; }
+  // the land mask only changes when the camera or the canvas does
+  const sig = [cam.lat.toFixed(3), cam.lon.toFixed(3), cam.zoom.toFixed(3), cx | 0, cy | 0, bw, bh, currentGeo() === geo50 ? 50 : 110].join(',');
+  if (sig !== paint.sig) { projectRings(); paintMask(); paint.sig = sig; }
+  paintSea();
+  ctx.fillStyle = `rgb(${BG[0]},${BG[1]},${BG[2]})`; ctx.fillRect(0, 0, W, Hh);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(buf, 0, 0, bw, bh, 0, 0, W, Hh);
+  paintCoast(); paintPlace(); paintScrim(); paintGrain(); paintMoon();
+}
+
+/* --- CANVAS SIZING ----------------------------------------------------- */
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; Hh = window.innerHeight;
+  if (!W || !Hh) { dirty = true; return; }
+  el.canvas.width = Math.round(W * dpr); el.canvas.height = Math.round(Hh * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  bs = clamp(Math.sqrt(120000 / (W * Hh)), 0.25, 1);
+  bw = Math.ceil(W * bs); bh = Math.ceil(Hh * bs); paint.sig = null;
+  buf.width = mask.width = bw; buf.height = mask.height = bh;
+  if (!grainPat) bakeGrain();
+  dirty = true;
+}
+
+/* --- TIME MODEL -------------------------------------------------------- */
+function scrubRange() { return { a: state.now0 - SCRUB_PAST, b: state.now0 + SCRUB_AHEAD }; }
+function setScrubFromT() {
+  const { a, b } = scrubRange();
+  const u = clamp((state.t - a) / (b - a), 0, 1);
+  el.scrub.value = Math.round(u * 1000);
+  el.scrub.style.setProperty('--p', (u * 100).toFixed(2) + '%');
+}
+function setMode(mode) {
+  state.mode = mode;
+  el.btnPlay.textContent = mode === 'play' ? 'Pause' : 'Play';
+  el.btnPlay.setAttribute('aria-pressed', mode === 'play' ? 'true' : 'false');
+  if (mode === 'play') state.playFrom = state.t;
+  dirty = true;
+}
+function stepTime(dtMs) {
+  if (state.mode === 'live') { state.t = Date.now(); if (Date.now() - state.now0 > 6 * 3600e3) state.now0 = Date.now(); }
+  else if (state.mode === 'play') {
+    state.t += dtMs * PLAY_RATE;
+    if (state.t > scrubRange().b) state.t = state.playFrom;
+    dirty = true;
+  }
+}
+const fmtCache = {};
+function fmt(kind, tz) {
+  const key = kind + '|' + tz;
+  if (!fmtCache[key]) {
+    const o = { timeZone: tz };
+    if (kind === 'time') { o.hour = 'numeric'; o.minute = '2-digit'; }
+    if (kind === 'day')  { o.weekday = 'short'; }
+    if (kind === 'clock'){ o.weekday = 'short'; o.day = 'numeric'; o.hour = 'numeric'; o.minute = '2-digit'; }
+    if (kind === 'date') { o.year = 'numeric'; o.month = '2-digit'; o.day = '2-digit'; }
+    try { fmtCache[key] = new Intl.DateTimeFormat(undefined, o); } catch (_) { fmtCache[key] = new Intl.DateTimeFormat(undefined, { ...o, timeZone: undefined }); }
+  }
+  return fmtCache[key];
+}
+function localDayKey(ms) { return fmt('date', state.tz).format(new Date(ms)); }
+let clockAt = 0;
+function updateClock() {
+  if (Math.abs(state.t - clockAt) < 30e3 && state.mode === 'live') return;
+  clockAt = state.t;
+  const live = state.mode === 'live';
+  el.clock.textContent = live ? 'now · ' + fmt('time', state.tz).format(new Date(state.t)) : fmt('clock', state.tz).format(new Date(state.t));
+  el.clock.classList.toggle('now', live);
+  setScrubFromT();
+}
+
+/* --- PLACE + SERIES ---------------------------------------------------- */
+function nearestCoast(lat, lon) {
+  const rings = land50 || land110; if (!rings) return { km: 0, lat, lon };
+  let best = Infinity, bl = lat, bo = lon;
+  const cl = Math.cos(lat * D2R);
+  for (const ring of rings) {
+    const n = ring.length >> 1;
+    for (let i = 0; i < n; i++) {
+      const x = wrapLon(ring[i * 2] - lon) * cl, y = ring[i * 2 + 1] - lat, d = x * x + y * y;
+      if (d < best) { best = d; bl = ring[i * 2 + 1]; bo = ring[i * 2]; }
+    }
+  }
+  return { km: Math.sqrt(best) * 111.2, lat: bl, lon: bo };
+}
+function nearestStation(lat, lon) {
+  if (!stations || !stations.length) return null;
+  let best = null, bd = Infinity;
+  for (const s of stations) { const d = kmBetween(lat, lon, s[2], s[3]); if (d < bd) { bd = d; best = s; } }
+  return best && bd <= NOAA_KM ? { id: best[0], name: best[1], lat: best[2], lon: best[3], km: bd } : null;
+}
+function cacheGet(key, ttl) {
+  try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.at < ttl) return c.v; if (c) return { stale: c.v }; } catch (_) {}
+  return null;
+}
+function cacheSet(key, v) { try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), v })); } catch (_) {} }
+
+function titleCase(s) { return s.toLowerCase().replace(/\b[a-z]/g, m => m.toUpperCase()); }
+function ymd(ms) { const d = new Date(ms); return d.getUTCFullYear() + String(d.getUTCMonth() + 1).padStart(2, '0') + String(d.getUTCDate()).padStart(2, '0'); }
+
+async function loadSeries() {
+  const lat = state.coastLat, lon = state.coastLon;
+  await loadStations();
+  const st = nearestStation(lat, lon);
+  const key = st ? 'tide.noaa:' + st.id : 'tide.om:' + lat.toFixed(2) + ',' + lon.toFixed(2);
+  const cached = cacheGet(key, st ? 24 * 3600e3 : 6 * 3600e3);
+  if (cached && !cached.stale) { state.series = cached; updateReadout(true); return; }
+  try {
+    let series;
+    if (st) {
+      const url = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&station=' + st.id
+        + '&begin_date=' + ymd(Date.now() - 4 * DAY) + '&end_date=' + ymd(Date.now() + 16 * DAY)
+        + '&datum=MLLW&units=metric&time_zone=gmt&interval=hilo&format=json';
+      const j = await (await fetch(url)).json();
+      if (!j.predictions || !j.predictions.length) throw new Error('noaa');
+      // MLLW → about mean tide level: subtract the mean of the highs and lows
+      // (subordinate stations have no MSL datum; MTL ≈ MSL to a few cm)
+      const raw = j.predictions.map(p => ({ t: Date.parse(p.t.replace(' ', 'T') + 'Z'), v: Number(p.v), type: p.type }));
+      const mean = raw.reduce((a, x) => a + x.v, 0) / raw.length;
+      const turns = raw.map(x => ({ t: x.t, v: x.v - mean, type: x.type }));
+      series = { src: 'noaa', name: titleCase(st.name), turns, pts: null };
+    } else {
+      const url = 'https://marine-api.open-meteo.com/v1/marine?latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3)
+        + '&minutely_15=sea_level_height_msl&past_days=3&forecast_days=15&timeformat=unixtime&timezone=UTC';
+      const j = await (await fetch(url)).json();
+      const T = j.minutely_15.time, V = j.minutely_15.sea_level_height_msl;
+      const vals = new Float64Array(V.length);
+      for (let i = 0; i < V.length; i++) vals[i] = V[i] == null ? (i ? vals[i - 1] : 0) : V[i];
+      const t0 = T[0] * 1000, step = (T[1] - T[0]) * 1000;
+      const turns = H.extrema(vals, t0, step).map(x => ({ t: x.t, v: x.v, type: x.type }));
+      series = { src: 'model', name: '', turns, pts: { t0, step, v: Array.from(vals) } };
+    }
+    state.series = series; cacheSet(key, series);
+    track('series', { src: series.src, ok: 1 });
+  } catch (_) {
+    state.series = cached ? cached.stale : null;
+    track('series', { ok: 0 });
+  }
+  updateReadout(true);
+}
+function heightAt(t) {
+  const s = state.series; if (!s) return null;
+  if (s.pts) {
+    const i = (t - s.pts.t0) / s.pts.step;
+    if (i < 0 || i >= s.pts.v.length - 1) return null;
+    const i0 = Math.floor(i), u = i - i0; return s.pts.v[i0] * (1 - u) + s.pts.v[i0 + 1] * u;
+  }
+  const T = s.turns; let k = -1;
+  for (let i = 0; i < T.length - 1; i++) if (T[i].t <= t && t < T[i + 1].t) { k = i; break; }
+  if (k < 0) return null;
+  const a = T[k], b = T[k + 1], u = (t - a.t) / (b.t - a.t);
+  return a.v + (b.v - a.v) * (1 - Math.cos(u * Math.PI)) / 2;
+}
+function fmtHeight(m) {
+  const v = state.units === 'ft' ? m * 3.28084 : m;
+  const s = (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1);
+  return `<span class="n">${s}</span><span class="u">${state.units}</span>`;
+}
+function fmtDur(ms) {
+  const m = Math.round(ms / 60e3);
+  if (m < 60) return `<span class="n">${m}</span> min`;
+  const h = Math.floor(m / 60), mm = m % 60;
+  return `<span class="n">${h}</span> h${mm ? ` <span class="n">${String(mm).padStart(2, '0')}</span>` : ''}`;
+}
+function springNeap(phase) {
+  const p = phase % 180, d = Math.min(p, 180 - p);
+  if (d < 22) return 'springs';
+  if (Math.abs(p - 90) < 22) return 'neaps';
+  return p < 90 ? 'easing toward neaps' : 'building toward springs';
+}
+
+/* --- READOUT ----------------------------------------------------------- */
+let readoutAt = 0;
+function updateReadout(force) {
+  if (!state.located) return;
+  if (!force && Math.abs(state.t - readoutAt) < 60e3) return;
+  readoutAt = state.t;
+  const t = state.t, s = state.series, tz = state.tz;
+  const tf = fmt('time', tz), df = fmt('day', tz);
+  const mi = moonInfo(t);                       // at t, not at the last painted frame
+  el.roPlace.textContent = state.place;
+  const inland = state.inlandKm > INLAND_KM
+    ? `You are about <span class="n">${Math.round(state.inlandKm)}</span> km from the sea. The nearest coast: ` : '';
+  if (!s || !s.turns.length) {
+    el.roState.innerHTML = inland + (navigator.onLine === false ? 'Offline, and nothing cached yet for this coast.' : 'Reading the sea…');
+    el.roTurns.innerHTML = ''; el.roRange.textContent = ''; el.rule.className = 'ro-rule';
+  } else {
+    const T = s.turns; let k = T.findIndex(x => x.t > t);
+    const h = heightAt(t);
+    if (k <= 0) {
+      el.roState.innerHTML = inland + (k === 0 ? 'Before the first prediction here.' : 'Past the last prediction here — press Now.');
+      el.rule.className = 'ro-rule';
+    } else {
+      const prev = T[k - 1], next = T[k];
+      const rising = next.type === 'H';
+      const near = Math.min(t - prev.t, next.t - t) < 20 * 60e3;
+      const word = near ? ((next.t - t < 20 * 60e3 ? next : prev).type === 'H' ? 'High water' : 'Low water') : (rising ? 'Rising' : 'Falling');
+      el.roState.innerHTML = inland + `${word} · ${rising ? 'high' : 'low'} in ${fmtDur(next.t - t)}` + (h == null ? '' : ` · ${fmtHeight(h)}`);
+      el.rule.className = 'ro-rule ' + (rising ? 'rising' : 'falling');
+    }
+    const today = localDayKey(t);
+    el.roTurns.innerHTML = T.slice(Math.max(k, 0), Math.max(k, 0) + 4).map((x, i) =>
+      `<li class="${i === 0 ? 'next' : ''}"><span>${tf.format(new Date(x.t))}</span><span class="k">${x.type === 'H' ? 'high' : 'low'}</span><span>${fmtHeight(x.v)}${localDayKey(x.t) !== today ? `<span class="d">${df.format(new Date(x.t))}</span>` : ''}</span></li>`).join('');
+    const dayT = T.filter(x => localDayKey(x.t) === today);
+    const rng = dayT.length >= 2 ? Math.max(...dayT.map(x => x.v)) - Math.min(...dayT.map(x => x.v)) : null;
+    el.roRange.innerHTML = (rng != null ? `Range today <span class="n">${(state.units === 'ft' ? rng * 3.28084 : rng).toFixed(1)}</span> ${state.units} · ` : '') + springNeap(mi.phase);
+  }
+  // moon + sun for the local day of t
+  const dayStart = t - 12 * 3600e3;
+  try {
+    const mr = riseSet(A.Body.Moon, state.lat, state.lon, dayStart), sr = riseSet(A.Body.Sun, state.lat, state.lon, dayStart);
+    const tt = ms => ms == null ? '—' : `<span class="n">${tf.format(new Date(ms))}</span>`;
+    el.roMoon.innerHTML = `Moon <span class="n">${Math.round(mi.frac * 100)}</span>% · rises ${tt(mr.rise)} · sets ${tt(mr.set)}`;
+    el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}`;
+  } catch (_) { el.roMoon.textContent = ''; el.roSun.textContent = ''; }
+  if (s) el.roSrc.textContent = s.src === 'noaa' ? `Official NOAA prediction · ${s.name}` : 'Model estimate · Open-Meteo · heights about mean sea level';
+  else el.roSrc.textContent = '';
+  const cc = (state.country || '').toUpperCase();
+  const off = cc === 'US' ? '<a href="https://tidesandcurrents.noaa.gov/" rel="noopener">NOAA Tides &amp; Currents</a>'
+    : cc === 'GB' ? '<a href="https://easytide.admiralty.co.uk/" rel="noopener">UKHO EasyTide</a>'
+    : 'your national tide tables';
+  el.roHand.innerHTML = `Not for navigation or safety. Official: ${off}.`;
+  dirty = true;
+}
+
+/* --- LOCATION UI ------------------------------------------------------- */
+function savePlace() {
+  try { localStorage.setItem(LS_PLACE, JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, tz: state.tz, country: state.country || '' })); } catch (_) {}
+}
+function loadPlace() {
+  try {
+    const p = JSON.parse(localStorage.getItem(LS_PLACE) || 'null');
+    if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) return p;
+  } catch (_) {}
+  return null;
+}
+function showLocate(show) {
+  el.locate.hidden = !show;
+  el.controls.hidden = show;                      // one thing at the bottom edge at a time
+  el.justLook.hidden = !(show && !state.located);
+  if (show) { el.input.value = ''; el.results.hidden = true; el.msg.hidden = true; el.input.focus(); }
+}
+function say(text) { el.msg.textContent = text; el.msg.hidden = !text; }
+async function geocode(name) {
+  const url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(name) + '&count=6&language=en&format=json';
+  const r = await fetch(url); if (!r.ok) throw new Error('geocode ' + r.status);
+  const j = await r.json();
+  return (j.results || []).map(x => ({ lat: x.latitude, lon: x.longitude, tz: x.timezone, name: x.name, country: x.country_code,
+                                       sub: [x.admin1, x.country].filter(Boolean).join(', ') }));
+}
+function renderResults(list) {
+  el.results.innerHTML = '';
+  if (!list.length) { el.results.hidden = true; return; }
+  for (const item of list) {
+    const li = document.createElement('li'), b = document.createElement('button');
+    b.type = 'button'; b.className = 'place-pick';
+    b.innerHTML = '<span class="p-name"></span> <span class="p-sub"></span>';
+    b.querySelector('.p-name').textContent = item.name; b.querySelector('.p-sub').textContent = item.sub;
+    b.addEventListener('click', () => enter(item, 'search'));
+    li.appendChild(b); el.results.appendChild(li);
+  }
+  el.results.hidden = false;
+}
+let searchSeq = 0;
+el.input.addEventListener('input', () => {
+  const q = el.input.value.trim(), mine = ++searchSeq;
+  if (q.length < 2) { el.results.hidden = true; return; }
+  clearTimeout(el.input._t);
+  el.input._t = setTimeout(async () => {
+    try { const list = await geocode(q); if (mine === searchSeq) renderResults(list); }
+    catch (_) { if (mine === searchSeq) say('Search is offline — try "Use my location".'); }
+  }, 250);
+});
+el.locate.addEventListener('submit', async e => {
+  e.preventDefault();
+  const q = el.input.value.trim(); if (!q) return;
+  try { const list = await geocode(q); if (list.length) enter(list[0], 'search'); else say('Nothing found by that name.'); }
+  catch (_) { say('Search is offline — try "Use my location".'); }
+});
+el.useDevice.addEventListener('click', () => {
+  if (!navigator.geolocation) { say('This browser has no location.'); return; }
+  say('Finding you…');
+  navigator.geolocation.getCurrentPosition(
+    p => enter({ lat: p.coords.latitude, lon: p.coords.longitude, name: 'Where you are', tz: Intl.DateTimeFormat().resolvedOptions().timeZone, country: '' }, 'device'),
+    () => say('Location was refused — search by name instead.'),
+    { enableHighAccuracy: false, timeout: 12000, maximumAge: 600e3 });
+});
+el.justLook.addEventListener('click', () => { showLocate(false); track('justlook'); });
+el.btnWhere.addEventListener('click', () => showLocate(el.locate.hidden));
+
+async function enter(item, how) {
+  state.lat = item.lat; state.lon = item.lon; state.place = item.name; state.tz = item.tz || state.tz; state.country = item.country || '';
+  state.located = true; state.series = null;
+  await loadCoast();
+  const nc = nearestCoast(state.lat, state.lon);
+  state.inlandKm = nc.km;
+  if (nc.km > INLAND_KM) { state.coastLat = nc.lat; state.coastLon = nc.lon; } else { state.coastLat = state.lat; state.coastLon = state.lon; }
+  savePlace();
+  showLocate(false);
+  el.readout.hidden = false; el.controls.hidden = false;
+  updateReadout(true);
+  flyToPlace();
+  loadSeries();
+  track('enter', { how, inland: nc.km > INLAND_KM ? 1 : 0 });
+}
+
+/* --- INPUT ------------------------------------------------------------- */
+let drag = null;
+el.canvas.addEventListener('pointerdown', e => {
+  if (e.button !== undefined && e.button !== 0) return;
+  el.canvas.setPointerCapture(e.pointerId);
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false, vx: 0, vy: 0, at: performance.now() };
+  el.canvas.classList.add('dragging');
+  view.ease = null;
+});
+el.canvas.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (Math.abs(dx) + Math.abs(dy) > 0) drag.moved = true;
+  const degPerPx = R2D / R;                              // radians per px at the centre
+  const dLon = -dx * degPerPx / Math.max(0.2, Math.cos(cam.lat * D2R)), dLat = dy * degPerPx;
+  if (view.mode === 'place') { view.pan.lat = clamp(view.pan.lat + dLat, -89, 89); view.pan.lon = wrapLon(view.pan.lon + dLon); }
+  else { view.off.lat += dLat; view.off.lon += dLon; }
+  const now = performance.now(), dt = Math.max(1, now - drag.at); drag.at = now;
+  drag.vx = dLon / dt; drag.vy = dLat / dt;
+  dirty = true;
+});
+function endDrag(e) {
+  if (!drag || (e && e.pointerId !== drag.id)) return;
+  el.canvas.classList.remove('dragging');
+  const d = drag; drag = null;
+  if (view.mode === 'moon') {
+    if (!REDUCED) { view.off.lon += d.vx * 260; view.off.lat += d.vy * 260; }   // a short glide
+    view.ease = { t0: performance.now(), lat: view.off.lat, lon: view.off.lon };
+  }
+  if (!d.moved && view.mode === 'moon') track('tap');
+  dirty = true;
+}
+el.canvas.addEventListener('pointerup', endDrag);
+el.canvas.addEventListener('pointercancel', endDrag);
+el.canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomBy(Math.exp(-e.deltaY * 0.0012), e.clientX, e.clientY);
+}, { passive: false });
+function zoomBy(f, px, py) {
+  const z = clamp((view.mode === 'place' ? view.zoom : 1) * f, 1, ZOOM_MAX);
+  if (view.mode !== 'place') {
+    if (z <= 1.02) return;
+    // zoom toward the point under the pointer
+    const X = (px - cx) / R, Y = (cy - py) / R, r2 = X * X + Y * Y;
+    let lat = cam.lat, lon = cam.lon;
+    if (r2 < 1) { const Z = Math.sqrt(1 - r2); lat = Math.asin(clamp(Z * sinP0 + Y * cosP0, -1, 1)) * R2D; lon = (lam0 + Math.atan2(X, Z * cosP0 - Y * sinP0)) * R2D; }
+    view.mode = 'place'; view.pan = { lat, lon }; view.ease = null; loadCoast();
+  }
+  view.zoom = z;
+  if (z <= 1.02) backToMoon();
+  dirty = true;
+}
+// pinch
+const touches = new Map();
+el.canvas.addEventListener('touchstart', e => { for (const t of e.changedTouches) touches.set(t.identifier, { x: t.clientX, y: t.clientY }); }, { passive: true });
+el.canvas.addEventListener('touchmove', e => {
+  if (e.touches.length !== 2) return;
+  e.preventDefault();
+  const a = e.touches[0], b = e.touches[1], pa = touches.get(a.identifier), pb = touches.get(b.identifier);
+  if (!pa || !pb) return;
+  const d0 = Math.hypot(pa.x - pb.x, pa.y - pb.y), d1 = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  if (d0 > 0) zoomBy(d1 / d0, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+  touches.set(a.identifier, { x: a.clientX, y: a.clientY }); touches.set(b.identifier, { x: b.clientX, y: b.clientY });
+  if (drag) { drag = null; el.canvas.classList.remove('dragging'); }
+}, { passive: false });
+el.canvas.addEventListener('touchend', e => { for (const t of e.changedTouches) touches.delete(t.identifier); }, { passive: true });
+el.canvas.addEventListener('dblclick', e => { zoomBy(view.mode === 'place' ? 1.8 : ZOOM_PLACE, e.clientX, e.clientY); });
+
+el.moon.addEventListener('click', backToMoon);
+el.btnNow.addEventListener('click', () => { setMode('live'); state.now0 = Date.now(); state.t = Date.now(); updateClock(); updateReadout(true); track('now'); });
+el.btnPlay.addEventListener('click', () => { setMode(state.mode === 'play' ? 'hold' : 'play'); track('play', { on: state.mode === 'play' ? 1 : 0 }); });
+el.scrub.addEventListener('input', () => {
+  setMode('hold');
+  const { a, b } = scrubRange(); const u = Number(el.scrub.value) / 1000;
+  state.t = a + u * (b - a); updateClock(); updateReadout(true);
+});
+el.scrub.addEventListener('change', () => track('scrub'));
+function showAbout(show) {
+  el.about.hidden = !show;
+  el.btnAbout.setAttribute('aria-expanded', show ? 'true' : 'false');
+  if (state.located) el.readout.hidden = show;          // one column of words at a time
+  if (show) el.aboutClose.focus(); else el.btnAbout.focus();
+  dirty = true;
+}
+el.btnAbout.addEventListener('click', () => showAbout(el.about.hidden));
+el.aboutClose.addEventListener('click', () => showAbout(false));
+window.addEventListener('keydown', e => {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.key === 'Escape') {
+    if (!el.about.hidden) showAbout(false);
+    else if (!el.locate.hidden && state.located) showLocate(false);
+    else backToMoon();
+  }
+  if (e.key === ' ' && e.target === document.body) { e.preventDefault(); el.btnPlay.click(); }
+  if (e.key === 'm' || e.key === 'M') backToMoon();
+  if (e.key === '+' || e.key === '=') zoomBy(1.4, cx, cy);
+  if (e.key === '-' || e.key === '_') zoomBy(1 / 1.4, cx, cy);
+});
+window.addEventListener('resize', resize);
+window.addEventListener('online', () => { if (state.located && !state.series) loadSeries(); });
+
+/* --- THE LOOP ---------------------------------------------------------- */
+let prevT = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(100, now - prevT);
+  if (now - lastFrame < 1000 / FPS_CAP) return;
+  prevT = now;
+  stepTime(dt);
+  const astroT = state.t;
+  sub = subPoint(A.Body.Moon, astroT); sunPt = subPoint(A.Body.Sun, astroT); moonI = moonInfo(astroT);
+  stepCamera(now - lastFrame);
+  computeField(state.t);
+  if (state.mode !== 'hold' || dirty || drag) {
+    const fieldMoved = Math.abs(state.t - (frame.paintedT || -Infinity)) > 60e3;
+    if (dirty || fieldMoved || drag || state.mode === 'play') { paint(); frame.paintedT = state.t; dirty = false; }
+  }
+  lastFrame = now;
+  updateClock();
+  updateReadout(false);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { dirty = true; prevT = performance.now(); } });
+
+/* --- ENTRY ------------------------------------------------------------- */
+async function init() {
+  resize();
+  const saved = loadPlace();
+  loadLand().then(() => { if (saved) enter({ ...saved, name: saved.place }, 'saved'); });
+  loadField();
+  if (!saved) showLocate(true);
+  el.moon.hidden = false;
+  requestAnimationFrame(frame);
+  track('load', { saved: saved ? 1 : 0, reduced: REDUCED ? 1 : 0 });
+}
+init();
