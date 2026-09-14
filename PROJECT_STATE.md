@@ -620,4 +620,5 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   series cached before seaTemp existed would never pick it up, since it's
   part of the one fetch rather than a separately-backfillable field like
   mllwOffset. Fixed with a `:v2` bump on the model cache key too.
-- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+- Deployed by the user; confirmed live (sea temp + daylight lines +
+  a real click on "Add to calendar", no console errors).
