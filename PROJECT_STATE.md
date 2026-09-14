@@ -560,3 +560,16 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   `aws-cdk-lib`.
 - `JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1` (Node 26).
 - Account <AWS_ACCOUNT_ID> / us-east-1 already CDK-bootstrapped.
+
+## 2026-09-17 -- tide: phase 7, the week, not deployed
+
+- Built docs/tide-v2-plan.md phase 7: inside Detail, right after the
+  existing next-4-turns list, the next 7 days grouped by calendar day
+  (weekRows()), collapsed to today+tomorrow with a "This week" word
+  control, plus a 14-day lowest-low/highest-high summary line
+  (extremes14()). Reuses the existing .ro-turns row markup/CSS for each
+  day's rows rather than inventing a new style.
+- Verified against both data paths (Open-Meteo model turns and NOAA
+  hilo turns) and at desktop + mobile widths; expand/collapse tested
+  with real clicks, not `.click()`.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.

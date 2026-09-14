@@ -209,7 +209,7 @@ returns. Data: `series.pts` when present; for NOAA (turns only) sample
   motion: the curve only repaints on data/time changes, never on a
   timer, so nothing animates on its own.
 
-### Phase 7 — The week
+### Phase 7 — The week — DONE 2026-09-17
 
 Below the curve, the next seven days as rows, one per day: the day name
 (small caps), then that day's turning points in order: `05:41 ▾ −1.5`
@@ -224,6 +224,26 @@ word control "This week" that expands them.
 - Data: NOAA hilo already covers +16 d; Open-Meteo extrema cover +15 d.
 - Acceptance: a person can plan a weekend low-tide walk from this screen
   alone.
+- **Built as:** lives inside Detail (its home per `tide-panel-research.md`),
+  right after the existing next-4-turns list. `weekRows()` groups
+  `state.series.turns` (already time-sorted) by calendar day starting at
+  `state.t`'s day, up to 7 days — one linear pass, no date-boundary
+  arithmetic, so it's identical on the NOAA and Open-Meteo paths. Each
+  day's rows reuse the literal `.ro-turns` markup and CSS rather than a
+  new row style, under a small-caps `.ro-week-label` weekday heading.
+  `extremes14()` takes the min `L` turn and max `H` turn in `[t, t+14d]`
+  — turning points are the extrema by construction, so no curve-sampling
+  needed. **Deviated from spec in one way:** collapsed to today+tomorrow
+  *always*, not just on short viewports — matches Detail's own always-
+  collapsed-by-default pattern and avoids conditioning behaviour on
+  viewport width, which nothing else in the app does; the day/night
+  `--chrome`/`--chrome-soft` colouring for turn times was also dropped
+  as redundant with the day heading itself.
+- **Verified:** both data paths (Chioggia/Open-Meteo, San Francisco/NOAA)
+  render correct day groupings and a plausible 14-day extreme line;
+  "This week" expand/collapse round-trips via real clicks (not
+  `.click()`) at desktop and mobile widths; today's group correctly
+  includes turns already past, not just the ones still ahead.
 
 ### Phase 8 — Datum, units, rate
 

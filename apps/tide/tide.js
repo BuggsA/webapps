@@ -38,7 +38,9 @@
                            nearestCoast() snap, a tethered preview card (Tonight's
                            .card shape) with an explicit "Use this place" commit —
                            docs/tide-tap-select-research.md, built 2026-09-17
-     READOUT             — updateReadout(): state line, rows, range, moon, sun, source
+     READOUT             — updateReadout(): state line, rows, range, moon, sun
+     WEEK                — the next 7 days as rows + the 14-day lowest/highest
+                           line (docs/tide-v2-plan.md phase 7), inside Detail, source
      DETAIL              — setDetail()/sizeDetail(): the on-demand panel for turns/
                            range/moon/sun (source + hand-off stay always visible) —
                            docs/tide-panel-research.md, Option C, decided 2026-09-16
@@ -107,6 +109,7 @@ const el = {
   clock: $('clock'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
   about: $('about'), aboutClose: $('about-close'), curve: $('curve'),
   roDetail: $('ro-detail'), btnDetail: $('btn-detail'),
+  roWeek: $('ro-week'), btnWeek: $('btn-week'), roExtreme: $('ro-extreme'),
   pick: $('pick-card'), pickName: $('pick-name'), pickUse: $('pick-use'),
 };
 const ctx = el.canvas.getContext('2d', { alpha: false });
@@ -756,6 +759,7 @@ function fmt(kind, tz) {
     const o = { timeZone: tz };
     if (kind === 'time') { o.hour = 'numeric'; o.minute = '2-digit'; }
     if (kind === 'day')  { o.weekday = 'short'; }
+    if (kind === 'wday') { o.weekday = 'short'; o.day = 'numeric'; }
     if (kind === 'clock'){ o.weekday = 'short'; o.day = 'numeric'; o.hour = 'numeric'; o.minute = '2-digit'; }
     if (kind === 'date') { o.year = 'numeric'; o.month = '2-digit'; o.day = '2-digit'; }
     try { fmtCache[key] = new Intl.DateTimeFormat(undefined, o); } catch (_) { fmtCache[key] = new Intl.DateTimeFormat(undefined, { ...o, timeZone: undefined }); }
@@ -1077,8 +1081,76 @@ function updateReadout(force) {
     : cc === 'GB' ? '<a href="https://easytide.admiralty.co.uk/" rel="noopener">UKHO EasyTide</a>'
     : 'your national tide tables';
   el.roHand.innerHTML = `Not for navigation or safety. Official: ${off}.`;
+  renderWeek();
   dirty = true;
 }
+
+/* --- WEEK -----------------------------------------------------------------
+   Phase 7 (docs/tide-v2-plan.md): the curve and the next-4-turns list only
+   reach a day or so out — not far enough to plan a weekend low-tide walk.
+   This groups the same turns already in state.series by calendar day, up
+   to 7 days out, using the exact row grammar .ro-turns already renders
+   (time / high-or-low / height) rather than inventing a second style. */
+let weekOpen = false;
+// state.series.turns grouped into calendar days, starting at the day
+// containing t, up to 7 days — turns are already time-sorted, so this is
+// one linear pass, no date-boundary arithmetic needed.
+function weekRows(t) {
+  const s = state.series;
+  if (!s || !s.turns || !s.turns.length) return [];
+  const today = localDayKey(t), df = fmt('day', state.tz);
+  const days = []; let seenToday = false;
+  for (const x of s.turns) {
+    const key = localDayKey(x.t);
+    if (!seenToday) { if (key !== today) continue; seenToday = true; }
+    let day = days.length && days[days.length - 1].key === key ? days[days.length - 1] : null;
+    if (!day) {
+      if (days.length >= 7) break;
+      day = { key, label: df.format(new Date(x.t)), turns: [] };
+      days.push(day);
+    }
+    day.turns.push(x);
+  }
+  return days;
+}
+// the lowest low and highest high in [t, t+14d] — turning points are the
+// extrema by construction, so no need to scan the interpolated curve.
+function extremes14(t) {
+  const s = state.series; if (!s || !s.turns) return null;
+  let lo = null, hi = null;
+  for (const x of s.turns) {
+    if (x.t < t || x.t > t + 14 * DAY) continue;
+    if (x.type === 'L' && (!lo || x.v < lo.v)) lo = x;
+    if (x.type === 'H' && (!hi || x.v > hi.v)) hi = x;
+  }
+  return (lo || hi) ? { lo, hi } : null;
+}
+function fmtWhen(ms) { return fmt('wday', state.tz).format(new Date(ms)) + ', ' + fmt('time', state.tz).format(new Date(ms)); }
+function renderWeek() {
+  if (!state.located) return;
+  const days = weekRows(state.t), tf = fmt('time', state.tz);
+  if (!days.length) { el.roWeek.innerHTML = ''; el.btnWeek.hidden = true; el.roExtreme.textContent = ''; return; }
+  el.roWeek.innerHTML = days.map((d, i) => `<div class="ro-week-day"${i >= 2 && !weekOpen ? ' hidden' : ''}>
+      <p class="ro-week-label">${d.label}</p>
+      <ol class="ro-turns">${d.turns.map(x =>
+        `<li><span>${tf.format(new Date(x.t))}</span><span class="k">${x.type === 'H' ? 'high' : 'low'}</span><span>${fmtHeight(x.v)}</span></li>`).join('')}</ol>
+    </div>`).join('');
+  el.btnWeek.hidden = days.length <= 2;
+  el.btnWeek.setAttribute('aria-expanded', weekOpen ? 'true' : 'false');
+  el.btnWeek.textContent = weekOpen ? 'Less' : 'This week';
+  const ex = extremes14(state.t), parts = [];
+  if (ex) {
+    if (ex.lo) parts.push(`Lowest ${fmtHeight(ex.lo.v)} ${fmtWhen(ex.lo.t)}`);
+    if (ex.hi) parts.push(`Highest ${fmtHeight(ex.hi.v)} ${fmtWhen(ex.hi.t)}`);
+  }
+  el.roExtreme.innerHTML = parts.join(' · ');
+}
+el.btnWeek.addEventListener('click', () => {
+  weekOpen = !weekOpen;
+  renderWeek();
+  sizeDetail();
+  track('week', { open: weekOpen ? 1 : 0 });
+});
 
 /* --- DETAIL -------------------------------------------------------------
    The rest of the turns, range/springs, moon, sun — collapsed by default
@@ -1174,7 +1246,7 @@ el.btnWhere.addEventListener('click', () => showLocate(el.locate.hidden));
 
 async function enter(item, how) {
   state.lat = item.lat; state.lon = item.lon; state.place = item.name; state.tz = item.tz || state.tz; state.country = item.country || '';
-  state.located = true; state.series = null;
+  state.located = true; state.series = null; weekOpen = false;
   await loadCoast();
   const nc = nearestCoast(state.lat, state.lon);
   state.inlandKm = nc.km;
