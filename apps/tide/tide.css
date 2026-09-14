@@ -209,7 +209,7 @@ body {
    the hand-off line stay outside it, always visible: short, and safety-
    relevant. Sized in JS (sizeDetail()) to whatever room is actually left
    above the controls; this is the static fallback. */
-.ro-detail-toggle { justify-self: start; margin: 0.35em 0 0.1em; }
+.ro-detail-toggle { justify-self: start; margin: 0.35em 0 0.1em; pointer-events: auto; }   /* the readout itself is inert; this is a real control */
 .ro-detail {
   display: grid;
   gap: 0.15em;

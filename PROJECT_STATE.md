@@ -475,6 +475,33 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - Not deployed. `node --check` clean. Limb wobble and the moon-glade
   shimmer remain research only (item 4), not built.
 
+## 2026-09-17 -- tide: Detail button dead on the live site, fixed
+
+- User reported the Detail toggle wasn't working after deploy. Reproduced
+  with a real click on the live site (not a JS-triggered `.click()` --
+  the diagnostic that mattered): `#btn-detail` had computed
+  `pointer-events: none`, inherited from `.readout`'s blanket
+  `pointer-events: none` (so the globe underneath can be dragged through
+  the chrome). Every other interactive child of `.readout` --
+  `.ro-curve`, `.ro-src a`, `.ro-detail` itself -- has its own
+  `pointer-events: auto` override; `.ro-detail-toggle` was missing one,
+  a straight oversight when it was added.
+- **Root cause of why this passed testing before deploy:** all local
+  verification of Detail used `el.btnDetail.click()` from
+  `javascript_exec`, which calls the click handler directly and never
+  goes through real hit-testing/pointer-events -- so a real mouse click
+  landing on a `pointer-events: none` element (falling through to the
+  globe canvas underneath) was never exercised. Lesson: a programmatic
+  `.click()` proves the handler works, not that the element is
+  clickable. Real click tests are the ones that catch this class of bug.
+- Fixed: added `pointer-events: auto` to `.ro-detail-toggle`. Verified
+  with an actual mouse click (not `.click()`) against a real place, both
+  before (reproduced: no state change, `elementFromPoint` at the
+  button's centre returned the globe canvas, not the button) and after
+  (fixed: click opens the panel, toggles to "Less").
+- **Not yet redeployed** -- one-line CSS fix, needs
+  `.\scripts\deploy-app.ps1 -Name tide` to reach production.
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename
