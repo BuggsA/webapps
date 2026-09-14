@@ -561,7 +561,7 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - `JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1` (Node 26).
 - Account <AWS_ACCOUNT_ID> / us-east-1 already CDK-bootstrapped.
 
-## 2026-09-17 -- tide: phase 7, the week, not deployed
+## 2026-09-17 -- tide: phase 7, the week
 
 - Built docs/tide-v2-plan.md phase 7: inside Detail, right after the
   existing next-4-turns list, the next 7 days grouped by calendar day
@@ -572,9 +572,9 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - Verified against both data paths (Open-Meteo model turns and NOAA
   hilo turns) and at desktop + mobile widths; expand/collapse tested
   with real clicks, not `.click()`.
-- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+- Deployed by the user alongside phase 8; confirmed live.
 
-## 2026-09-14 -- tide: phase 8, datum/units/rate, not deployed
+## 2026-09-14 -- tide: phase 8, datum/units/rate
 
 - Built docs/tide-v2-plan.md phase 8: a datum toggle (mean sea level /
   chart datum MLLW) and a units toggle (m/ft), both persisted, plus a
@@ -599,4 +599,5 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   all follow the setting without individually knowing about it. Range
   and the new rate line are left alone -- both are differences, and a
   constant datum offset cancels out of a subtraction.
-- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+- Deployed by the user; confirmed live with a real click toggling the
+  datum on the production San Francisco/NOAA station.
