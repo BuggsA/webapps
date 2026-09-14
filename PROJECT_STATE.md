@@ -371,6 +371,39 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - **Next:** phase 6 (today's curve) and phase 7 (the week) first, ship,
   then 8-11.
 
+## 2026-09-15 -- tide phase 6 (today's curve), not deployed
+
+- Model switched mid-session (Fable 5.1 -> Sonnet 5); picked up
+  `docs/tide-v2-plan.md` phase 6, the highest-value gap: a 36 h sea-level
+  curve in the readout (state.t -6h..+30h), night-washed, turning points
+  labelled, a draggable "now" mark. `apps/tide/index.html` +`.ro-curve` in
+  `tide.css` + a new CURVE section in `tide.js` (`sizeCurve`,
+  `nightBands`, `paintCurve`, `updateReadoutLite` + pointer-drag).
+  aria-hidden: purely a pointer enhancement over the already-accessible
+  rows and the keyboard scrub.
+- **Two real bugs found and fixed while testing, not just eyeballing
+  screenshots:**
+  - Same-type turning points (~12h25m apart) collided into unreadable
+    overlapping label text in the curve at typical widths (320-340px).
+    Fixed with per-row (above/below) collision tracking that drops a
+    label rather than let it overlap -- verified by re-rendering and
+    checking the pixels, not just looking.
+  - **Pre-existing v1 bug**, found via the phase-6 short-viewport
+    acceptance test: the max-height:34rem rule meant to hide the moon/sun
+    lines targeted `.ro-sun, .ro-moon`, but those elements only carry
+    `id="ro-sun"`/`id="ro-moon"` (class is `ro-line`) -- the rule never
+    matched anything. Fixed to `#ro-sun, #ro-moon`. Verified with a
+    pixel-level readback (`getComputedStyle(...).display`) at 420px
+    height, and that the full readout now fits 320x690 / 375x560 /
+    375x480 / 375x420 with zero scroll.
+  - Also verified with real pixel reads (not screenshots) that the night
+    wash actually paints (alpha ~0.30 at night x-positions, 0 at day).
+- Verified on both series sources (NOAA hi/lo at Wildwood NJ, Open-Meteo
+  15-min at Brighton UK); drag-to-scrub moves `state.t` and the globe
+  follows; `paintCurve()` costs ~1.1 ms/call; `node --check` clean.
+- **Not deployed.** `docs/tide-v2-plan.md` phase 6 marked done with the
+  detail above. **Next:** phase 7 (the week).
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename

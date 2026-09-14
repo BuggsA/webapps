@@ -137,9 +137,10 @@ committed with a message that references `tide-art-direction.md`.
 Order is by value per effort. Phases 6 and 7 are the whole difference
 between "pretty" and "used"; do them first, ship, then continue.
 
-### Phase 6 — Today's curve (the single biggest gap)
+### Phase 6 — Today's curve (the single biggest gap) — DONE 2026-09-13
 
-A 36-hour sea-level curve in the readout: from 6 h before now to 30 h
+Built in `apps/tide/tide.js` (CURVE section) + `.ro-curve` in
+`tide.css` + `<canvas id="curve">` in `index.html`. A 36-hour sea-level curve in the readout: from 6 h before now to 30 h
 after, drawn as one hairline on a small canvas inside `#readout` (or on
 the main canvas under the readout — choose the small canvas: it stacks on
 phones and is easy to size). Night shaded as a slightly darker band from
@@ -152,13 +153,48 @@ returns. Data: `series.pts` when present; for NOAA (turns only) sample
 `heightAt` every 15 min. Datum/unit follow phase 8's setting.
 
 - Files: `index.html` (a `<canvas id="curve">` between `#ro-state` and
-  `#ro-turns`), `tide.css` (height ~5.5 rem, full readout width),
-  `tide.js` (new `paintCurve()` in READOUT, called from `updateReadout`
-  and on `resize`; pointer handling; `aria-label` summarising the next
-  turns).
-- Acceptance: at 320 px wide the place name, state line, curve and next
-  two turns fit above the controls without scrolling; reduced motion:
-  the now-mark updates once a minute, nothing animates.
+  `#ro-turns`), `tide.css` (height 5.5rem, 3.4rem on short viewports),
+  `tide.js` (`sizeCurve`, `nightBands`, `paintCurve`, `updateReadoutLite`
+  + pointer-drag handlers, all in the new CURVE section; wired from
+  `updateReadout` and the resize listener).
+- **Built as:** the curve window is `state.t − 6 h … state.t + 30 h`,
+  drawn as a hairline with a night wash (from `riseSet(Sun)` day-by-day,
+  clipped to the window), the turning points from `s.turns` as dots with
+  time+height labels, and the "now" mark in the accent colour with the
+  live height. Dragging on the curve freezes the window at the values it
+  had on pointerdown so the gesture reads as a fixed ruler (not a
+  recentring one) — `updateReadoutLite()` repaints just the state line
+  and the curve during the drag; the full `updateReadout(true)` runs on
+  release, which recentres the window and refreshes the rows, moon/sun,
+  and source line. `role`/`aria-label` were dropped in favour of
+  `aria-hidden="true"`: the curve is a pointer-only progressive
+  enhancement over the already-accessible rows and the keyboard-operable
+  scrub, so a screen reader gets nothing new from it and nothing less
+  without it.
+- **Bug found and fixed while testing:** two turning points of the same
+  type (~12h25m apart, both highs or both lows) landed close enough in
+  a 320–340px-wide curve that their text labels overlapped into
+  unreadable runs (`"4:58 PM −2.4ft5:10 AM −2.3ft"`). Fixed with
+  per-row (above/below) last-label-right-edge tracking: a label that
+  would collide is dropped and only its dot remains — verified by
+  reading the actual rendered pixels, not just eyeballing a screenshot.
+- **Also fixed (pre-existing, found in the same pass):** the short-
+  viewport rule meant to hide the moon/sun lines,
+  `.ro-sun, .ro-moon { display: none; }`, never matched anything — both
+  elements carry `class="ro-line"` and only their `id` is `ro-sun`/
+  `ro-moon`. Changed to `#ro-sun, #ro-moon`. Verified: at 375×420 CSS px
+  the readout (place, state, curve, two rows, source, hand-off) now fits
+  the viewport with zero scroll, where before the dead rule silently
+  cost ~40px of vertical budget on exactly the phones that need it most.
+- **Verified:** NOAA path (Wildwood) and Open-Meteo path (Brighton) both
+  render correctly; drag-to-scrub moves `state.t` and the globe follows;
+  pixel-level check that the night wash actually paints (alpha ≈0.30 at
+  night x-positions, 0 at day x-positions); 320×690, 375×560, 375×480,
+  375×420 all fit without scrolling; `paintCurve()` costs ~1.1 ms/call.
+- Acceptance (met): at 320 px wide the place name, state line, curve and
+  next two turns fit above the controls without scrolling; reduced
+  motion: the curve only repaints on data/time changes, never on a
+  timer, so nothing animates on its own.
 
 ### Phase 7 — The week
 

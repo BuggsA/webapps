@@ -32,6 +32,8 @@
      PLACE + SERIES      — geocode, device, coast distance, NOAA proximity,
                            loadSeries() (cached), turning points, heightAt()
      READOUT             — updateReadout(): state line, rows, range, moon, sun, source
+     CURVE               — paintCurve() (36 h hairline in the readout), nightBands(),
+                           sizeCurve(), pointer-drag-to-scrub on the curve
      INPUT               — drag, wheel, pinch, keys, buttons
      THE LOOP / ENTRY
    ========================================================================== */
@@ -51,6 +53,7 @@ const ZOOM_MAX   = 14;
 const EASE_BACK  = 4000;             // ms, drag offset returns to the moon's view
 const INLAND_KM  = 25;               // beyond this: "N km from the sea"
 const NOAA_KM    = 15;               // within this: official NOAA prediction
+const CURVE_BEFORE = 6 * 3600e3, CURVE_AFTER = 30 * 3600e3;  // the readout curve's window
 const SEA_L0 = 0.35, SEA_LA = 0.20;  // luminance: L = L0 + LA·tanh(|η/0.6|^0.65)
 const LS_PLACE = 'tide.place';
 const FPS_CAP  = REDUCED ? 4 : 30;
@@ -85,9 +88,11 @@ const el = {
   useDevice: $('use-device'), justLook: $('just-look'),
   controls: $('controls'), btnNow: $('btn-now'), btnPlay: $('btn-play'), scrub: $('scrub'),
   clock: $('clock'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
-  about: $('about'), aboutClose: $('about-close'),
+  about: $('about'), aboutClose: $('about-close'), curve: $('curve'),
 };
 const ctx = el.canvas.getContext('2d', { alpha: false });
+const curveCtx = el.curve.getContext('2d');
+let curveW = 0, curveH = 0;
 const buf = document.createElement('canvas');       // low-res sea/land/light pass
 const bctx = buf.getContext('2d', { willReadFrequently: true });
 let bw = 0, bh = 0, bs = 0.5;                       // buffer size + scale (CSS px → buffer px)
@@ -683,11 +688,14 @@ function heightAt(t) {
   const a = T[k], b = T[k + 1], u = (t - a.t) / (b.t - a.t);
   return a.v + (b.v - a.v) * (1 - Math.cos(u * Math.PI)) / 2;
 }
-function fmtHeight(m) {
+function heightNum(m) {
   const v = state.units === 'ft' ? m * 3.28084 : m;
-  const s = (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1);
-  return `<span class="n">${s}</span><span class="u">${state.units}</span>`;
+  return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1);
 }
+function fmtHeight(m) {
+  return `<span class="n">${heightNum(m)}</span><span class="u">${state.units}</span>`;
+}
+function fmtHeightPlain(m) { return heightNum(m) + state.units; }   // for canvas text
 function fmtDur(ms) {
   const m = Math.round(ms / 60e3);
   if (m < 60) return `<span class="n">${m}</span> min`;
@@ -701,6 +709,154 @@ function springNeap(phase) {
   return p < 90 ? 'easing toward neaps' : 'building toward springs';
 }
 
+/* --- CURVE --------------------------------------------------------------
+   A 36 h hairline in the readout (−6 h … +30 h around the shown moment):
+   no axes, no gridlines, no fill — a line, a night wash, the turning
+   points labelled, and an accent mark at "now". Draggable as a shortcut
+   into the nearby hours; the <input type=range> scrub is the keyboard-
+   accessible way to move in time, so this canvas stays aria-hidden. */
+function sizeCurve() {
+  const r = el.curve.getBoundingClientRect();
+  const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+  if (w < 4 || h < 4) return false;
+  if (w !== curveW || h !== curveH) {
+    curveW = w; curveH = h;
+    el.curve.width = Math.round(w * dpr); el.curve.height = Math.round(h * dpr);
+  }
+  return true;
+}
+// Night intervals (sun below the horizon) across [lo, hi], from the sunrise/
+// sunset pairs of every local day the window touches.
+function nightBands(lo, hi) {
+  const events = [];
+  for (let dayStart = lo - DAY, i = 0; i < 4 && dayStart < hi; i++, dayStart += DAY) {
+    const r = riseSet(A.Body.Sun, state.lat, state.lon, dayStart);
+    if (r.rise != null) events.push({ t: r.rise, on: true });
+    if (r.set != null) events.push({ t: r.set, on: false });
+  }
+  events.sort((a, b) => a.t - b.t);
+  const bands = [];
+  let start = events.length && events[0].on ? lo : null;
+  for (const e of events) {
+    if (e.on) { if (start != null) bands.push([Math.max(start, lo), Math.min(e.t, hi)]); start = null; }
+    else if (start == null) start = e.t;
+  }
+  if (start != null) bands.push([Math.max(start, lo), hi]);
+  return bands.filter(b => b[1] > b[0]);
+}
+// win: optional { lo, hi } to freeze the window during a drag; otherwise
+// it recentres on state.t every call.
+function paintCurve(win) {
+  if (el.curve.hidden || !sizeCurve()) return;
+  curveCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  curveCtx.clearRect(0, 0, curveW, curveH);
+  const s = state.series;
+  if (!s) return;
+  const t = state.t, lo = win ? win.lo : t - CURVE_BEFORE, hi = win ? win.hi : t + CURVE_AFTER;
+  const N = 144, pts = [];
+  for (let i = 0; i <= N; i++) {
+    const tt = lo + (hi - lo) * i / N, v = heightAt(tt);
+    if (v != null) pts.push([tt, v]);
+  }
+  if (pts.length < 2) return;
+  let vmin = Infinity, vmax = -Infinity;
+  for (const [, v] of pts) { if (v < vmin) vmin = v; if (v > vmax) vmax = v; }
+  if (vmax - vmin < 0.2) { const mid = (vmax + vmin) / 2; vmin = mid - 0.1; vmax = mid + 0.1; }
+  const topPad = 15, botPad = 17;
+  const xOf = tt => (tt - lo) / (hi - lo) * curveW;
+  const yOf = v => topPad + (vmax - v) / (vmax - vmin) * (curveH - topPad - botPad);
+
+  curveCtx.fillStyle = 'rgba(4,8,16,0.30)';
+  let bands = [];
+  try { bands = nightBands(lo, hi); } catch (_) {}
+  for (const [a, b] of bands) curveCtx.fillRect(xOf(a), 0, Math.max(0.5, xOf(b) - xOf(a)), curveH);
+
+  curveCtx.strokeStyle = 'rgba(243,238,228,0.82)';
+  curveCtx.lineWidth = 1;
+  curveCtx.beginPath();
+  pts.forEach(([tt, v], i) => { const X = xOf(tt), Y = yOf(v); i ? curveCtx.lineTo(X, Y) : curveCtx.moveTo(X, Y); });
+  curveCtx.stroke();
+
+  curveCtx.font = "10.5px 'Space Grotesk', ui-serif, Georgia, serif";
+  curveCtx.textBaseline = 'alphabetic';
+  const tf = fmt('time', state.tz);
+  // labels sit on two independent rows (above highs, below lows); a label
+  // that would overlap the previous one on its own row is dropped — its
+  // dot still marks the turn on the line — rather than let text collide.
+  let lastRightHigh = -Infinity, lastRightLow = -Infinity;
+  for (const x of (s.turns || [])) {
+    if (x.t < lo || x.t > hi) continue;
+    const X = xOf(x.t), Y = yOf(x.v), high = x.type === 'H';
+    curveCtx.fillStyle = 'rgba(243,238,228,0.92)';
+    curveCtx.beginPath(); curveCtx.arc(X, Y, 1.6, 0, Math.PI * 2); curveCtx.fill();
+    const label = tf.format(new Date(x.t)) + '  ' + fmtHeightPlain(x.v);
+    const align = X < 32 ? 'left' : X > curveW - 32 ? 'right' : 'center';
+    const w = curveCtx.measureText(label).width;
+    const left = align === 'left' ? X : align === 'right' ? X - w : X - w / 2;
+    if (left < (high ? lastRightHigh : lastRightLow) + 6) continue;   // would collide — dot only
+    if (high) lastRightHigh = left + w; else lastRightLow = left + w;
+    curveCtx.textAlign = align;
+    curveCtx.fillStyle = 'rgba(243,238,228,0.78)';
+    curveCtx.fillText(label, X, high ? Y - 6 : Y + 15);
+  }
+
+  const X0 = xOf(t);
+  if (X0 >= -1 && X0 <= curveW + 1) {
+    curveCtx.strokeStyle = 'rgb(214,190,150)';
+    curveCtx.globalAlpha = 0.85;
+    curveCtx.beginPath(); curveCtx.moveTo(X0, 0); curveCtx.lineTo(X0, curveH); curveCtx.stroke();
+    curveCtx.globalAlpha = 1;
+    const nowV = heightAt(t);
+    if (nowV != null) {
+      curveCtx.fillStyle = 'rgb(214,190,150)';
+      curveCtx.beginPath(); curveCtx.arc(X0, yOf(nowV), 2.2, 0, Math.PI * 2); curveCtx.fill();
+    }
+  }
+}
+// A light-weight refresh used while dragging the curve: reposition the
+// state line and the curve itself without touching the turns list, the
+// moon/sun rise-set calls, or the source line (those catch up on release).
+function updateReadoutLite(win) {
+  const t = state.t, s = state.series, h = heightAt(t);
+  if (s && s.turns.length) {
+    const k = s.turns.findIndex(x => x.t > t);
+    if (k > 0) {
+      const next = s.turns[k], rising = next.type === 'H';
+      el.roState.innerHTML = `${rising ? 'Rising' : 'Falling'} · ${rising ? 'high' : 'low'} in ${fmtDur(next.t - t)}` + (h == null ? '' : ` · ${fmtHeight(h)}`);
+      el.rule.className = 'ro-rule ' + (rising ? 'rising' : 'falling');
+    }
+  }
+  updateClock();
+  paintCurve(win);
+}
+let curveDrag = null;
+function curveTimeFromX(clientX, win) {
+  const r = el.curve.getBoundingClientRect();
+  const u = clamp((clientX - r.left) / Math.max(1, r.width), 0, 1);
+  return win.lo + u * (win.hi - win.lo);
+}
+el.curve.addEventListener('pointerdown', e => {
+  if (!state.series || el.curve.hidden) return;
+  el.curve.setPointerCapture(e.pointerId);
+  curveDrag = { lo: state.t - CURVE_BEFORE, hi: state.t + CURVE_AFTER };
+  setMode('hold');
+  state.t = curveTimeFromX(e.clientX, curveDrag);
+  updateReadoutLite(curveDrag);
+});
+el.curve.addEventListener('pointermove', e => {
+  if (!curveDrag) return;
+  state.t = curveTimeFromX(e.clientX, curveDrag);
+  updateReadoutLite(curveDrag);
+});
+function endCurveDrag() {
+  if (!curveDrag) return;
+  curveDrag = null;
+  updateReadout(true);
+  track('curve-scrub');
+}
+el.curve.addEventListener('pointerup', endCurveDrag);
+el.curve.addEventListener('pointercancel', endCurveDrag);
+
 /* --- READOUT ----------------------------------------------------------- */
 let readoutAt = 0;
 function updateReadout(force) {
@@ -713,6 +869,7 @@ function updateReadout(force) {
   el.roPlace.textContent = state.place;
   const inland = state.inlandKm > INLAND_KM
     ? `You are about <span class="n">${Math.round(state.inlandKm)}</span> km from the sea. The nearest coast: ` : '';
+  el.curve.hidden = !s || !s.turns.length;
   if (!s || !s.turns.length) {
     el.roState.innerHTML = inland + (navigator.onLine === false ? 'Offline, and nothing cached yet for this coast.' : 'Reading the sea…');
     el.roTurns.innerHTML = ''; el.roRange.textContent = ''; el.rule.className = 'ro-rule';
@@ -736,6 +893,7 @@ function updateReadout(force) {
     const dayT = T.filter(x => localDayKey(x.t) === today);
     const rng = dayT.length >= 2 ? Math.max(...dayT.map(x => x.v)) - Math.min(...dayT.map(x => x.v)) : null;
     el.roRange.innerHTML = (rng != null ? `Range today <span class="n">${(state.units === 'ft' ? rng * 3.28084 : rng).toFixed(1)}</span> ${state.units} · ` : '') + springNeap(mi.phase);
+    paintCurve();
   }
   // moon + sun for the local day of t
   const dayStart = t - 12 * 3600e3;
@@ -935,7 +1093,7 @@ window.addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '=') zoomBy(1.4, cx, cy);
   if (e.key === '-' || e.key === '_') zoomBy(1 / 1.4, cx, cy);
 });
-window.addEventListener('resize', resize);
+window.addEventListener('resize', () => { resize(); if (state.located) updateReadout(true); });
 window.addEventListener('online', () => { if (state.located && !state.series) loadSeries(); });
 
 /* --- THE LOOP ---------------------------------------------------------- */
