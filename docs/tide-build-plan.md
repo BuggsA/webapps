@@ -1,4 +1,10 @@
-# Tide — build plan
+# Tide — build plan (v1, DONE — live 2026-09-13)
+
+**Status:** phases 0–5 below are built and deployed (`apps/tide/`, commits
+`7b78f0e` + `ed61b14`). The next work is **`tide-v2-plan.md`** — making the
+readout useful to people who actually use tides (today's curve, the week,
+datum/units/rate, daylight windows, phone-first layout). Start there.
+
 
 A map to build from, not a spec. Brief: `tide-brief.md`. Data:
 `tide-data-research.md`. Look: `tide-art-direction.md` (must be LOCKED

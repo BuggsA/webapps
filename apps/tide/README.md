@@ -27,7 +27,9 @@ tabular numerals for numbers; a single film grain; nothing pulses.
 
 **Status:** v1 live at `/tide/` (deployed 2026-09-13) — phases 0–5 of
 [`../../docs/tide-build-plan.md`](../../docs/tide-build-plan.md). See
-`../../PROJECT_STATE.md`.
+`../../PROJECT_STATE.md`. **Next:** `../../docs/tide-v2-plan.md` — the
+readout is thin for real users (no curve, no week, wrong datum for
+boaters); v2 fixes that, answer first, globe second.
 
 **Data shipped in `data/`:**
 - `tide-field.bin` + `tide-field.json` — EOT20 ocean tide (Hart-Davis

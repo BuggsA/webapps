@@ -355,6 +355,22 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   beyond US/GB; optionally pre-gzipping `tide-field.bin` (deploy-script
   change: upload with `Content-Encoding: gzip`).
 
+## 2026-09-13 -- tide redeployed with the limb fix; v2 plan written
+
+- Human redeployed `tide` (commit `ed61b14`, verified live: `tide.js`
+  contains `buildLandMask`) and re-synced the landing page (Until,
+  Tonight, Tide all listed).
+- **Assessment:** v1 is the picture; the readout is too thin for people
+  who use tides (no today curve, no week, no chart datum, no rate, no
+  daylight windows, globe first on phones). Written up as
+  **`docs/tide-v2-plan.md`** -- a cold-start handoff (file map, how
+  tide.js works, verified numbers, gotchas already paid for, the critique
+  by user type, phases 6-11 with files/acceptance, decisions not to
+  reopen, three open questions for the human, how to work). The model
+  working on this is about to change; that doc is the entry point.
+- **Next:** phase 6 (today's curve) and phase 7 (the week) first, ship,
+  then 8-11.
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename
