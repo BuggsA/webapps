@@ -40,7 +40,9 @@
                            docs/tide-tap-select-research.md, built 2026-09-17
      READOUT             — updateReadout(): state line, rows, range, moon, sun
      WEEK                — the next 7 days as rows + the 14-day lowest/highest
-                           line (docs/tide-v2-plan.md phase 7), inside Detail, source
+                           line (docs/tide-v2-plan.md phase 7), inside Detail
+     DATUM + UNITS       — heightNum()'s datum shift, tideRate() (phase 8:
+                           docs/tide-v2-plan.md), the two word controls, source
      DETAIL              — setDetail()/sizeDetail(): the on-demand panel for turns/
                            range/moon/sun (source + hand-off stay always visible) —
                            docs/tide-panel-research.md, Option C, decided 2026-09-16
@@ -72,6 +74,7 @@ const SEA_L0 = 0.35, SEA_LA = 0.20;  // luminance: L = L0 + LA·tanh(|η/0.6|^0.
 const RELIEF_GAIN = 2, REL_CLAMP = 0.05;    // raking-light relief term — calibrated live: median
 // near-terminator ocean gradient ~0.009 raw -> ~0.018 L; the steepest ~10% saturate at the clamp.
 const LS_PLACE = 'tide.place';
+const LS_UNITS = 'tide.units', LS_DATUM = 'tide.datum';
 const FPS_CAP  = REDUCED ? 4 : 30;
 
 /* --- STATE ------------------------------------------------------------- */
@@ -79,8 +82,9 @@ const state = {
   t: Date.now(), now0: Date.now(), mode: 'live', playFrom: 0,
   lat: NaN, lon: NaN, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, place: '',
   located: false, inlandKm: 0, coastLat: NaN, coastLon: NaN,
-  series: null,           // { src, pts:[{t,v}], turns:[{t,v,type}], name, country }
-  units: /-US$/i.test(navigator.language || '') ? 'ft' : 'm',
+  series: null,           // { src, pts:[{t,v}], turns:[{t,v,type}], name, country, mllwOffset }
+  units: (() => { try { const u = localStorage.getItem(LS_UNITS); if (u === 'ft' || u === 'm') return u; } catch (_) {} return /-US$/i.test(navigator.language || '') ? 'ft' : 'm'; })(),
+  datum: (() => { try { return localStorage.getItem(LS_DATUM) === 'mllw' ? 'mllw' : 'msl'; } catch (_) { return 'msl'; } })(),
 };
 const cam = { lat: 0, lon: 0, zoom: 1 };            // what is drawn
 const view = { mode: 'moon', off: { lat: 0, lon: 0 }, pan: { lat: 0, lon: 0 }, zoom: 1,
@@ -110,6 +114,7 @@ const el = {
   about: $('about'), aboutClose: $('about-close'), curve: $('curve'),
   roDetail: $('ro-detail'), btnDetail: $('btn-detail'),
   roWeek: $('ro-week'), btnWeek: $('btn-week'), roExtreme: $('ro-extreme'),
+  btnDatum: $('btn-datum'), btnUnits: $('btn-units'),
   pick: $('pick-card'), pickName: $('pick-name'), pickUse: $('pick-use'),
 };
 const ctx = el.canvas.getContext('2d', { alpha: false });
@@ -806,13 +811,60 @@ function cacheSet(key, v) { try { localStorage.setItem(key, JSON.stringify({ at:
 function titleCase(s) { return s.toLowerCase().replace(/\b[a-z]/g, m => m.toUpperCase()); }
 function ymd(ms) { const d = new Date(ms); return d.getUTCFullYear() + String(d.getUTCMonth() + 1).padStart(2, '0') + String(d.getUTCDate()).padStart(2, '0'); }
 
+// phase 8 datum: attach the model path's estimated chart datum (MLLW)
+// lazily and asynchronously, since it needs its own extra fetch. Keeps
+// the series' own 6h cache in sync once resolved, so future loads within
+// that window already carry it. NOAA stations don't need this call at
+// all — see the mllwOffset comment in loadSeries below.
+async function estimateMLLW(lat, lon) {
+  const key = 'tide.mllw:' + lat.toFixed(2) + ',' + lon.toFixed(2);
+  const cached = cacheGet(key, 30 * DAY);
+  if (cached && !cached.stale) return cached.v;
+  try {
+    const url = 'https://marine-api.open-meteo.com/v1/marine?latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3)
+      + '&hourly=sea_level_height_msl&past_days=92&forecast_days=1&timeformat=unixtime&timezone=UTC';
+    const j = await (await fetch(url)).json();
+    const T = j.hourly.time, V = j.hourly.sea_level_height_msl;
+    const vals = new Float64Array(V.length);
+    for (let i = 0; i < V.length; i++) vals[i] = V[i] == null ? (i ? vals[i - 1] : 0) : V[i];
+    const t0 = T[0] * 1000, step = (T[1] - T[0]) * 1000;
+    // the mean of each day's LOWER low (not just any low) is the actual
+    // definition of MLLW — a plain mean of all lows would be biased high
+    // on mixed/semidiurnal coasts where the two daily lows differ.
+    const byDay = new Map();
+    for (const x of H.extrema(vals, t0, step)) {
+      if (x.type !== 'L') continue;
+      const dk = localDayKey(x.t);
+      if (!byDay.has(dk) || x.v < byDay.get(dk)) byDay.set(dk, x.v);
+    }
+    const lows = [...byDay.values()];
+    if (!lows.length) throw new Error('no lows');
+    const mllw = lows.reduce((a, v) => a + v, 0) / lows.length;
+    cacheSet(key, { v: mllw });
+    return mllw;
+  } catch (_) {
+    return cached ? cached.stale.v : null;
+  }
+}
+function attachMLLW(series, lat, lon, key) {
+  if (series.src !== 'model' || series.mllwOffset != null) return;
+  estimateMLLW(lat, lon).then(v => {
+    if (v == null || state.series !== series) return;   // superseded by a newer place
+    series.mllwOffset = v; cacheSet(key, series);
+    syncUnitControls();
+    if (state.datum === 'mllw') updateReadout(true);
+  });
+}
 async function loadSeries() {
   const lat = state.coastLat, lon = state.coastLon;
   await loadStations();
   const st = nearestStation(lat, lon);
-  const key = st ? 'tide.noaa:' + st.id : 'tide.om:' + lat.toFixed(2) + ',' + lon.toFixed(2);
+  // ':v2' bumps past any cached NOAA series from before mllwOffset existed
+  // (unlike the model path, NOAA has no async step to backfill it lazily —
+  // mean isn't recoverable from turns alone once it's already subtracted).
+  const key = st ? 'tide.noaa:' + st.id + ':v2' : 'tide.om:' + lat.toFixed(2) + ',' + lon.toFixed(2);
   const cached = cacheGet(key, st ? 24 * 3600e3 : 6 * 3600e3);
-  if (cached && !cached.stale) { state.series = cached; updateReadout(true); return; }
+  if (cached && !cached.stale) { state.series = cached; updateReadout(true); attachMLLW(cached, lat, lon, key); return; }
   try {
     let series;
     if (st) {
@@ -826,7 +878,12 @@ async function loadSeries() {
       const raw = j.predictions.map(p => ({ t: Date.parse(p.t.replace(' ', 'T') + 'Z'), v: Number(p.v), type: p.type }));
       const mean = raw.reduce((a, x) => a + x.v, 0) / raw.length;
       const turns = raw.map(x => ({ t: x.t, v: x.v - mean, type: x.type }));
-      series = { src: 'noaa', name: titleCase(st.name), turns, pts: null };
+      // the predictions above were already fetched with datum=MLLW, so
+      // "raw" (before the MTL-centring subtraction) IS the official
+      // MLLW-referenced height — the offset back to it is just +mean,
+      // i.e. MLLW sits at v = −mean in the now-centred frame. Exact, not
+      // an estimate: no separate datums lookup needed for NOAA stations.
+      series = { src: 'noaa', name: titleCase(st.name), turns, pts: null, mllwOffset: -mean };
     } else {
       const url = 'https://marine-api.open-meteo.com/v1/marine?latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3)
         + '&minutely_15=sea_level_height_msl&past_days=3&forecast_days=15&timeformat=unixtime&timezone=UTC';
@@ -839,6 +896,7 @@ async function loadSeries() {
       series = { src: 'model', name: '', turns, pts: { t0, step, v: Array.from(vals) } };
     }
     state.series = series; cacheSet(key, series);
+    attachMLLW(series, lat, lon, key);
     track('series', { src: series.src, ok: 1 });
   } catch (_) {
     state.series = cached ? cached.stale : null;
@@ -859,14 +917,50 @@ function heightAt(t) {
   const a = T[k], b = T[k + 1], u = (t - a.t) / (b.t - a.t);
   return a.v + (b.v - a.v) * (1 - Math.cos(u * Math.PI)) / 2;
 }
+// phase 8 datum toggle: every absolute height reading on the page routes
+// through heightNum (fmtHeight/fmtHeightPlain both call it), so shifting
+// the reference here is the one place that needs to know about it.
+function displayHeight(m) {
+  const s = state.series;
+  return (state.datum === 'mllw' && s && s.mllwOffset != null) ? m - s.mllwOffset : m;
+}
 function heightNum(m) {
-  const v = state.units === 'ft' ? m * 3.28084 : m;
+  const v = state.units === 'ft' ? displayHeight(m) * 3.28084 : displayHeight(m);
   return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1);
 }
 function fmtHeight(m) {
   return `<span class="n">${heightNum(m)}</span><span class="u">${state.units}</span>`;
 }
 function fmtHeightPlain(m) { return heightNum(m) + state.units; }   // for canvas text
+// a difference (rate, range), not an absolute reading — unit conversion
+// only, never a datum shift (a constant offset cancels in a subtraction),
+// and no sign glyph since it's always paired with a rising/falling word.
+function fmtDelta(m) {
+  const v = state.units === 'ft' ? Math.abs(m) * 3.28084 : Math.abs(m);
+  return `<span class="n">${v.toFixed(1)}</span><span class="u">${state.units}</span>`;
+}
+// phase 8 rate: height at t+1h minus height at t, the same finite
+// difference the plan specifies. "fastest part of the tide" compares
+// that to the same 1h delta taken at the current half-cycle's midpoint
+// (its steepest point), so both numbers come from the identical method.
+function tideRate(t) {
+  const s = state.series; if (!s || !s.turns || !s.turns.length) return null;
+  const T = s.turns, k = T.findIndex(x => x.t > t);
+  if (k <= 0) return null;
+  const prev = T[k - 1], next = T[k];
+  const h0 = heightAt(t), h1 = heightAt(t + 3600e3);
+  if (h0 == null || h1 == null) return null;
+  const rate = h1 - h0;
+  const mid = (prev.t + next.t) / 2;
+  const hm0 = heightAt(mid - 1800e3), hm1 = heightAt(mid + 1800e3);
+  const maxRate = (hm0 != null && hm1 != null) ? Math.abs(hm1 - hm0) : null;
+  return { rate, fastest: maxRate != null && maxRate > 0 && Math.abs(rate) >= 0.9 * maxRate };
+}
+function rateSuffix(t) {
+  const r = tideRate(t);
+  if (!r) return '';
+  return ` · ${fmtDelta(r.rate)} in the next hour` + (r.fastest ? ' · fastest part of the tide' : '');
+}
 function fmtDur(ms) {
   const m = Math.round(ms / 60e3);
   if (m < 60) return `<span class="n">${m}</span> min`;
@@ -993,7 +1087,7 @@ function updateReadoutLite(win) {
     const k = s.turns.findIndex(x => x.t > t);
     if (k > 0) {
       const next = s.turns[k], rising = next.type === 'H';
-      el.roState.innerHTML = `${rising ? 'Rising' : 'Falling'} · ${rising ? 'high' : 'low'} in ${fmtDur(next.t - t)}` + (h == null ? '' : ` · ${fmtHeight(h)}`);
+      el.roState.innerHTML = `${rising ? 'Rising' : 'Falling'} · ${rising ? 'high' : 'low'} in ${fmtDur(next.t - t)}` + (h == null ? '' : ` · ${fmtHeight(h)}`) + rateSuffix(t);
       el.rule.className = 'ro-rule ' + (rising ? 'rising' : 'falling');
     }
   }
@@ -1055,7 +1149,7 @@ function updateReadout(force) {
       const rising = next.type === 'H';
       const near = Math.min(t - prev.t, next.t - t) < 20 * 60e3;
       const word = near ? ((next.t - t < 20 * 60e3 ? next : prev).type === 'H' ? 'High water' : 'Low water') : (rising ? 'Rising' : 'Falling');
-      el.roState.innerHTML = inland + `${word} · ${rising ? 'high' : 'low'} in ${fmtDur(next.t - t)}` + (h == null ? '' : ` · ${fmtHeight(h)}`);
+      el.roState.innerHTML = inland + `${word} · ${rising ? 'high' : 'low'} in ${fmtDur(next.t - t)}` + (h == null ? '' : ` · ${fmtHeight(h)}`) + (near ? '' : rateSuffix(t));
       el.rule.className = 'ro-rule ' + (rising ? 'rising' : 'falling');
     }
     const today = localDayKey(t);
@@ -1082,8 +1176,36 @@ function updateReadout(force) {
     : 'your national tide tables';
   el.roHand.innerHTML = `Not for navigation or safety. Official: ${off}.`;
   renderWeek();
+  syncUnitControls();
   dirty = true;
 }
+
+/* --- DATUM + UNITS (phase 8) --------------------------------------------
+   Two word controls on their own line in Detail: the datum cycles what
+   "zero" means (mean sea level / chart datum), the units cycle m/ft.
+   Both persist and both are read back by heightNum() (above), so every
+   height on the page — state line, curve labels, turns, week — follows
+   them without each call site knowing about the setting. */
+function datumLabel(d, s) {
+  if (d === 'msl') return 'above mean sea level';
+  return 'above chart datum (MLLW)' + (s && s.src === 'model' ? ' — estimated' : '');
+}
+function syncUnitControls() {
+  el.btnUnits.textContent = state.units;
+  el.btnDatum.textContent = datumLabel(state.datum, state.series);
+}
+function setUnits(u) {
+  state.units = u;
+  try { localStorage.setItem(LS_UNITS, u); } catch (_) {}
+  updateReadout(true);
+}
+function setDatum(d) {
+  state.datum = d;
+  try { localStorage.setItem(LS_DATUM, d); } catch (_) {}
+  updateReadout(true);
+}
+el.btnUnits.addEventListener('click', () => { setUnits(state.units === 'ft' ? 'm' : 'ft'); track('units', { u: state.units }); });
+el.btnDatum.addEventListener('click', () => { setDatum(state.datum === 'msl' ? 'mllw' : 'msl'); track('datum', { d: state.datum }); });
 
 /* --- WEEK -----------------------------------------------------------------
    Phase 7 (docs/tide-v2-plan.md): the curve and the next-4-turns list only

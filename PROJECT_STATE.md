@@ -573,3 +573,30 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   hilo turns) and at desktop + mobile widths; expand/collapse tested
   with real clicks, not `.click()`.
 - **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+
+## 2026-09-14 -- tide: phase 8, datum/units/rate, not deployed
+
+- Built docs/tide-v2-plan.md phase 8: a datum toggle (mean sea level /
+  chart datum MLLW) and a units toggle (m/ft), both persisted, plus a
+  rate line ("0.4 m in the next hour", + "fastest part of the tide"
+  near a half-cycle's midpoint) on the state line when rising/falling.
+- **Spec correction found live:** NOAA's `datums.json` endpoint the plan
+  named is retired (404s, redirects to the Metadata API). Turned out
+  unnecessary anyway -- NOAA predictions are already fetched with
+  `datum=MLLW` and re-centred by subtracting the window's own mean
+  (pre-existing code); that mean is the *exact* offset back to MLLW, so
+  the toggle reproduces NOAA's own numbers algebraically. Only the
+  Open-Meteo/model path is a real estimate (92-day past_days call,
+  mean of each day's lower low), labelled "estimated" accordingly.
+- **Bug found and fixed before it shipped:** a NOAA series cached before
+  this phase (no `mllwOffset` field) would never self-heal -- the async
+  backfill path only covers the model path, since NOAA needs no extra
+  fetch. Fixed with a cache-key version bump (`:v2`) so stale entries
+  are cleanly bypassed rather than silently showing MSL numbers under
+  an MLLW label.
+- Every height on the page routes through one function (`heightNum()`)
+  for the datum shift, so state line / curve labels / turns / week rows
+  all follow the setting without individually knowing about it. Range
+  and the new rate line are left alone -- both are differences, and a
+  constant datum offset cancels out of a subtraction.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.

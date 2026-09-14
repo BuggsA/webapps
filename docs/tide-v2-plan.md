@@ -245,7 +245,7 @@ word control "This week" that expands them.
   `.click()`) at desktop and mobile widths; today's group correctly
   includes turns already past, not just the ones still ahead.
 
-### Phase 8 — Datum, units, rate
+### Phase 8 — Datum, units, rate — DONE 2026-09-14
 
 - **Datum.** A word control on the range line cycles `above mean sea
   level` → `above chart datum (MLLW)` → back, persisted in `localStorage`
@@ -255,6 +255,18 @@ word control "This week" that expands them.
   history that one extra `past_days=92&hourly=` call provides (cache 30
   days) and **label it "estimated chart datum"**. Every height on the
   page (state line, curve, rows) follows the setting.
+  - **Built differently than specified:** `datums.json` (the endpoint
+    named here) has been retired by NOAA — confirmed live, it 404s and
+    points at the Metadata API instead. Didn't need it anyway: the NOAA
+    predictions are already fetched with `datum=MLLW` and then re-centred
+    by subtracting the window's own mean (existing code, pre-phase-8);
+    that mean **is** the exact offset back to MLLW, so toggling reproduces
+    NOAA's own MLLW numbers algebraically, not from a second lookup — no
+    "estimated" label for NOAA stations, only for the model path, which
+    does use the 92-day `past_days` call exactly as specified (verified:
+    -0.89 m against a real coastal point, sane order of magnitude).
+  - The word controls ended up on their own line rather than merged into
+    the range line's text, to keep each `.word` a clean tap target.
 - **Units.** A word control `m` / `ft` beside the datum, persisted
   (`tide.units`), replacing the locale guess as the source of truth
   (locale remains the first-run default).
@@ -265,6 +277,16 @@ word control "This week" that expands them.
   anyone on sand.
 - Acceptance: a boater can read a NOAA station's numbers here and see the
   same values as NOAA's own page in feet on MLLW.
+- **Verified:** datum/unit toggles apply uniformly across the state line,
+  turn rows, week rows and the 14-day extreme line (a real click, not
+  `.click()`, on both) — all via one choke point (`heightNum()`), not by
+  threading the setting through every call site; range and the new rate
+  line are correctly datum-invariant (a constant offset cancels in a
+  difference) and only unit-converted; "fastest part of the tide"
+  confirmed to trigger at a half-cycle's midpoint and stay silent
+  elsewhere; a stale NOAA series cached before this phase (missing
+  `mllwOffset`) is caught by a cache-key version bump rather than silently
+  showing MSL numbers under an MLLW label.
 
 ### Phase 9 — Answers: daylight windows, water temperature, calendar
 
