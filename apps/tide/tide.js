@@ -22,12 +22,15 @@
      COLOUR              — oklch → sRGB, the three luminance LUTs, the η→L map
      ASTRONOMY GLUE      — subPoint() (sub-lunar / sub-solar), moon phase, rise/set
      DATA                — loadLand(), loadCoast(), loadField(), loadStations()
-     FIELD               — computeField(t): η per 1° cell from the constituents
+     FIELD               — computeField(t): η per 1° cell from the constituents,
+                           plus its spatial gradient (gradLat/gradLon) for RELIEF
      CAMERA              — cam / target / drag offset / ease-back / fly-to
      PROJECTION          — project(), frame constants (sun & moon in camera frame)
      PAINT               — buildLandMask() (lat/lon raster), prepRings()/projectRings()
-                           (coast hairline only), paintSea() (per-pixel pass),
-                           paintCoast(), paintPlace(), paintMoon(), paintGrain(), paintScrim()
+                           (coast hairline only), paintSea() (per-pixel pass, incl. RELIEF
+                           shading — docs/tide-visibility-research.md §2, built 2026-09-16),
+                           paintCoast(), paintPlace(), paintMoon() + paintMoonLine()
+                           (tracked marker — same doc §3), paintGrain(), paintScrim()
      TIME MODEL          — now0, live / hold / play, scrub, clock
      PLACE + SERIES      — geocode, device, coast distance, NOAA proximity,
                            loadSeries() (cached), turning points, heightAt()
@@ -58,6 +61,8 @@ const INLAND_KM  = 25;               // beyond this: "N km from the sea"
 const NOAA_KM    = 15;               // within this: official NOAA prediction
 const CURVE_BEFORE = 6 * 3600e3, CURVE_AFTER = 30 * 3600e3;  // the readout curve's window
 const SEA_L0 = 0.35, SEA_LA = 0.20;  // luminance: L = L0 + LA·tanh(|η/0.6|^0.65)
+const RELIEF_GAIN = 2, REL_CLAMP = 0.05;    // raking-light relief term — calibrated live: median
+// near-terminator ocean gradient ~0.009 raw -> ~0.018 L; the steepest ~10% saturate at the clamp.
 const LS_PLACE = 'tide.place';
 const FPS_CAP  = REDUCED ? 4 : 30;
 
@@ -78,6 +83,8 @@ let land110 = null, land50 = null, stations = null;
 let geo110 = null, geo50 = null;                     // rings as unit vectors + a bounding cap
 let field = null;                                   // { names, ampC[], ampS[], N, nlon, nlat, lon0, lat0 }
 const eta = new Float32Array(360 * 180);
+// spatial gradient of eta (deg^-1), refilled alongside it — feeds the relief-shading term in paintSea()
+const gradLat = new Float32Array(360 * 180), gradLon = new Float32Array(360 * 180);
 let etaAt = -Infinity;
 let lastFrame = 0, dirty = true;
 
@@ -233,6 +240,20 @@ function computeField(t) {
     const C = field.ampC[c], S = field.ampS[c];
     for (let k = 0; k < field.N; k++) eta[k] += C[k] * fc + S[k] * fs;
   }
+  // Spatial gradient of eta (central differences, deg^-1): wraps in longitude,
+  // one-sided at the poles. Feeds paintSea's relief-shading term — a real
+  // slope of the actual tide data, not a decorative texture. Cheap: one pass
+  // over the same 64,800-cell grid, once per simulated minute, not per pixel.
+  const nlon = field.nlon, nlat = field.nlat;
+  for (let j = 0; j < nlat; j++) {
+    const jN = Math.min(j + 1, nlat - 1), jS = Math.max(j - 1, 0), latSpan = (jN - jS) || 1;
+    const row = j * nlon, rowN = jN * nlon, rowS = jS * nlon;
+    for (let i = 0; i < nlon; i++) {
+      const iE = (i + 1) % nlon, iW = (i - 1 + nlon) % nlon;
+      gradLon[row + i] = (eta[row + iE] - eta[row + iW]) / 2;
+      gradLat[row + i] = (eta[rowN + i] - eta[rowS + i]) / latSpan;
+    }
+  }
 }
 // bilinear sample of η at (lat, lon) degrees
 function sampleEta(lat, lon) {
@@ -243,6 +264,22 @@ function sampleEta(lat, lon) {
   const j0 = Math.floor(v), j1 = Math.min(j0 + 1, nlat - 1), fv = v - j0;
   const a = eta[j0 * nlon + i0], b = eta[j0 * nlon + i1], c = eta[j1 * nlon + i0], d = eta[j1 * nlon + i1];
   return (a + (b - a) * fu) * (1 - fv) + (c + (d - c) * fu) * fv;
+}
+// bilinear sample of the eta gradient at (lat, lon) — same indexing as
+// sampleEta, kept as its own function rather than folded together so
+// callers that don't need the gradient (most of them) pay nothing for it.
+function sampleGrad(lat, lon) {
+  const nlon = field.nlon, nlat = field.nlat;
+  let u = lon - field.lon0; u -= Math.floor(u / 360) * 360;
+  let v = clamp(lat - field.lat0, 0, nlat - 1.0001);
+  const i0 = Math.floor(u) % nlon, i1 = (i0 + 1) % nlon, fu = u - Math.floor(u);
+  const j0 = Math.floor(v), j1 = Math.min(j0 + 1, nlat - 1), fv = v - j0;
+  const r0 = j0 * nlon, r1 = j1 * nlon;
+  const loA = gradLon[r0 + i0], loB = gradLon[r0 + i1], loC = gradLon[r1 + i0], loD = gradLon[r1 + i1];
+  const laA = gradLat[r0 + i0], laB = gradLat[r0 + i1], laC = gradLat[r1 + i0], laD = gradLat[r1 + i1];
+  const gLon = (loA + (loB - loA) * fu) * (1 - fv) + (loC + (loD - loC) * fu) * fv;
+  const gLat = (laA + (laB - laA) * fu) * (1 - fv) + (laC + (laD - laC) * fu) * fv;
+  return [gLat, gLon];
 }
 
 /* --- CAMERA ------------------------------------------------------------ */
@@ -384,6 +421,12 @@ function paintSea() {
   const y0 = Math.max(0, Math.floor(bcy - bR - 2)), y1 = Math.min(bh, Math.ceil(bcy + bR + 2));
   const [sx, sy, sz] = sunCam, [mx, my, mz] = moonCam;
   const moonLift = 0.05 * moonI.frac;
+  // raking-light relief term (docs/tide-visibility-research.md §2): the real
+  // slope of the tide field, dotted against the direction of increasing
+  // sunlight — a closed form of "which way does the light come from here,"
+  // so it peaks at the terminator and vanishes at local noon/midnight for
+  // free, with no per-pixel trig beyond sin/cos of one angle.
+  const sinSunLat = Math.sin(sunPt.lat * D2R), cosSunLat = Math.cos(sunPt.lat * D2R), sunLon = sunPt.lon;
   const edge = 1.3 / bR, haveField = !!field;
   // fill the background everywhere first
   for (let i = 0; i < d.length; i += 4) { d[i] = BG[0]; d[i + 1] = BG[1]; d[i + 2] = BG[2]; d[i + 3] = 255; }
@@ -421,6 +464,14 @@ function paintSea() {
         const e = haveField ? sampleEta(lat, lon) : 0;
         const ei = clamp(Math.round(e * 100) + 800, 0, 1600);
         L = ETA_LUT[ei] * (0.38 + 0.62 * day);     // night keeps the tide readable
+        if (haveField) {
+          const cp = Math.sqrt(Math.max(0, 1 - sp * sp));
+          const dlon = (lon - sunLon) * D2R, sdl = Math.sin(dlon), cdl = Math.cos(dlon);
+          const dSunLat = cp * sinSunLat - sp * cosSunLat * cdl;   // ∂(sun altitude term)/∂lat
+          const dSunLon = -cp * cosSunLat * sdl;                   // ∂(sun altitude term)/∂lon
+          const [gLat, gLon] = sampleGrad(lat, lon);
+          L += clamp((gLat * dSunLat + gLon * dSunLon) * RELIEF_GAIN, -REL_CLAMP, REL_CLAMP);
+        }
       }
       L += moonLift * Math.max(0, dMoon);
       L *= 0.82 + 0.18 * Z;                       // quiet limb darkening
@@ -467,14 +518,72 @@ function paintPlace() {
   ctx.beginPath(); ctx.arc(sx, sy, 1.4, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
-function moonDiscPos() {
-  const rect = el.moon.getBoundingClientRect();
-  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+// The moon is a tracked object, not fixed chrome (docs/tide-visibility-research.md
+// §3, built 2026-09-16): its screen position comes from moonCam — the same
+// vector already driving the moonlight-lift term — projected to just
+// outside the globe's rim in whatever direction the moon actually is from
+// the current camera, and clamped inside the safe viewport margins like an
+// off-screen/edge indicator. Drag away from the moon's view and it visibly
+// swings toward the edge; release, and it eases back to centre with the
+// camera — the causal link is demonstrated by the motion, not asserted by
+// a caption. Works identically whether the camera is following the moon
+// or is zoomed to a place, since moonCam is computed the same way in both.
+function moonMarkerPos() {
+  const [mx, my, mz] = moonCam;
+  const mag = Math.hypot(mx, my);
+  const dirx = mag > 1e-4 ? mx / mag : 0, diry = mag > 1e-4 ? my / mag : 1;   // home: straight up
+  const orbitR = R * 1.18 + 26;
+  let x = cx + dirx * orbitR, y = cy - diry * orbitR;
+  const m = 26;                                    // half the 44px target + a couple px
+  const bottomLimit = (el.controls.hidden ? Hh : el.controls.getBoundingClientRect().top) - m - 4;
+  x = clamp(x, m, W - m);
+  y = clamp(y, m, Math.max(m, bottomLimit));
+  // the marker sits above the readout in z-index (it's a real hit target,
+  // not just a drawing) — never let it land on the readout's text, or its
+  // 44px target would steal taps meant for the curve/turns underneath.
+  // Check feasibility before picking a direction to push, not after —
+  // picking blind and re-clamping can undo the push right back into the
+  // collision it was meant to escape.
+  if (!el.readout.hidden) {
+    const rr = el.readout.getBoundingClientRect();
+    if (x > rr.left - m && x < rr.right + m && y > rr.top - m && y < rr.bottom + m) {
+      const downY = rr.bottom + m, rightX = rr.right + m;
+      const canDown = downY <= bottomLimit, canRight = rightX <= W - m;
+      if (canDown && (!canRight || (downY - y) <= (rightX - x))) y = downY;
+      else if (canRight) x = rightX;
+      else y = bottomLimit;             // neither escape fits: settle at the floor, clear of the text above
+      x = clamp(x, m, W - m);
+      y = clamp(y, m, Math.max(m, bottomLimit));
+    }
+  }
+  const alpha = 0.12 + 0.88 * smooth(-0.15, 0.15, mz);   // fades toward a faint ghost, never vanishes outright
+  return { x, y, alpha };
 }
-function paintMoon() {
-  const { x, y } = moonDiscPos(); const r = 10;
+function positionMoonButton(mm) {
+  el.moon.style.left = (mm.x - 22) + 'px';
+  el.moon.style.top = (mm.y - 22) + 'px';
+  el.moon.style.transform = 'none';
+}
+// A faint hairline from the marker to the sub-lunar point on the globe —
+// only while the sub-lunar point is actually visible and the two aren't
+// already coincident (the default, undragged view), so it confirms the
+// relationship rather than restating it.
+function paintMoonLine(mm) {
+  const [X, Y, Z] = project(sub.lat, sub.lon);
+  if (Z <= 0.02) return;
+  const px = cx + R * X, py = cy - R * Y;
+  if (Math.hypot(mm.x - px, mm.y - py) < 30) return;
+  ctx.save();
+  ctx.globalAlpha = 0.20 * mm.alpha;
+  ctx.strokeStyle = 'rgb(243,238,228)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(mm.x, mm.y); ctx.lineTo(px, py); ctx.stroke();
+  ctx.restore();
+}
+function paintMoon(mm) {
+  const { x, y, alpha } = mm; const r = 10;
   const P = moonI.phase, waxing = P < 180, rx = Math.abs(Math.cos(P * D2R)) * r, bulgeOut = Math.cos(P * D2R) > 0;
-  ctx.save(); ctx.translate(x, y); if (!waxing) ctx.scale(-1, 1);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); if (!waxing) ctx.scale(-1, 1);
   ctx.fillStyle = 'rgba(243,238,228,0.16)'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = 'rgba(243,238,228,0.92)';
   ctx.beginPath();
@@ -552,7 +661,11 @@ function paint() {
   ctx.fillStyle = `rgb(${BG[0]},${BG[1]},${BG[2]})`; ctx.fillRect(0, 0, W, Hh);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(buf, 0, 0, bw, bh, 0, 0, W, Hh);
-  paintCoast(); paintPlace(); paintScrim(); paintGrain(); paintMoon();
+  paintCoast(); paintPlace(); paintScrim(); paintGrain();
+  const mm = moonMarkerPos();
+  positionMoonButton(mm);
+  paintMoonLine(mm);
+  paintMoon(mm);
 }
 
 /* --- CANVAS SIZING ----------------------------------------------------- */

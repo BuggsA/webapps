@@ -1,17 +1,19 @@
 # Tide — making high/low and the moon's pull actually visible
 
-Research only. No code changed. Priority set by the user: **beauty and
-wow first — utility is what brings people to the site, not the point of
-the globe itself.** Read after `tide-panel-research.md`; this is the
-same kind of pass, aimed at what was found by testing the globe directly
-(see the conversation: sampled real rendered pixels at real high/low
-tide moments, at the most extreme location on Earth) — the brightness
-encoding is real and correctly scaled to each region's actual tidal
-range, but it competes with day/night for the same channel and there is
-no way, by design (no legend, per the banned list), to read it cold.
-Separately, the moon's **phase** reads clearly (the disc); its
-**location and causal role** — why the water does what it does, right
-here — does not.
+**Built 2026-09-16** — items 1–3 of §5's order (relief shading, the
+tracked moon marker, the confirming hairline). Items 4 (limb wobble,
+moon-glade shimmer) remain research only, not built. Priority set by
+the user: **beauty and wow first — utility is what brings people to the
+site, not the point of the globe itself.** Read after
+`tide-panel-research.md`; this is the same kind of pass, aimed at what
+was found by testing the globe directly (see the conversation: sampled
+real rendered pixels at real high/low tide moments, at the most extreme
+location on Earth) — the brightness encoding is real and correctly
+scaled to each region's actual tidal range, but it competes with
+day/night for the same channel and there is no way, by design (no
+legend, per the banned list), to read it cold. Separately, the moon's
+**phase** reads clearly (the disc); its **location and causal role** —
+why the water does what it does, right here — did not.
 
 ## 1. The precedent that solves this: Bartosz Ciechanowski, *Moon*
 
@@ -225,9 +227,73 @@ locked direction or doesn't.
 4. Limb wobble (§2, optional) and the moon-glade shimmer (§3, optional)
    — both worth a prototype before committing, both carry real taste
    risk (bulge-vs-blob; glint-vs-banned-specular) that the rest of this
-   list doesn't.
+   list doesn't. **Not built — still just research.**
 
-Nothing here has been built. Say which of these to take forward.
+## 6. What actually got built (2026-09-16), and what changed on the way
+
+**Relief shading (§2), in `paintSea()`.** `computeField()` now also
+fills `gradLat`/`gradLon` (central differences over the same 360×180
+grid, wrapped in longitude, one-sided at the poles) right after it
+fills `eta` — one extra pass over the grid, once per simulated minute,
+negligible next to the per-pixel cost. A new `sampleGrad(lat, lon)`
+bilinear-samples them the same way `sampleEta` already does. Per sea
+pixel, the raking term is a closed-form dot product — the field's real
+slope against the analytic gradient of "how much sunlight reaches this
+point" (itself derived from `sunPt`, no new trig beyond one sin/cos of
+`lon − sunLon`) — added to `L` before the existing moonlight-lift and
+limb-darkening terms.
+
+*Calibration, done against real numbers, not guessed:* sampled the raw
+(pre-gain) term across every open-ocean cell within 0.10 of the
+terminator on a real load. Median magnitude ≈ 0.009, 90th percentile
+≈ 0.05, max ≈ 0.29. Landed on `RELIEF_GAIN = 2`, `REL_CLAMP = 0.05` —
+typical terminator-adjacent water gets a ±0.02-ish nudge, the steepest
+~10% (the Fundys of the world) saturate at the clamp. **Bug caught by
+that same calibration pass, before it shipped:** the first version
+clamped the *raw* term and multiplied by gain afterward, so the actual
+range was ±0.10, double the intended cap — fixed to gain-then-clamp.
+Confirmed live: at a real near-terminator point the relief term now
+swings a pixel from `rgb(0,12,39)` to `rgb(0,2,26)` — a real, visible
+darkening along the shadowed side of a ridge. Frame cost unchanged at
+~18.5 ms, the same budget the rest of the globe already runs in.
+
+**The tracked moon marker + confirming line (§3), in `paintMoon()` /
+new `moonMarkerPos()` / `paintMoonLine()`.** The `.moon` button is
+repositioned every frame from `moonCam` (already computed for the
+moonlight-lift term) rather than sitting at a fixed CSS position;
+`moonDiscPos()` is gone. Verified live: dragging the globe away from
+the moon's view visibly swings the marker toward the edge in the
+correct direction in real time, and releasing eases it back to centre
+together with the camera (both driven by the same `stepCamera()`
+easing, so reduced motion is inherited for free — no new guard needed
+anywhere in this feature). Alpha fades toward a floor of `0.12` (never
+a hard vanish) as the moon crosses behind the current view — confirmed
+correct, not a bug, against Brighton's real moonset time on a real
+load. The confirming hairline turned out to read better than planned:
+because the marker orbits just outside the globe's rim while the
+sub-lunar point it points to sits inside at the centre, the "only when
+not already close together" suppression almost never fires in
+practice, so the line reads as a *permanent, quiet axis* in the default
+resting view rather than a rare transition flash — a better outcome
+than the original spec, kept as-is.
+
+**A real layout bug found and fixed in testing, not shipped broken:**
+the marker sits above the readout in z-index (it's a real 44px hit
+target, not just a drawing), and on narrow phones its computed position
+could land on top of the curve's turn labels or the state line — a
+silent tap-stealing bug, not just a visual one. Fixed with a
+feasibility-checked push (down below the readout, or right of it,
+whichever actually fits within the safe margins and the controls bar —
+checked *before* picking a direction, not after, since picking blind
+and re-clamping could undo the push right back into the collision).
+Verified by sweeping the drag angle in 30° steps at 320px width and
+checking the marker's real bounding rect against the state line, the
+turns list, and the Detail toggle: zero collisions across the full
+sweep, where the first version failed at the home position.
+
+Not touched: nothing about this feature is specific to the NOAA vs.
+Open-Meteo data path, so both were exercised incidentally through
+existing test flows rather than re-verified from scratch here.
 
 ## Sources
 

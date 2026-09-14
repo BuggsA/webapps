@@ -108,7 +108,11 @@ body {
 }
 #globe.dragging { cursor: grabbing; }
 
-/* --- the moon's hit target (the disc itself is drawn on the canvas) */
+/* --- the moon's hit target (the disc itself is drawn on the canvas) ---
+   A tracked marker, not fixed chrome: tide.js repositions it every frame
+   via inline left/top from its real bearing (moonMarkerPos(), docs/
+   tide-visibility-research.md §3). left/top/transform below are only the
+   pre-first-paint fallback, overridden the instant paint() runs. */
 .moon {
   position: fixed;
   z-index: 12;
@@ -372,9 +376,6 @@ body {
 .about .word { justify-self: start; }
 
 /* --- responsive ------------------------------------------------------ */
-@media (max-width: 40rem) {
-  .moon { left: auto; right: var(--edge); transform: none; }   /* off the readout's line */
-}
 @media (max-width: 30rem) {
   /* two rows: the scrub alone on top, the words and icons beneath */
   .controls { gap: 0 var(--sp-4); flex-wrap: wrap; }

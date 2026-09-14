@@ -443,6 +443,38 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   the misleading signal). Detail in `docs/tide-panel-research.md`.
 - Not deployed. `node --check` clean.
 
+## 2026-09-16 -- tide: relief shading + tracked moon marker, not deployed
+
+- Built docs/tide-visibility-research.md items 1-3: raking-light relief
+  shading on the sea (a real slope of the tide field, dotted against the
+  direction of increasing sunlight -- peaks at the terminator, vanishes
+  at local noon/midnight, no legend, no new colour) and the moon icon
+  as a tracked off-screen-indicator marker (driven by moonCam, already
+  computed for the moonlight-lift term) instead of fixed chrome, plus a
+  confirming hairline from the marker to the sub-lunar point.
+- User pushed back on the first pass at the moon fix ("is this the best,
+  not just the cheapest") -- the static hairline-only idea was replaced
+  before building anything, in favour of the tracked marker (see the
+  doc's history). Built the better idea, not the cheap one.
+- Calibrated the relief gain against real sampled data (median/p90/max
+  of the raw term across every near-terminator open-ocean cell on a real
+  load), not guessed. Caught and fixed a real bug in the same pass: the
+  clamp was applied before the gain instead of after, doubling the
+  intended range.
+- Caught and fixed a real layout bug: the moon marker is a live 44px hit
+  target (not just a drawing) and could land on the readout's text on
+  narrow phones, silently stealing taps. Fixed with a feasibility-checked
+  push, verified by sweeping the drag angle at 320px width with zero
+  collisions against the state line, turns, and Detail toggle.
+- Verified: frame cost unchanged (~18.5 ms); drag-and-release swings the
+  marker out and eases it back with the camera; alpha correctly fades
+  toward a floor (never a hard vanish) when the moon is below the
+  horizon at a zoomed place, checked against Brighton's real moonset
+  time; reduced motion inherited for free (the marker only reads
+  cam/moonCam, which stepCamera() already snaps under REDUCED).
+- Not deployed. `node --check` clean. Limb wobble and the moon-glade
+  shimmer remain research only (item 4), not built.
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename
