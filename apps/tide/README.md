@@ -25,7 +25,7 @@ moonlight as a faint lift on the near limb; the readout set as table
 rows under a hairline, never a card; Fraunces for words, Space Grotesk
 tabular numerals for numbers; a single film grain; nothing pulses.
 
-**Status:** v1 — phases 0–5 of
+**Status:** v1 live at `/tide/` (deployed 2026-09-13) — phases 0–5 of
 [`../../docs/tide-build-plan.md`](../../docs/tide-build-plan.md). See
 `../../PROJECT_STATE.md`.
 

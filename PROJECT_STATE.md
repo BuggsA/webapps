@@ -337,9 +337,23 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - **Verified in the in-app browser** at 319x944 and 1280x800: NOAA path
   (Wildwood NJ), model path (Brighton UK), fresh-launch prompt, About,
   Play, drag, zoom. `node --check` clean.
-- **Not done:** deploy (human: `.\scripts\deploy-app.ps1 -Name tide`, then
-  re-sync the landing page, which now lists Tonight and Tide). A real-phone
-  performance pass. UK/other official-table links beyond US/GB.
+- **Deployed 2026-09-13** by the human at
+  `https://<DISTRIBUTION_DOMAIN>/tide/` (all files 200; the field
+  .bin is served uncompressed at 1.55 MB because CloudFront does not gzip
+  `application/octet-stream`). The landing page was **not** re-synced yet
+  (`.\scripts\deploy-site-root.ps1`) -- it still lists only Until.
+- **2026-09-13 fix, needs a redeploy:** the live view showed land and sea
+  swapped when Antarctica straddled the limb -- a ring spanning all
+  longitudes, clamped to the rim, swept the whole disc and flipped the
+  even-odd land mask. The projected mask is gone: land is now a 0.125°
+  lat/lon raster built once from the rings (`buildLandMask`) and sampled
+  bilinearly per pixel (soft coast), which also removed the mask cost.
+  Per-pixel asin/atan2 replaced by ~1e-6-rad polynomial approximations;
+  pixel budget 90k. Frames: ~18 ms at planet scale and at coast zoom on
+  this machine.
+- **Still not done:** a real-phone performance pass; official-table links
+  beyond US/GB; optionally pre-gzipping `tide-field.bin` (deploy-script
+  change: upload with `Content-Encoding: gzip`).
 
 ## Not done yet
 

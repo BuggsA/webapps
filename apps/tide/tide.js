@@ -25,8 +25,9 @@
      FIELD               — computeField(t): η per 1° cell from the constituents
      CAMERA              — cam / target / drag offset / ease-back / fly-to
      PROJECTION          — project(), frame constants (sun & moon in camera frame)
-     PAINT               — paintMask(), paintSea() (per-pixel pass), paintCoast(),
-                           paintPlace(), paintMoon(), paintGrain(), paintScrim()
+     PAINT               — buildLandMask() (lat/lon raster), prepRings()/projectRings()
+                           (coast hairline only), paintSea() (per-pixel pass),
+                           paintCoast(), paintPlace(), paintMoon(), paintGrain(), paintScrim()
      TIME MODEL          — now0, live / hold / play, scrub, clock
      PLACE + SERIES      — geocode, device, coast distance, NOAA proximity,
                            loadSeries() (cached), turning points, heightAt()
@@ -89,8 +90,6 @@ const el = {
 const ctx = el.canvas.getContext('2d', { alpha: false });
 const buf = document.createElement('canvas');       // low-res sea/land/light pass
 const bctx = buf.getContext('2d', { willReadFrequently: true });
-const mask = document.createElement('canvas');      // land mask at buffer res
-const mctx = mask.getContext('2d', { willReadFrequently: true });
 let bw = 0, bh = 0, bs = 0.5;                       // buffer size + scale (CSS px → buffer px)
 
 /* --- SMALL MATH -------------------------------------------------------- */
@@ -100,6 +99,18 @@ const lerp = (a, b, u) => a + (b - a) * u;
 const smooth = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
 const wrapLon = d => ((d + 540) % 360) - 180;
 const easeOutCubic = u => 1 - Math.pow(1 - u, 3);
+// atan2 / asin to ~1e-5 rad (a 6-term odd polynomial) — the per-pixel pass
+// spends most of its time here, and Math.atan2 is 2–3× slower.
+function fatan(x) { const x2 = x * x; return x * (0.99997726 + x2 * (-0.33262347 + x2 * (0.19354346 + x2 * (-0.11643287 + x2 * (0.05265332 - 0.01172120 * x2))))); }
+function fatan2(y, x) {
+  const ax = Math.abs(x), ay = Math.abs(y);
+  const swap = ay > ax, r = swap ? ax / ay : (ax === 0 ? 0 : ay / ax);
+  let a = fatan(r);
+  if (swap) a = 1.5707963267948966 - a;
+  if (x < 0) a = 3.141592653589793 - a;
+  return y < 0 ? -a : a;
+}
+function fasin(v) { return fatan2(v, Math.sqrt(Math.max(0, 1 - v * v))); }
 function kmBetween(lat1, lon1, lat2, lon2) {
   const x = wrapLon(lon2 - lon1) * Math.cos((lat1 + lat2) * 0.5 * D2R), y = lat2 - lat1;
   return Math.sqrt(x * x + y * y) * 111.2;
@@ -157,6 +168,7 @@ async function loadLand() {
   const r = await fetch('data/land-110m.json'); const j = await r.json();
   land110 = j.rings.map(f => new Float32Array(f));
   geo110 = prepRings(land110);
+  if (!land50) buildLandMask(land110);
   dirty = true;
 }
 async function loadCoast() {
@@ -170,7 +182,7 @@ async function loadCoast() {
       for (let i = 0; i < m; i++) { ring[i * 2] = dv.getInt16(o, true) / 100; ring[i * 2 + 1] = dv.getInt16(o + 2, true) / 100; o += 4; }
       rings.push(ring);
     }
-    land50 = rings; geo50 = prepRings(rings); dirty = true;
+    land50 = rings; geo50 = prepRings(rings); buildLandMask(land50); dirty = true;
   } catch (_) { loadCoast.busy = false; }
 }
 async function loadField() {
@@ -307,6 +319,27 @@ function prepRings(rings) {
   });
 }
 let basis = { r: [0, 1, 0], u: [0, 0, 1], f: [1, 0, 0] };
+// Land as an equirectangular raster (0.125°), rasterised once from the rings.
+// Sampled per pixel by (lat, lon) — no limb clipping, no polar-ring trouble.
+const MW = 2880, MH = 1440;
+let landMask = null;
+function buildLandMask(rings) {
+  const c = document.createElement('canvas'); c.width = MW; c.height = MH;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.fillStyle = '#fff'; g.beginPath();
+  for (const ring of rings) {
+    const n = ring.length >> 1;
+    for (let i = 0; i < n; i++) {
+      const x = (ring[i * 2] + 180) / 360 * MW, y = (90 - ring[i * 2 + 1]) / 180 * MH;
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.closePath();
+  }
+  g.fill('evenodd');
+  const d = g.getImageData(0, 0, MW, MH).data, m = new Uint8Array(MW * MH);
+  for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 127 ? 1 : 0;
+  landMask = m; dirty = true;
+}
 function currentGeo() { return (cam.zoom >= 2.2 && geo50) ? geo50 : geo110; }
 // project the current ring set once per frame: [{ pts (unit-disc coords), n, front }]
 let projected = [];
@@ -335,55 +368,8 @@ function projectRings() {
     if (front) projected.push({ pts, zs, n });
   }
 }
-// Sutherland–Hodgman clip of a closed polygon (flat [x,y,...]) to a rect.
-// Each ring clipped on its own keeps the evenodd fill exact inside the rect,
-// and stops the rasteriser chewing on geometry thousands of px off-canvas.
-function clipRing(src, x0, y0, x1, y1) {
-  let poly = src;
-  for (let side = 0; side < 4; side++) {
-    const out = []; const n = poly.length >> 1; if (!n) return out;
-    const inside = (x, y) => side === 0 ? x >= x0 : side === 1 ? x <= x1 : side === 2 ? y >= y0 : y <= y1;
-    for (let i = 0; i < n; i++) {
-      const ax = poly[((i + n - 1) % n) * 2], ay = poly[((i + n - 1) % n) * 2 + 1], bx = poly[i * 2], by = poly[i * 2 + 1];
-      const ain = inside(ax, ay), bin = inside(bx, by);
-      if (ain !== bin) {                                   // crossing → intersection
-        let t;
-        if (side < 2) { const e = side === 0 ? x0 : x1; t = (e - ax) / (bx - ax); out.push(e, ay + (by - ay) * t); }
-        else { const e = side === 2 ? y0 : y1; t = (e - ay) / (by - ay); out.push(ax + (bx - ax) * t, e); }
-      }
-      if (bin) out.push(bx, by);
-    }
-    poly = out;
-  }
-  return poly;
-}
-function paintMask() {
-  mctx.clearRect(0, 0, bw, bh);
-  mctx.fillStyle = '#fff';
-  mctx.beginPath();
-  const ox = cx * bs, oy = cy * bs, rad = R * bs;
-  const X0 = -3, Y0 = -3, X1 = bw + 3, Y1 = bh + 3;
-  for (const p of projected) {
-    const pts = p.pts, n = p.n;
-    let flat = new Array(n * 2), minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
-    for (let i = 0; i < n; i++) {
-      const sx = ox + rad * pts[i * 2], sy = oy - rad * pts[i * 2 + 1];
-      flat[i * 2] = sx; flat[i * 2 + 1] = sy;
-      if (sx < minx) minx = sx; if (sx > maxx) maxx = sx; if (sy < miny) miny = sy; if (sy > maxy) maxy = sy;
-    }
-    if (maxx < X0 || minx > X1 || maxy < Y0 || miny > Y1) continue;          // off the buffer
-    if (minx < X0 || maxx > X1 || miny < Y0 || maxy > Y1) flat = clipRing(flat, X0, Y0, X1, Y1);
-    const m = flat.length >> 1; if (m < 3) continue;
-    mctx.moveTo(flat[0], flat[1]);
-    for (let i = 1; i < m; i++) mctx.lineTo(flat[i * 2], flat[i * 2 + 1]);
-    mctx.closePath();
-  }
-  mctx.fill('evenodd');
-}
-
 function paintSea() {
   const img = bctx.createImageData(bw, bh), d = img.data;
-  const m = mctx.getImageData(0, 0, bw, bh).data;
   const bR = R * bs, bcx = cx * bs, bcy = cy * bs;
   const x0 = Math.max(0, Math.floor(bcx - bR - 2)), x1 = Math.min(bw, Math.ceil(bcx + bR + 2));
   const y0 = Math.max(0, Math.floor(bcy - bR - 2)), y1 = Math.min(bh, Math.ceil(bcy + bR + 2));
@@ -402,7 +388,20 @@ function paintSea() {
       const aEdge = rr > 1 ? clamp((1 + edge - rr) / edge, 0, 1) : 1;
       const Z = rr >= 1 ? 0 : Math.sqrt(1 - r2);
       const idx = (py * bw + px) * 4;
-      const isLand = m[idx + 3] > 127;
+      const sp = Z * sinP0 + Y * cosP0;
+      const lat = fasin(clamp(sp, -1, 1)) * R2D;
+      let lon = (lam0 + fatan2(X, Z * cosP0 - Y * sinP0)) * R2D;
+      lon -= Math.floor((lon + 180) / 360) * 360;                 // → [−180, 180)
+      // land fraction: bilinear over the 0.125° raster → a soft, antialiased coast
+      let landF = 0;
+      if (landMask) {
+        const fy = clamp((90 - lat) / 180 * MH - 0.5, 0, MH - 1.001), fx = (lon + 180) / 360 * MW - 0.5;
+        const y0 = fy | 0, y1 = Math.min(y0 + 1, MH - 1), ty = fy - y0;
+        const x0 = ((fx | 0) % MW + MW) % MW, x1 = (x0 + 1) % MW, tx = fx - Math.floor(fx);
+        const r0 = y0 * MW, r1 = y1 * MW;
+        landF = (landMask[r0 + x0] * (1 - tx) + landMask[r0 + x1] * tx) * (1 - ty) + (landMask[r1 + x0] * (1 - tx) + landMask[r1 + x1] * tx) * ty;
+      }
+      const isLand = landF >= 0.5;
       const dSun = X * sx + Y * sy + Z * sz;
       const dMoon = X * mx + Y * my + Z * mz;
       const day = smooth(-0.12, 0.22, dSun);
@@ -410,13 +409,7 @@ function paintSea() {
       if (isLand) {
         L = 0.13 + 0.17 * day;
       } else {
-        let e = 0;
-        if (haveField) {
-          const sp = Z * sinP0 + Y * cosP0;
-          const lat = Math.asin(clamp(sp, -1, 1)) * R2D;
-          const lon = (lam0 + Math.atan2(X, Z * cosP0 - Y * sinP0)) * R2D;
-          e = sampleEta(lat, lon);
-        }
+        const e = haveField ? sampleEta(lat, lon) : 0;
         const ei = clamp(Math.round(e * 100) + 800, 0, 1600);
         L = ETA_LUT[ei] * (0.38 + 0.62 * day);     // night keeps the tide readable
       }
@@ -425,6 +418,10 @@ function paintSea() {
       const li = clamp(Math.round(L * 255), 0, 255) * 3;
       const lut = isLand ? LUT_LAND : LUT_SEA;
       let r = lut[li], g = lut[li + 1], b = lut[li + 2];
+      if (landF > 0.02 && landF < 0.98) {                       // the coast: mix the other side in
+        const o = isLand ? LUT_SEA : LUT_LAND, w = isLand ? 1 - landF : landF;
+        r += (o[li] - r) * w; g += (o[li + 1] - g) * w; b += (o[li + 2] - b) * w;
+      }
       // the warm edge of the terminator, day side
       const wd = (dSun - 0.05) / 0.11, w = 0.30 * Math.exp(-wd * wd) * (isLand ? 0.5 : 1) * Z;   // fades at the limb: never a ring
       if (w > 0.02) { r += (LUT_WARM[li] - r) * w; g += (LUT_WARM[li + 1] - g) * w; b += (LUT_WARM[li + 2] - b) * w; }
@@ -528,11 +525,14 @@ function paint() {
   if (!bw || !bh || !W || !Hh) { resize(); if (!bw || !bh) return; }
   layout(); frameConstants();
   // buffer resolution follows the globe's on-screen area (~160k px in the pass)
-  const want = clamp(Math.sqrt(120000 / Math.max(1, Math.min(Math.PI * R * R, W * Hh))), 0.25, 1);
-  if (Math.abs(want - bs) > 0.08) { bs = want; bw = Math.ceil(W * bs); bh = Math.ceil(Hh * bs); buf.width = mask.width = bw; buf.height = mask.height = bh; paint.sig = null; }
-  // the land mask only changes when the camera or the canvas does
-  const sig = [cam.lat.toFixed(3), cam.lon.toFixed(3), cam.zoom.toFixed(3), cx | 0, cy | 0, bw, bh, currentGeo() === geo50 ? 50 : 110].join(',');
-  if (sig !== paint.sig) { projectRings(); paintMask(); paint.sig = sig; }
+  const want = clamp(Math.sqrt(90000 / Math.max(1, Math.min(Math.PI * R * R, W * Hh))), 0.25, 1);
+  if (Math.abs(want - bs) > 0.08) { bs = want; bw = Math.ceil(W * bs); bh = Math.ceil(Hh * bs); buf.width = bw; buf.height = bh; paint.sig = null; }
+  // rings are projected only for the coast hairline (zoomed in), and only
+  // when the camera has moved
+  if (cam.zoom >= 2 && geo50) {
+    const sig = [cam.lat.toFixed(3), cam.lon.toFixed(3), cam.zoom.toFixed(3), cx | 0, cy | 0].join(',');
+    if (sig !== paint.sig) { projectRings(); paint.sig = sig; }
+  }
   paintSea();
   ctx.fillStyle = `rgb(${BG[0]},${BG[1]},${BG[2]})`; ctx.fillRect(0, 0, W, Hh);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
@@ -547,9 +547,9 @@ function resize() {
   if (!W || !Hh) { dirty = true; return; }
   el.canvas.width = Math.round(W * dpr); el.canvas.height = Math.round(Hh * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  bs = clamp(Math.sqrt(120000 / (W * Hh)), 0.25, 1);
+  bs = clamp(Math.sqrt(90000 / (W * Hh)), 0.25, 1);
   bw = Math.ceil(W * bs); bh = Math.ceil(Hh * bs); paint.sig = null;
-  buf.width = mask.width = bw; buf.height = mask.height = bh;
+  buf.width = bw; buf.height = bh;
   if (!grainPat) bakeGrain();
   dirty = true;
 }
