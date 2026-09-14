@@ -601,3 +601,23 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   constant datum offset cancels out of a subtraction.
 - Deployed by the user; confirmed live with a real click toggling the
   datum on the production San Francisco/NOAA station.
+
+## 2026-09-14 -- tide: phase 9, daylight windows/water temp/calendar, not deployed
+
+- Built docs/tide-v2-plan.md phase 9: "Low/high water in daylight" lines
+  (next 3 of each, filtered by real civil twilight via astronomy-engine's
+  SearchAltitude -- went with the precise option over the plan's rough
+  sunrise+/-30min fallback, since the library already had it); sea
+  surface temperature on the sun line (model path only, converts to F
+  when units=ft); an "Add to calendar" .ics export (14 days of turns as
+  0-minute events + one dawn-to-dusk span event per day whose twilight
+  window contains a low).
+- Verified by inspecting the generated .ics text directly (the preview
+  sandbox blocks real downloads, as the plan itself warns) -- well-formed
+  on both data paths; real click (not `.click()`) on the button at
+  desktop and mobile widths.
+- **Bug caught before shipping (same class as phase 8's):** a model-path
+  series cached before seaTemp existed would never pick it up, since it's
+  part of the one fetch rather than a separately-backfillable field like
+  mllwOffset. Fixed with a `:v2` bump on the model cache key too.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.

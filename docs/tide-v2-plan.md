@@ -288,23 +288,55 @@ word control "This week" that expands them.
   `mllwOffset`) is caught by a cache-key version bump rather than silently
   showing MSL numbers under an MLLW label.
 
-### Phase 9 — Answers: daylight windows, water temperature, calendar
+### Phase 9 — Answers: daylight windows, water temperature, calendar — DONE 2026-09-14
 
 - **Windows.** Two lines under the week: "Low water in daylight:" the
   next three daylight lows with date, time, height; and "High water in
   daylight:" likewise. Daylight = between civil twilight times (compute
   from astronomy-engine: `SearchAltitude(Sun, −6°)` or approximate with
   sunrise−30 min / sunset+30 min).
+  - **Built with the precise option, not the approximation:** the bundled
+    astronomy-engine already exposes `SearchAltitude`, so `civilTwilight()`
+    mirrors the existing `riseSet()` exactly with −6° instead of the
+    horizon — no reason to take the rougher shortcut when the real thing
+    was one parameter away. Twilight windows are cached per calendar day
+    (`twilightCache`, cleared on place change) since a week of turns
+    shares only a handful of distinct days.
 - **Water temperature.** Add `hourly=sea_surface_temperature` to the
   Open-Meteo marine call (same call, no extra request) and show "Sea
   15 °C" on the sun line. Skip when the field is null.
+  - Converts to °F when the units toggle is on `ft`, matching how every
+    other number on the page already follows that setting — the plan's
+    example didn't mention this, but leaving temperature the one number
+    that ignores the toggle would be a worse, not better, reading of it.
 - **Add to calendar.** A word control "Add to calendar" that builds an
   `.ics` (next 14 days of highs and lows for this place as 0-minute
   events, plus the daylight-low windows) and offers it via a `data:`
   URL / `Blob` download. Works in real browsers; the in-app preview
   sandbox blocks downloads, so test by inspecting the generated text.
+  - **"the daylight-low windows" read as:** for each of the next 14 days
+    whose civil-twilight window contains at least one low, one *span*
+    event from dawn to dusk (not another 0-minute point already covered
+    by the per-turn events above), titled with that day's best low and
+    its time — a calendar block a walker can actually hold onto, distinct
+    from the instant-in-time entries. Built via Blob + object URL + a
+    temporary `<a download>`, not a `data:` URL (no practical difference
+    for a ~10–16 KB file; Blob avoids the URL-length ceiling some browsers
+    still enforce on `data:` links).
 - Acceptance: the three questions in §2 for walkers, swimmers and anglers
   have a visible answer.
+- **Verified:** built and inspected real `.ics` text (not a live download,
+  per the sandbox note above) on both data paths — well-formed
+  `VCALENDAR`/`VEVENT` blocks, correct 0-duration turn events and
+  dawn→dusk window events, `SUMMARY` carrying the place name; sea
+  temperature confirmed present on the model path and absent (silently
+  skipped) on NOAA; a real click (not `.click()`) on "Add to calendar"
+  triggers the handler without error at desktop and mobile widths.
+- **Bug caught before shipping:** the same stale-cache gap fixed for NOAA
+  in phase 8 also hit the model path here — a series cached before
+  `seaTemp` existed would never carry it, since it's part of the initial
+  fetch, not a separate backfillable step like `mllwOffset`. Fixed with
+  the model cache key's own `:v2` bump.
 
 ### Phase 10 — Layout for use, and first paint
 

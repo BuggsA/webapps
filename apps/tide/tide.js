@@ -20,7 +20,8 @@
    MAP OF THIS FILE (search the ALL-CAPS tag to jump):
      TUNABLES / STATE / ELEMENTS / SMALL MATH
      COLOUR              — oklch → sRGB, the three luminance LUTs, the η→L map
-     ASTRONOMY GLUE      — subPoint() (sub-lunar / sub-solar), moon phase, rise/set
+     ASTRONOMY GLUE      — subPoint() (sub-lunar / sub-solar), moon phase,
+                           rise/set, civil twilight (phase 9)
      DATA                — loadLand(), loadCoast(), loadField(), loadStations()
      FIELD               — computeField(t): η per 1° cell from the constituents,
                            plus its spatial gradient (gradLat/gradLon) for RELIEF
@@ -42,7 +43,9 @@
      WEEK                — the next 7 days as rows + the 14-day lowest/highest
                            line (docs/tide-v2-plan.md phase 7), inside Detail
      DATUM + UNITS       — heightNum()'s datum shift, tideRate() (phase 8:
-                           docs/tide-v2-plan.md), the two word controls, source
+                           docs/tide-v2-plan.md), the two word controls
+     DAYLIGHT + CALENDAR — civilTwilight(), daylight-filtered turns, the
+                           .ics export (phase 9: docs/tide-v2-plan.md), source
      DETAIL              — setDetail()/sizeDetail(): the on-demand panel for turns/
                            range/moon/sun (source + hand-off stay always visible) —
                            docs/tide-panel-research.md, Option C, decided 2026-09-16
@@ -115,6 +118,7 @@ const el = {
   roDetail: $('ro-detail'), btnDetail: $('btn-detail'),
   roWeek: $('ro-week'), btnWeek: $('btn-week'), roExtreme: $('ro-extreme'),
   btnDatum: $('btn-datum'), btnUnits: $('btn-units'),
+  roDayLow: $('ro-day-low'), roDayHigh: $('ro-day-high'), btnCalendar: $('btn-calendar'),
   pick: $('pick-card'), pickName: $('pick-name'), pickUse: $('pick-use'),
 };
 const ctx = el.canvas.getContext('2d', { alpha: false });
@@ -193,6 +197,15 @@ function riseSet(body, lat, lon, dayStartMs) {
   const obs = new A.Observer(lat, lon, 0), t0 = A.MakeTime(new Date(dayStartMs));
   const r = A.SearchRiseSet(body, obs, +1, t0, 1), s = A.SearchRiseSet(body, obs, -1, t0, 1);
   return { rise: r ? r.date.getTime() : null, set: s ? s.date.getTime() : null };
+}
+// civil twilight (sun at −6°) — same shape as riseSet, one altitude
+// different: SearchAltitude takes the boundary as a parameter instead of
+// assuming the horizon. Null at high latitude in permanent twilight/dark.
+function civilTwilight(lat, lon, dayStartMs) {
+  const obs = new A.Observer(lat, lon, 0), t0 = A.MakeTime(new Date(dayStartMs));
+  const dawn = A.SearchAltitude(A.Body.Sun, obs, +1, t0, 1, -6);
+  const dusk = A.SearchAltitude(A.Body.Sun, obs, -1, t0, 1, -6);
+  return { dawn: dawn ? dawn.date.getTime() : null, dusk: dusk ? dusk.date.getTime() : null };
 }
 
 /* --- DATA -------------------------------------------------------------- */
@@ -862,7 +875,10 @@ async function loadSeries() {
   // ':v2' bumps past any cached NOAA series from before mllwOffset existed
   // (unlike the model path, NOAA has no async step to backfill it lazily —
   // mean isn't recoverable from turns alone once it's already subtracted).
-  const key = st ? 'tide.noaa:' + st.id + ':v2' : 'tide.om:' + lat.toFixed(2) + ',' + lon.toFixed(2);
+  // ':v2' on the model side likewise bumps past a series cached before
+  // seaTemp (phase 9) existed — there's no self-heal for it the way
+  // mllwOffset gets one, since it isn't a separate fetch to retry.
+  const key = st ? 'tide.noaa:' + st.id + ':v2' : 'tide.om:' + lat.toFixed(2) + ',' + lon.toFixed(2) + ':v2';
   const cached = cacheGet(key, st ? 24 * 3600e3 : 6 * 3600e3);
   if (cached && !cached.stale) { state.series = cached; updateReadout(true); attachMLLW(cached, lat, lon, key); return; }
   try {
@@ -886,14 +902,22 @@ async function loadSeries() {
       series = { src: 'noaa', name: titleCase(st.name), turns, pts: null, mllwOffset: -mean };
     } else {
       const url = 'https://marine-api.open-meteo.com/v1/marine?latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3)
-        + '&minutely_15=sea_level_height_msl&past_days=3&forecast_days=15&timeformat=unixtime&timezone=UTC';
+        + '&minutely_15=sea_level_height_msl&hourly=sea_surface_temperature&past_days=3&forecast_days=15&timeformat=unixtime&timezone=UTC';
       const j = await (await fetch(url)).json();
       const T = j.minutely_15.time, V = j.minutely_15.sea_level_height_msl;
       const vals = new Float64Array(V.length);
       for (let i = 0; i < V.length; i++) vals[i] = V[i] == null ? (i ? vals[i - 1] : 0) : V[i];
       const t0 = T[0] * 1000, step = (T[1] - T[0]) * 1000;
       const turns = H.extrema(vals, t0, step).map(x => ({ t: x.t, v: x.v, type: x.type }));
-      series = { src: 'model', name: '', turns, pts: { t0, step, v: Array.from(vals) } };
+      // sea temp: same call, no extra request (phase 9). Left with real
+      // nulls where the forecast horizon for this field runs out short of
+      // the height series' own 15 days — seaTempAt() skips those, not
+      // forward-filled, since a stale temp read as current would mislead.
+      let seaTemp = null;
+      if (j.hourly && j.hourly.sea_surface_temperature) {
+        seaTemp = { t0: j.hourly.time[0] * 1000, step: (j.hourly.time[1] - j.hourly.time[0]) * 1000, v: j.hourly.sea_surface_temperature };
+      }
+      series = { src: 'model', name: '', turns, pts: { t0, step, v: Array.from(vals) }, seaTemp };
     }
     state.series = series; cacheSet(key, series);
     attachMLLW(series, lat, lon, key);
@@ -932,6 +956,17 @@ function fmtHeight(m) {
   return `<span class="n">${heightNum(m)}</span><span class="u">${state.units}</span>`;
 }
 function fmtHeightPlain(m) { return heightNum(m) + state.units; }   // for canvas text
+// phase 9 sea temperature: nearest-hour lookup, no interpolation (water
+// temperature drifts slowly enough that rounding to the hour is honest).
+function seaTempAt(t) {
+  const s = state.series; if (!s || !s.seaTemp) return null;
+  const { t0, step, v } = s.seaTemp;
+  const i = Math.round((t - t0) / step);
+  return (i < 0 || i >= v.length || v[i] == null) ? null : v[i];
+}
+function fmtTemp(c) {
+  return state.units === 'ft' ? { n: Math.round(c * 9 / 5 + 32), u: '°F' } : { n: Math.round(c), u: '°C' };
+}
 // a difference (rate, range), not an absolute reading — unit conversion
 // only, never a datum shift (a constant offset cancels in a subtraction),
 // and no sign glyph since it's always paired with a rising/falling word.
@@ -1166,7 +1201,8 @@ function updateReadout(force) {
     const mr = riseSet(A.Body.Moon, state.lat, state.lon, dayStart), sr = riseSet(A.Body.Sun, state.lat, state.lon, dayStart);
     const tt = ms => ms == null ? '—' : `<span class="n">${tf.format(new Date(ms))}</span>`;
     el.roMoon.innerHTML = `Moon <span class="n">${Math.round(mi.frac * 100)}</span>% · rises ${tt(mr.rise)} · sets ${tt(mr.set)}`;
-    el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}`;
+    const temp = seaTempAt(t), ft = temp == null ? null : fmtTemp(temp);
+    el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}` + (ft == null ? '' : ` · Sea <span class="n">${ft.n}</span>${ft.u}`);
   } catch (_) { el.roMoon.textContent = ''; el.roSun.textContent = ''; }
   if (s) el.roSrc.textContent = s.src === 'noaa' ? `Official NOAA prediction · ${s.name}` : 'Model estimate · Open-Meteo · heights about mean sea level';
   else el.roSrc.textContent = '';
@@ -1176,6 +1212,7 @@ function updateReadout(force) {
     : 'your national tide tables';
   el.roHand.innerHTML = `Not for navigation or safety. Official: ${off}.`;
   renderWeek();
+  renderDaylight();
   syncUnitControls();
   dirty = true;
 }
@@ -1274,6 +1311,97 @@ el.btnWeek.addEventListener('click', () => {
   track('week', { open: weekOpen ? 1 : 0 });
 });
 
+/* --- DAYLIGHT + CALENDAR (phase 9) -----------------------------------------
+   "Low/high water in daylight": the walker/angler question isn't just
+   when the tide turns, it's when that turn is actually usable — i.e.
+   between civil twilight, not just between sunrise/sunset. Cached per
+   calendar day (twilightCache) since a week of turns usually shares only
+   a handful of distinct days and SearchAltitude isn't free. */
+const twilightCache = new Map();
+function daylightWindow(dayStartMs) {
+  const key = localDayKey(dayStartMs);
+  if (twilightCache.has(key)) return twilightCache.get(key);
+  let win;
+  try { win = civilTwilight(state.lat, state.lon, dayStartMs); } catch (_) { win = { dawn: null, dusk: null }; }
+  twilightCache.set(key, win);
+  return win;
+}
+function isDaylight(t) {
+  const w = daylightWindow(t - 12 * 3600e3);
+  return w.dawn != null && w.dusk != null && t >= w.dawn && t <= w.dusk;
+}
+function daylightTurns(type, fromT, toT, n) {
+  const s = state.series; if (!s || !s.turns) return [];
+  const out = [];
+  for (const x of s.turns) {
+    if (x.t < fromT || x.t > toT || x.type !== type || !isDaylight(x.t)) continue;
+    out.push(x);
+    if (n != null && out.length >= n) break;
+  }
+  return out;
+}
+function renderDaylight() {
+  if (!state.located) return;
+  const has = !!(state.series && state.series.turns && state.series.turns.length);
+  const end14 = state.t + 14 * DAY;
+  if (has) {
+    const lows = daylightTurns('L', state.t, end14, 3), highs = daylightTurns('H', state.t, end14, 3);
+    el.roDayLow.innerHTML = lows.length ? 'Low water in daylight: ' + lows.map(x => `${fmtWhen(x.t)}, ${fmtHeight(x.v)}`).join(' · ') : '';
+    el.roDayHigh.innerHTML = highs.length ? 'High water in daylight: ' + highs.map(x => `${fmtWhen(x.t)}, ${fmtHeight(x.v)}`).join(' · ') : '';
+  } else {
+    el.roDayLow.textContent = ''; el.roDayHigh.textContent = '';
+  }
+  el.btnCalendar.hidden = !has;
+}
+// .ics export: every turn in the next 14 days as a 0-minute event, plus
+// one span event per day whose civil-twilight window contains a low —
+// "the daylight-low windows" from the plan read as a calendar block a
+// walker could actually hold onto, not a repeat of the instant above.
+function icsStamp(ms) {
+  const d = new Date(ms), p2 = n => String(n).padStart(2, '0');
+  return d.getUTCFullYear() + p2(d.getUTCMonth() + 1) + p2(d.getUTCDate()) + 'T' + p2(d.getUTCHours()) + p2(d.getUTCMinutes()) + p2(d.getUTCSeconds()) + 'Z';
+}
+function icsEscape(s) { return String(s).replace(/([,;])/g, '\\$1'); }
+function buildICS() {
+  const s = state.series; if (!s || !s.turns || !s.turns.length) return null;
+  const now = Date.now(), from = state.t, to = from + 14 * DAY;
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Tide//tide.app//EN', 'CALSCALE:GREGORIAN'];
+  let n = 0;
+  const push = (dtStart, dtEnd, summary) => {
+    lines.push('BEGIN:VEVENT', `UID:tide-${now}-${n++}@tide.app`, `DTSTAMP:${icsStamp(now)}`,
+      `DTSTART:${icsStamp(dtStart)}`, `DTEND:${icsStamp(dtEnd)}`, `SUMMARY:${icsEscape(summary)}`, 'END:VEVENT');
+  };
+  for (const x of s.turns) {
+    if (x.t < from || x.t > to) continue;
+    push(x.t, x.t, (x.type === 'H' ? 'High tide ' : 'Low tide ') + fmtHeightPlain(x.v) + (state.place ? ' — ' + state.place : ''));
+  }
+  const byDay = new Map();
+  for (const x of daylightTurns('L', from, to)) {
+    const key = localDayKey(x.t);
+    if (!byDay.has(key)) byDay.set(key, { dayStart: x.t - 12 * 3600e3, lows: [] });
+    byDay.get(key).lows.push(x);
+  }
+  for (const { dayStart, lows } of byDay.values()) {
+    const w = daylightWindow(dayStart);
+    if (w.dawn == null || w.dusk == null) continue;
+    const best = lows.reduce((a, b) => (b.v < a.v ? b : a));
+    push(w.dawn, w.dusk, `Daylight low-tide window · ${fmtHeightPlain(best.v)} at ${fmt('time', state.tz).format(new Date(best.t))}` + (state.place ? ' — ' + state.place : ''));
+  }
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+el.btnCalendar.addEventListener('click', () => {
+  const ics = buildICS();
+  if (!ics) return;
+  const blob = new Blob([ics], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = (state.place || 'tide').replace(/[^\w\- ]/g, '') + '.ics';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  track('calendar');
+});
+
 /* --- DETAIL -------------------------------------------------------------
    The rest of the turns, range/springs, moon, sun — collapsed by default
    (docs/tide-panel-research.md, Option C, decided 2026-09-16). The
@@ -1368,7 +1496,7 @@ el.btnWhere.addEventListener('click', () => showLocate(el.locate.hidden));
 
 async function enter(item, how) {
   state.lat = item.lat; state.lon = item.lon; state.place = item.name; state.tz = item.tz || state.tz; state.country = item.country || '';
-  state.located = true; state.series = null; weekOpen = false;
+  state.located = true; state.series = null; weekOpen = false; twilightCache.clear();
   await loadCoast();
   const nc = nearestCoast(state.lat, state.lon);
   state.inlandKm = nc.km;
