@@ -18,6 +18,13 @@
 <!-- The moon: the only icon. Drawn on the canvas; this is its hit target. -->
 <button id="moon" class="moon" type="button" aria-label="Return to the moon's view of the Earth" hidden></button>
 
+<!-- Pick: hold a finger on the globe and it snaps to the nearest coast —
+     a tethered preview, not a commit, until "Use this place". -->
+<div id="pick-card" class="pick-card" role="status" hidden>
+  <p class="pick-name" id="pick-name"></p>
+  <button class="word pick-use" type="button" id="pick-use">Use this place</button>
+</div>
+
 <!-- Readout: rows written onto the field, top-left. Numerals first. -->
 <section id="readout" class="readout" hidden>
   <div class="ro-rule" id="ro-rule"></div>

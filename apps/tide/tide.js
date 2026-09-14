@@ -34,6 +34,10 @@
      TIME MODEL          — now0, live / hold / play, scrub, clock
      PLACE + SERIES      — geocode, device, coast distance, NOAA proximity,
                            loadSeries() (cached), turning points, heightAt()
+     PICK                — long-press the globe to set your place: unproject(),
+                           nearestCoast() snap, a tethered preview card (Tonight's
+                           .card shape) with an explicit "Use this place" commit —
+                           docs/tide-tap-select-research.md, built 2026-09-17
      READOUT             — updateReadout(): state line, rows, range, moon, sun, source
      DETAIL              — setDetail()/sizeDetail(): the on-demand panel for turns/
                            range/moon/sun (source + hand-off stay always visible) —
@@ -60,6 +64,8 @@ const EASE_BACK  = 4000;             // ms, drag offset returns to the moon's vi
 const INLAND_KM  = 25;               // beyond this: "N km from the sea"
 const NOAA_KM    = 15;               // within this: official NOAA prediction
 const CURVE_BEFORE = 6 * 3600e3, CURVE_AFTER = 30 * 3600e3;  // the readout curve's window
+const LONGPRESS_MS   = 550;          // hold time to register a pick — matches Maps' own
+const LONGPRESS_SLOP = 8;            // px of drift tolerated before it's a drag, not a hold
 const SEA_L0 = 0.35, SEA_LA = 0.20;  // luminance: L = L0 + LA·tanh(|η/0.6|^0.65)
 const RELIEF_GAIN = 2, REL_CLAMP = 0.05;    // raking-light relief term — calibrated live: median
 // near-terminator ocean gradient ~0.009 raw -> ~0.018 L; the steepest ~10% saturate at the clamp.
@@ -80,6 +86,7 @@ const view = { mode: 'moon', off: { lat: 0, lon: 0 }, pan: { lat: 0, lon: 0 }, z
 let W = 0, Hh = 0, dpr = 1;
 let R = 0, cx = 0, cy = 0;                          // globe radius/centre, CSS px
 let land110 = null, land50 = null, stations = null;
+let pendingPick = null;             // { lat, lon, x, y, name, country } — the tethered preview, if open
 let geo110 = null, geo50 = null;                     // rings as unit vectors + a bounding cap
 let field = null;                                   // { names, ampC[], ampS[], N, nlon, nlat, lon0, lat0 }
 const eta = new Float32Array(360 * 180);
@@ -100,6 +107,7 @@ const el = {
   clock: $('clock'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
   about: $('about'), aboutClose: $('about-close'), curve: $('curve'),
   roDetail: $('ro-detail'), btnDetail: $('btn-detail'),
+  pick: $('pick-card'), pickName: $('pick-name'), pickUse: $('pick-use'),
 };
 const ctx = el.canvas.getContext('2d', { alpha: false });
 const curveCtx = el.curve.getContext('2d');
@@ -344,6 +352,13 @@ function project(lat, lon) {
   const p = lat * D2R, dl = lon * D2R - lam0, cp = Math.cos(p), sp = Math.sin(p), cdl = Math.cos(dl);
   return [cp * Math.sin(dl), cosP0 * sp - sinP0 * cp * cdl, sinP0 * sp + cosP0 * cp * cdl];
 }
+// inverse: screen px → {lat,lon} on the sphere, or null if the point misses the globe
+function unproject(px, py) {
+  const X = (px - cx) / R, Y = (cy - py) / R, r2 = X * X + Y * Y;
+  if (r2 >= 1) return null;
+  const Z = Math.sqrt(1 - r2);
+  return { lat: fasin(clamp(Z * sinP0 + Y * cosP0, -1, 1)) * R2D, lon: wrapLon((lam0 + fatan2(X, Z * cosP0 - Y * sinP0)) * R2D) };
+}
 
 /* --- PAINT ------------------------------------------------------------- */
 // Rings → unit vectors (x,y,z per vertex) + a bounding cap (centre vector,
@@ -518,6 +533,35 @@ function paintPlace() {
   ctx.beginPath(); ctx.arc(sx, sy, 1.4, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
+// The pending pick (docs/tide-tap-select-research.md): a lighter, dashed
+// ring — deliberately distinct from paintPlace()'s committed marker above —
+// tethered to #pick-card by a hairline, the same leader-line shape Tonight
+// uses for its tap-to-select card. Positions from the live projection every
+// frame, same as the moon marker, so it drifts correctly with the globe;
+// if the point rotates past the limb the preview no longer means anything
+// concrete, so it's dropped rather than left stranded off in space.
+function paintPick() {
+  if (!pendingPick) return;
+  const [X, Y, Z] = project(pendingPick.lat, pendingPick.lon);
+  if (Z <= 0.02) { cancelPick(); return; }
+  const px = cx + R * X, py = cy - R * Y;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(243,238,228,0.55)'; ctx.lineWidth = 1;
+  ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(243,238,228,0.85)';
+  ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
+  const cw = el.pick.offsetWidth || 220, ch = el.pick.offsetHeight || 70;
+  const m = 14, topLimit = 14;
+  const bottomLimit = (el.controls.hidden ? Hh : el.controls.getBoundingClientRect().top) - m;
+  const lx = clamp(px + 18, m, Math.max(m, W - cw - m));
+  const ly = clamp(py + 16, topLimit, Math.max(topLimit, bottomLimit - ch));
+  el.pick.style.left = lx + 'px'; el.pick.style.top = ly + 'px';
+  const tx = clamp(px, lx, lx + cw), ty = clamp(py, ly, ly + ch);
+  ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(tx, ty); ctx.stroke();
+  ctx.restore();
+}
 // The moon is a tracked object, not fixed chrome (docs/tide-visibility-research.md
 // §3, built 2026-09-16): its screen position comes from moonCam — the same
 // vector already driving the moonlight-lift term — projected to just
@@ -661,7 +705,7 @@ function paint() {
   ctx.fillStyle = `rgb(${BG[0]},${BG[1]},${BG[2]})`; ctx.fillRect(0, 0, W, Hh);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(buf, 0, 0, bw, bh, 0, 0, W, Hh);
-  paintCoast(); paintPlace(); paintScrim(); paintGrain();
+  paintCoast(); paintPlace(); paintPick(); paintScrim(); paintGrain();
   const mm = moonMarkerPos();
   positionMoonButton(mm);
   paintMoonLine(mm);
@@ -1144,20 +1188,82 @@ async function enter(item, how) {
   track('enter', { how, inland: nc.km > INLAND_KM ? 1 : 0 });
 }
 
+/* --- PICK -----------------------------------------------------------------
+   Long-press the globe to set your place, instead of typing every time
+   (docs/tide-tap-select-research.md). Deliberately not a toggle/mode: the
+   gesture itself (a hold, not a tap or a drag) carries the intent every
+   time, so there's no invisible state to forget. A preview only — nothing
+   is saved until "Use this place". */
+function cancelPick() {
+  if (!pendingPick) return;
+  pendingPick = null;
+  el.pick.hidden = true;
+  dirty = true;
+}
+// BigDataCloud's reverse-geocode-client (keyless, CORS-open — confirmed
+// live in tide-tap-select-research.md). Open ocean and remote coasts often
+// have no locality, just a description like "exclusive economic zone of
+// the United States" — not a place name, so it's excluded in favour of
+// falling back to the subdivision/country, and finally a plain label.
+function pickName(j) {
+  const loc = j.locality && !/^exclusive economic zone/i.test(j.locality) ? j.locality : (j.city || '');
+  if (loc) return loc;
+  if (j.principalSubdivision && j.countryName) return j.principalSubdivision + ', ' + j.countryName;
+  return j.countryName || 'This coast';
+}
+async function startPick(px, py) {
+  const u = unproject(px, py);
+  if (!u) return;                                      // missed the globe
+  const nc = nearestCoast(u.lat, u.lon);
+  const lat = nc.km > INLAND_KM ? nc.lat : u.lat, lon = nc.km > INLAND_KM ? nc.lon : u.lon;
+  pendingPick = { lat, lon, name: '', country: '' };
+  el.pickName.textContent = 'Finding this place…';
+  el.pick.hidden = false;
+  dirty = true;
+  if (navigator.vibrate) navigator.vibrate(12);
+  track('longpress');
+  try {
+    const url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&localityLanguage=en';
+    const j = await (await fetch(url)).json();
+    if (!pendingPick || pendingPick.lat !== lat || pendingPick.lon !== lon) return;   // superseded by a newer pick
+    pendingPick.name = pickName(j); pendingPick.country = j.countryCode || '';
+    el.pickName.textContent = pendingPick.name;
+  } catch (_) {
+    if (pendingPick && pendingPick.lat === lat && pendingPick.lon === lon) el.pickName.textContent = 'This coast';
+  }
+}
+el.pickUse.addEventListener('click', () => {
+  if (!pendingPick) return;
+  const item = { lat: pendingPick.lat, lon: pendingPick.lon, name: pendingPick.name || 'This coast', tz: state.tz, country: pendingPick.country };
+  cancelPick();
+  enter(item, 'pick');
+});
+
 /* --- INPUT ------------------------------------------------------------- */
 let drag = null;
 el.canvas.addEventListener('pointerdown', e => {
   if (e.button !== undefined && e.button !== 0) return;
+  if (pendingPick) cancelPick();                          // a fresh touch elsewhere dismisses the preview
   el.canvas.setPointerCapture(e.pointerId);
-  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false, vx: 0, vy: 0, at: performance.now() };
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, downX: e.clientX, downY: e.clientY, moved: false, vx: 0, vy: 0, at: performance.now() };
   el.canvas.classList.add('dragging');
   view.ease = null;
+  const pid = e.pointerId;
+  drag.pressTimer = setTimeout(() => {
+    if (!drag || drag.id !== pid) return;                 // released, or superseded, before the hold completed
+    const d = drag; drag = null;
+    el.canvas.classList.remove('dragging');
+    startPick(d.downX, d.downY);
+  }, LONGPRESS_MS);
 });
 el.canvas.addEventListener('pointermove', e => {
   if (!drag || e.pointerId !== drag.id) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
   drag.x = e.clientX; drag.y = e.clientY;
   if (Math.abs(dx) + Math.abs(dy) > 0) drag.moved = true;
+  if (drag.pressTimer && Math.hypot(e.clientX - drag.downX, e.clientY - drag.downY) > LONGPRESS_SLOP) {
+    clearTimeout(drag.pressTimer); drag.pressTimer = null;   // drifted too far to be a hold — it's a drag now
+  }
   const degPerPx = R2D / R;                              // radians per px at the centre
   const dLon = -dx * degPerPx / Math.max(0.2, Math.cos(cam.lat * D2R)), dLat = dy * degPerPx;
   if (view.mode === 'place') { view.pan.lat = clamp(view.pan.lat + dLat, -89, 89); view.pan.lon = wrapLon(view.pan.lon + dLon); }
@@ -1168,6 +1274,7 @@ el.canvas.addEventListener('pointermove', e => {
 });
 function endDrag(e) {
   if (!drag || (e && e.pointerId !== drag.id)) return;
+  if (drag.pressTimer) clearTimeout(drag.pressTimer);
   el.canvas.classList.remove('dragging');
   const d = drag; drag = null;
   if (view.mode === 'moon') {
@@ -1188,10 +1295,8 @@ function zoomBy(f, px, py) {
   if (view.mode !== 'place') {
     if (z <= 1.02) return;
     // zoom toward the point under the pointer
-    const X = (px - cx) / R, Y = (cy - py) / R, r2 = X * X + Y * Y;
-    let lat = cam.lat, lon = cam.lon;
-    if (r2 < 1) { const Z = Math.sqrt(1 - r2); lat = Math.asin(clamp(Z * sinP0 + Y * cosP0, -1, 1)) * R2D; lon = (lam0 + Math.atan2(X, Z * cosP0 - Y * sinP0)) * R2D; }
-    view.mode = 'place'; view.pan = { lat, lon }; view.ease = null; loadCoast();
+    const u = unproject(px, py);
+    view.mode = 'place'; view.pan = u || { lat: cam.lat, lon: cam.lon }; view.ease = null; loadCoast();
   }
   view.zoom = z;
   if (z <= 1.02) backToMoon();
@@ -1208,7 +1313,7 @@ el.canvas.addEventListener('touchmove', e => {
   const d0 = Math.hypot(pa.x - pb.x, pa.y - pb.y), d1 = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
   if (d0 > 0) zoomBy(d1 / d0, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
   touches.set(a.identifier, { x: a.clientX, y: a.clientY }); touches.set(b.identifier, { x: b.clientX, y: b.clientY });
-  if (drag) { drag = null; el.canvas.classList.remove('dragging'); }
+  if (drag) { if (drag.pressTimer) clearTimeout(drag.pressTimer); drag = null; el.canvas.classList.remove('dragging'); }
 }, { passive: false });
 el.canvas.addEventListener('touchend', e => { for (const t of e.changedTouches) touches.delete(t.identifier); }, { passive: true });
 el.canvas.addEventListener('dblclick', e => { zoomBy(view.mode === 'place' ? 1.8 : ZOOM_PLACE, e.clientX, e.clientY); });
@@ -1234,7 +1339,8 @@ el.aboutClose.addEventListener('click', () => showAbout(false));
 window.addEventListener('keydown', e => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   if (e.key === 'Escape') {
-    if (!el.about.hidden) showAbout(false);
+    if (pendingPick) cancelPick();
+    else if (!el.about.hidden) showAbout(false);
     else if (!el.roDetail.hidden) setDetail(false);
     else if (!el.locate.hidden && state.located) showLocate(false);
     else backToMoon();

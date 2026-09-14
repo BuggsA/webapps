@@ -124,6 +124,30 @@ body {
 .moon[hidden] { display: none; }
 .moon:focus-visible { outline-offset: -2px; }
 
+/* --- pick: a tethered preview after a long-press on the globe ------
+   Same shape as Tonight's tap-to-select card: a hairline, not a box,
+   positioned every frame from the tapped point's real screen position
+   (paintPick(), tide.js) the way the moon marker already is. The
+   container stays pointer-events:none so it never blocks the globe
+   underneath it — but .pick-use is a real control and needs its own
+   pointer-events:auto to be clickable at all. That line is load-bearing,
+   not decorative: see the Detail-button bug, PROJECT_STATE.md 2026-09-17,
+   for what happens when a button inherits none from its container. */
+.pick-card {
+  position: fixed;
+  z-index: 13;
+  width: min(15rem, calc(100vw - 2 * var(--edge)));
+  display: grid;
+  gap: 0.3em;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--chrome-line);
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.pick-card[hidden] { display: none; }
+.pick-name { font-size: 1.1rem; color: var(--chrome); }
+.pick-use { pointer-events: auto; font-size: 0.96rem; justify-self: start; }
+
 /* --- a word that acts as a control -------------------------------- */
 .word {
   font-family: var(--serif);

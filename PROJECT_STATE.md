@@ -499,8 +499,41 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   before (reproduced: no state change, `elementFromPoint` at the
   button's centre returned the globe canvas, not the button) and after
   (fixed: click opens the panel, toggles to "Less").
-- **Not yet redeployed** -- one-line CSS fix, needs
-  `.\scripts\deploy-app.ps1 -Name tide` to reach production.
+- Redeployed by the user; confirmed live.
+
+## 2026-09-17 -- tide: long-press to set your place, not deployed
+
+- Built the recommendation from `docs/tide-tap-select-research.md`:
+  hold a finger/mouse on the globe (~550ms, tolerating ~8px of drift)
+  and it snaps through the existing `nearestCoast()` to the nearest
+  coast, shows a tethered, non-modal preview card (Tonight's `.card`
+  shape -- hairline, no box), and only becomes the saved place on an
+  explicit "Use this place". A plain tap or a drag is unaffected --
+  the long-press timer is cancelled the moment movement exceeds the
+  slop, or on release, so the existing pan/tap behaviour didn't change.
+  Not a toggle: no mode to forget, per the research doc's Raskin
+  citation.
+- New `unproject(px,py)` factored out of `zoomBy`'s inline screen ->
+  lat/lon math (behaviour-preserving refactor, same fallback when the
+  point misses the globe).
+- Reverse geocoding via BigDataCloud's `reverse-geocode-client`
+  (keyless, CORS-open, confirmed in the research doc): remote coasts
+  often return a "exclusive economic zone of ..." locality instead of a
+  real place name, so that's filtered out in favour of
+  subdivision+country, then a plain "This coast" fallback.
+- **Verified the click-through lesson from the Detail bug applies here
+  too:** `.pick-use` needs its own `pointer-events: auto` since
+  `.pick-card` is `pointer-events: none` like `.readout`/`.card`. Set
+  it from the start this time, but still verified with a real
+  `computer` click (not `.click()`) on both desktop and mobile widths,
+  not just the JS-dispatched long-press gesture used to open the card.
+- Tested: long-press opens + resolves a name; drag past the slop pans
+  normally with no pick; a quick tap elsewhere dismisses an open pick;
+  Escape dismisses; the preview auto-cancels if its point rotates past
+  the limb; committing flies to the place, loads its tide series, and
+  updates the readout -- all via real synthetic PointerEvents (not
+  direct handler calls) plus a real mouse click for the commit button.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
 
 ## Not done yet
 
