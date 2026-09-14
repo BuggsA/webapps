@@ -18,8 +18,11 @@ on-demand "Detail" toggle. Read before touching phase 7 — phase 7's
 week rows have a home now, inside that same toggle, not a new panel) →
 **`tide-visibility-research.md`** (2026-09-16: can't actually tell high
 from low tide by looking at the globe, and the moon's location/pull
-isn't legible even though its phase is — researched, not decided; the
-user's priority here is beauty/wow, utility is secondary).
+isn't legible even though its phase is — **built same day**: raking-
+light relief shading + the moon as a tracked marker) →
+**`tide-tap-select-research.md`** (2026-09-17: long-press the globe to
+set your place instead of typing every time — researched, not decided,
+recommends long-press + a tethered preview over a toggle mode).
 
 ---
 
