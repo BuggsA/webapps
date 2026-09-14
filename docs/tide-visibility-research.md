@@ -123,34 +123,80 @@ gets rounder or bigger. Treat this as a maybe, not a should.
 
 ## 3. The moon's location and causal role
 
-Two gaps, one cheap fix each, both matching precedent already proven
-in this codebase:
+**First pass at this (superseded below).** The obvious cheap fix is a
+static hairline from the moon disc to the globe's centre, reusing
+Tonight's `paintLeader()` pattern verbatim. It's honest and costs
+almost nothing. But "cheapest" and "best" aren't the same question, and
+on reflection this one is weaker than it looks: a line from a fixed
+icon to a fixed centre-point only means something if the viewer already
+understands "the camera stands at the moon" — the exact thing not yet
+legible. It explains a static fact; it doesn't do anything.
 
-**Default (moon) view — the connection is real but unstated.** The
-camera *is* standing at the sub-lunar point; the near bulge is always
-centred. Nothing on screen says so. A single hairline from the moon
-disc down to the centre of the globe — Tonight's own `paintLeader()`
-pattern, already built, already in the palette, a thin line and nothing
-else — would say "the water here answers to the point that line comes
-from" without a word of copy. Cheap, in-house precedent, matches
-Ciechanowski's arrow instinct (a line showing *where the influence comes
-from*) without borrowing his literal force-vector diagram, which would
-look too technical for Tide's register.
+**The better answer: stop treating the moon icon as chrome. Make it a
+real tracked object.** Right now `.moon` is a decorative button pinned
+at a fixed screen position (`moonDiscPos()` just reads its CSS
+coordinates); `paintMoon()` draws the phase disc there regardless of
+where the camera is actually looking. But the app **already computes**,
+every single frame, in both the default and the zoomed-to-a-place view,
+exactly the vector that answers "which way is the moon from here" —
+`moonCam` in `frameConstants()` (`moonCam = toCam(sub.lat, sub.lon)`),
+the same call already feeding the moonlight-lift lighting term. That
+number is sitting right there, unused for this.
 
-**Zoomed to a place — the moon's bearing disappears entirely.** Once
-the camera flies to a coast, the moon disc docks at a fixed screen
-position (top, or top-right on narrow layouts) and stops indicating
-direction at all. Ciechanowski's sky-panorama demo solves the same
-problem with *"the little arrow will guide you to its position"* — a
-small arrow that always points toward the moon regardless of where the
-camera is looking. Tide's readout already computes moonrise/moonset
-locally (`riseSet(A.Body.Moon, …)`); the bearing itself
-(`A.Horizon`-style azimuth from the place to the current sub-lunar
-point) is one more astronomy-engine call away. A short tick or arrow
-near the moon disc, or a bearing degree folded into the existing "Moon
-…% · rises … · sets …" line, would close this without adding a diagram.
-This is the more *utilitarian* of the two fixes — worth doing, but
-secondary to §2 under the stated priority.
+Use it to actually move the disc. Project `moonCam` to a screen
+position just outside the globe's rim, in whatever direction it
+currently points; when it points more away than toward the viewer, slip
+the marker along the rim rather than letting it leave the screen —
+exactly the **off-screen/edge indicator** pattern from games (the
+waypoint arrow that slides along the edge of the view toward an
+objective that's currently behind you, popularised by open-world games
+and now a completely standard UI pattern), and functionally the same
+move as Ciechanowski's sky-panorama arrow, just applied to Tide's own
+camera rather than a literal star-map. Drag the globe away from the
+moon's view and the marker visibly swings out toward the edge in the
+correct direction, in real time, tied to a gesture the app already has;
+release, and as the camera eases back to the sub-lunar point (the
+existing `EASE_BACK` animation), the marker eases back to centre with
+it — the causal link gets demonstrated by the motion itself, not
+asserted by a line.
+
+This single mechanism also **unifies the two cases** the first pass
+treated as separate problems. `moonCam` is computed identically whether
+`view.mode` is `'moon'` or `'place'`, so the same code that makes the
+marker swing during a drag also makes it correctly show the moon's real
+bearing once zoomed to a coast — no second, bolt-on "bearing indicator"
+needed.
+
+The one implementation wrinkle: the `.moon` element is a real
+`<button>` (44px target, keyboard-reachable, per the accessibility
+floor), not just a canvas glyph. Its DOM position needs to follow the
+computed screen position each frame — reposition the element itself
+(clamped inside the safe-area margins) rather than only redrawing the
+icon, so the visible glyph and the tap/click target never separate.
+
+**Combine, don't choose.** Once the marker is real, the original
+hairline idea gets better rather than obsolete: draw a faint line from
+wherever the marker currently sits to the sub-lunar point on the globe,
+*only* while they're both on screen and not already close together. The
+motion teaches the relationship; the line, shown only when useful,
+confirms it. That combination is the actual recommendation, not either
+piece alone.
+
+**A third option, more atmospheric, worth naming even though it needs a
+caveat.** The real, named, universally-recognised phenomenon this whole
+app is implicitly about is the *moon glade* — the shimmering path
+moonlight lays across water, pointing straight at the moon. Rendering
+that would be extraordinarily on-theme and beautiful, and it would
+double as a location cue for free (the glade always points at the
+source). The catch: the art direction's banned list rules out "a
+specular highlight" explicitly, aimed at the cheap glossy-3D-globe
+look. A literal Blinn-Phong glint would trip that. What wouldn't: break
+the highlight up through the same grain/dither texture the sea already
+uses, so it reads as scattered, broken sparkle on ripples — which is
+also what a real moon glade actually looks like, never a smooth glossy
+streak — rather than a rendered light-model artifact. Higher risk,
+highest ceiling; worth a prototype before deciding it either fits the
+locked direction or doesn't.
 
 ## 4. What this is not proposing
 
@@ -168,14 +214,18 @@ secondary to §2 under the stated priority.
 
 1. Field gradient + raking relief shading (§2) — the main "wow," and
    the direct answer to "can you tell high and low tide by looking."
-2. The moon → sub-lunar hairline in the default view (§3) — cheap,
-   reuses Tonight's own code shape, answers "why is the water like this
-   right here."
-3. The moon-bearing indicator when zoomed to a place (§3) — smaller,
-   more utilitarian, fine to defer.
-4. Limb wobble (§2, optional) — the one item worth prototyping and
-   looking at before committing; it's the only piece with real taste
-   risk (bulge-vs-blob), everything else above is low-risk.
+2. The moon as a tracked, off-screen-indicator marker (§3) — bigger
+   than the hairline alone, reuses the drag/ease-back interaction
+   already built, unifies the default and zoomed-to-a-place cases in
+   one mechanism. The recommended answer to "where is the moon and why
+   does it matter here," not the hairline by itself.
+3. The confirming hairline, layered on top of #2 once the marker is
+   real — small addition, meaningfully better together than either
+   alone.
+4. Limb wobble (§2, optional) and the moon-glade shimmer (§3, optional)
+   — both worth a prototype before committing, both carry real taste
+   risk (bulge-vs-blob; glint-vs-banned-specular) that the rest of this
+   list doesn't.
 
 Nothing here has been built. Say which of these to take forward.
 
