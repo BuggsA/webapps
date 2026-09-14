@@ -202,11 +202,58 @@ option that ages best into phase 7–9, since "the week" is exactly the
 kind of longer, denser content NN/g says belongs in an opt-in sheet
 rather than a permanently-open one.
 
-No recommendation is being made between B and C yet without your steer —
-A is clearly the cheapest if you want something shipped fast, but C is
-the one that scales into the rest of the v2 plan without a second
-rework. Worth deciding before phase 7 (the week) adds seven more rows to
-a readout that is already the thing crowding the screen.
+**DECIDED 2026-09-16: Option C.** Built in `apps/tide/` the same day.
+The permanent glance is now rule + place + state + curve. Everything
+that scales with more data — the remaining turns, range/springs, moon,
+sun — sits behind a `.word`-styled "Detail" / "Less" toggle
+(`#btn-detail` → `#ro-detail`), collapsed by default, reusing the exact
+show/hide shape the About panel already used (`hidden` attribute +
+`aria-expanded`, no JS framework, no new pattern to learn). Source and
+the hand-off line stay outside the toggle, always visible, per §3's
+call that safety-adjacent text shouldn't be opt-in.
+
+**What actually got built, past the plan:**
+- `sizeDetail()` measures the real gap between the panel and the
+  controls bar (`controlsTop - top - 16`, capped at `70svh`) and sets it
+  as an inline `max-height`, so the panel is *provably* never able to
+  push content past the controls, on any viewport — not a guess, a
+  measurement, the same discipline the curve's `sizeCurve()` already
+  uses.
+- The panel scrolls internally (`overflow-y: auto`) rather than
+  truncating — better than what the short-viewport media query used to
+  do (silently dropping turns 3–4 and hiding moon/sun with no way to
+  reach them). That media query's truncation rules were removed as
+  redundant now that the default state is already compact.
+- `layout()`'s phone-specific "shrink the globe to fit below the
+  readout" branch now only applies while Detail is *closed* — an open
+  Detail panel is treated like `#about`/`#locate` already are: it
+  overlays the globe translucently rather than fighting it for space,
+  since there usually isn't room for both a full detail panel and a
+  repositioned globe on a short phone.
+- Escape closes Detail (added to the existing About/Locate Escape
+  chain), and closing it (any way) returns focus to the toggle button —
+  matching `showAbout()`'s convention, and cheap insurance against focus
+  getting lost if a future phase adds a focusable child inside the panel.
+- The scroll thumb is styled as a 3px hairline in `--chrome-line`
+  (`scrollbar-width: thin` + `::-webkit-scrollbar`) rather than left as
+  the browser's default grey bar, which read as a generic-UI tell.
+
+**Verified**, not just built: default-collapsed state fits 320×690,
+375×560, 375×480 and 320×500 with zero page scroll (checked
+`document.body.scrollHeight === innerHeight` directly, not eyeballed);
+Detail opens/closes correctly on both the NOAA and Open-Meteo data
+paths; the panel's measured `max-height` stays below the controls bar's
+top edge at every size tested; Escape and the focus-return both work.
+One real bug surfaced and fixed along the way, unrelated to the panel
+itself: the local test server (Python's single-process `http.server`,
+long-running across many navigations in one browser session) combined
+with the browser's own HTTP cache made a plain `fetch('index.html',
+{cache:'reload'})` bust the wrong cache key (`/index.html`, not the `/`
+the page actually loads from) — several apparent crashes during testing
+were stale pre-Detail markup being served to current JS, not a code
+defect. Ground truth going forward: read what the browser actually
+received via network-request inspection, not curl (which hit the
+correct content the whole time and was misleading).
 
 ## Sources
 

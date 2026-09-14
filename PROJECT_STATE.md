@@ -404,6 +404,45 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - **Not deployed.** `docs/tide-v2-plan.md` phase 6 marked done with the
   detail above. **Next:** phase 7 (the week).
 
+## 2026-09-16 -- tide: on-demand Detail panel (panel-research Option C), not deployed
+
+- User confirmed the recommendation from `docs/tide-panel-research.md`:
+  Option C, hybrid. Built the same day.
+- The readout's permanent glance is now just rule + place + state +
+  curve. Everything that scales with more data -- the remaining turns,
+  range/springs, moon, sun -- moved behind a `.word`-styled "Detail" /
+  "Less" toggle (`#btn-detail` -> `#ro-detail`), collapsed by default,
+  built on the exact `hidden` + `aria-expanded` shape the About panel
+  already used. Source and the hand-off line stay outside it, always
+  visible (safety-adjacent text shouldn't be opt-in).
+- `sizeDetail()` measures the real gap to the controls bar and caps the
+  panel's height to it (min of that and 70svh), so it is provably unable
+  to push content off-screen, on any viewport -- not a guess. It scrolls
+  internally (styled as a 3px hairline in `--chrome-line`, not the
+  browser's default grey bar) rather than the old media query's silent
+  truncation, which is now removed as redundant.
+- `layout()`'s phone-only "shrink the globe below the readout" branch
+  now only applies while Detail is closed; open, it overlays the globe
+  translucently like `#about`/`#locate` already do, since there usually
+  isn't room for both on a short phone.
+- Escape closes Detail (added to the existing Escape chain); closing it
+  any way returns focus to the toggle, matching `showAbout()`.
+- **Verified**, not just built: default-collapsed state fits 320x690,
+  375x560, 375x480 and 320x500 with zero page scroll (checked
+  `document.body.scrollHeight === innerHeight` directly); both NOAA and
+  Open-Meteo data paths; Detail's measured max-height never exceeds the
+  controls bar's top edge; Escape + focus-return confirmed.
+- **A real testing-environment bug found and fixed along the way** (not
+  an app defect): the long-running local preview server plus the
+  browser's HTTP cache meant `fetch('index.html', {cache:'reload'})` was
+  busting the wrong cache key (`/index.html`, not `/`, which is what the
+  page actually loads from) -- several apparent crashes mid-session were
+  stale pre-Detail markup paired with current JS, confirmed by reading
+  what the browser actually received over the network, not by curl
+  (which was hitting the live file correctly the entire time and was
+  the misleading signal). Detail in `docs/tide-panel-research.md`.
+- Not deployed. `node --check` clean.
+
 ## Not done yet
 
 - **Credential envelope -- confirm.** DEPLOY.md step 0 (rename

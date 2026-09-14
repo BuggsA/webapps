@@ -32,6 +32,9 @@
      PLACE + SERIES      — geocode, device, coast distance, NOAA proximity,
                            loadSeries() (cached), turning points, heightAt()
      READOUT             — updateReadout(): state line, rows, range, moon, sun, source
+     DETAIL              — setDetail()/sizeDetail(): the on-demand panel for turns/
+                           range/moon/sun (source + hand-off stay always visible) —
+                           docs/tide-panel-research.md, Option C, decided 2026-09-16
      CURVE               — paintCurve() (36 h hairline in the readout), nightBands(),
                            sizeCurve(), pointer-drag-to-scrub on the curve
      INPUT               — drag, wheel, pinch, keys, buttons
@@ -89,6 +92,7 @@ const el = {
   controls: $('controls'), btnNow: $('btn-now'), btnPlay: $('btn-play'), scrub: $('scrub'),
   clock: $('clock'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
   about: $('about'), aboutClose: $('about-close'), curve: $('curve'),
+  roDetail: $('ro-detail'), btnDetail: $('btn-detail'),
 };
 const ctx = el.canvas.getContext('2d', { alpha: false });
 const curveCtx = el.curve.getContext('2d');
@@ -517,10 +521,16 @@ function layout() {
     const r2 = Math.min(0.42 * W, (lr.top - 40) / 2);
     if (r2 > 60) { R = r2 * cam.zoom; cy = 40 + r2; }
   } else if (rr && cam.zoom < 1.6) {
-    if (W < 640) {                                   // phones: globe below the readout
-      const top = rr.bottom + 8, bottom = Hh - 90;
-      const r2 = Math.min(0.42 * W, (bottom - top) / 2);
-      if (r2 > 60) { R = r2 * cam.zoom; cy = top + r2; }
+    if (W < 640) {
+      if (el.roDetail.hidden) {                       // phones: globe below the readout
+        const top = rr.bottom + 8, bottom = Hh - 90;
+        const r2 = Math.min(0.42 * W, (bottom - top) / 2);
+        if (r2 > 60) { R = r2 * cam.zoom; cy = top + r2; }
+      }
+      // Detail open: there isn't room below a full-length readout on a
+      // phone, so don't fight it for space — leave the globe at its
+      // default centred size and let the (translucent, scrim-backed)
+      // panel sit over it, the same way #about and #locate already do.
     } else if (cx - R < rr.right + 12) {
       cx = Math.min(rr.right + 12 + R, W - R - 12);
     }
@@ -913,6 +923,33 @@ function updateReadout(force) {
   dirty = true;
 }
 
+/* --- DETAIL -------------------------------------------------------------
+   The rest of the turns, range/springs, moon, sun — collapsed by default
+   (docs/tide-panel-research.md, Option C, decided 2026-09-16). The
+   glance (place + state + curve) already carries the one fact that
+   matters; this is opt-in, so a short phone never has it forced open.
+   Content is populated continuously by updateReadout() regardless of
+   whether the panel is open — only its visibility and height live here. */
+function sizeDetail() {
+  if (el.roDetail.hidden) return;
+  const top = el.roDetail.getBoundingClientRect().top;
+  const controlsTop = el.controls.hidden ? Hh : el.controls.getBoundingClientRect().top;
+  const avail = Math.max(120, controlsTop - top - 16);
+  el.roDetail.style.maxHeight = Math.min(avail, Hh * 0.7) + 'px';
+}
+function setDetail(open) {
+  el.roDetail.hidden = !open;
+  el.btnDetail.setAttribute('aria-expanded', open ? 'true' : 'false');
+  el.btnDetail.textContent = open ? 'Less' : 'Detail';
+  if (open) sizeDetail(); else el.btnDetail.focus();   // never strand focus on close
+  dirty = true;
+}
+el.btnDetail.addEventListener('click', () => {
+  const open = el.roDetail.hidden;
+  setDetail(open);
+  track('detail', { open: open ? 1 : 0 });
+});
+
 /* --- LOCATION UI ------------------------------------------------------- */
 function savePlace() {
   try { localStorage.setItem(LS_PLACE, JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, tz: state.tz, country: state.country || '' })); } catch (_) {}
@@ -1085,6 +1122,7 @@ window.addEventListener('keydown', e => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   if (e.key === 'Escape') {
     if (!el.about.hidden) showAbout(false);
+    else if (!el.roDetail.hidden) setDetail(false);
     else if (!el.locate.hidden && state.located) showLocate(false);
     else backToMoon();
   }
@@ -1093,7 +1131,7 @@ window.addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '=') zoomBy(1.4, cx, cy);
   if (e.key === '-' || e.key === '_') zoomBy(1 / 1.4, cx, cy);
 });
-window.addEventListener('resize', () => { resize(); if (state.located) updateReadout(true); });
+window.addEventListener('resize', () => { resize(); if (state.located) updateReadout(true); sizeDetail(); });
 window.addEventListener('online', () => { if (state.located && !state.series) loadSeries(); });
 
 /* --- THE LOOP ---------------------------------------------------------- */

@@ -12,8 +12,10 @@ Read in this order: `building-a-new-app.md` (house rules) →
 runs its checklist) → `tide-data-research.md` (verified endpoints) →
 `tide-build-plan.md` (what v1 did) → this file → **`tide-panel-research.md`**
 (2026-09-15: the readout blocks small screens; three progressive-
-disclosure shapes researched against real precedent, not yet decided —
-read before touching phase 7 or phase 10).
+disclosure shapes researched against real precedent — **decided and
+built 2026-09-16, Option C**: glance stays permanent, the rest is one
+on-demand "Detail" toggle. Read before touching phase 7 — phase 7's
+week rows have a home now, inside that same toggle, not a new panel).
 
 ---
 
