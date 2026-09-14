@@ -533,7 +533,8 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   the limb; committing flies to the place, loads its tide series, and
   updates the readout -- all via real synthetic PointerEvents (not
   direct handler calls) plus a real mouse click for the commit button.
-- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+- Deployed by the user; confirmed live against the production URL with
+  a real click (not `.click()`) committing a picked place end to end.
 
 ## Not done yet
 
