@@ -34,7 +34,9 @@
                            (tracked marker — same doc §3), paintGrain(), paintScrim()
      TIME MODEL          — now0, live / hold / play, scrub, clock
      PLACE + SERIES      — geocode, device, coast distance, NOAA proximity,
-                           loadSeries() (cached), turning points, heightAt()
+                           loadSeries() (cached), turning points, heightAt();
+                           up to 3 saved places, cycled by tapping the name
+                           (phase 10: docs/tide-v2-plan.md)
      PICK                — long-press the globe to set your place: unproject(),
                            nearestCoast() snap, a tethered preview card (Tonight's
                            .card shape) with an explicit "Use this place" commit —
@@ -76,7 +78,9 @@ const LONGPRESS_SLOP = 8;            // px of drift tolerated before it's a drag
 const SEA_L0 = 0.35, SEA_LA = 0.20;  // luminance: L = L0 + LA·tanh(|η/0.6|^0.65)
 const RELIEF_GAIN = 2, REL_CLAMP = 0.05;    // raking-light relief term — calibrated live: median
 // near-terminator ocean gradient ~0.009 raw -> ~0.018 L; the steepest ~10% saturate at the clamp.
-const LS_PLACE = 'tide.place';
+const LS_PLACE = 'tide.place';            // pre-phase-10 single-place key, migrated once (see `places` init)
+const LS_PLACES = 'tide.places';          // phase 10: up to 3, most-recently-used first
+const MAX_PLACES = 3;
 const LS_UNITS = 'tide.units', LS_DATUM = 'tide.datum';
 const FPS_CAP  = REDUCED ? 4 : 30;
 
@@ -690,24 +694,19 @@ function layout() {
   const base = 0.40 * Math.min(W, Hh);
   R = base * cam.zoom;
   cx = W / 2; cy = Hh * 0.53;
-  if (!el.locate.hidden && W < 640 && cam.zoom < 1.6) {   // the prompt is open: globe up top
+  if (!state.located && !el.locate.hidden && W < 640 && cam.zoom < 1.6) {
+    // onboarding / "Just look": still the pre-phase-10 fixed-overlay
+    // screen (docs/tide-v2-plan.md phase 10 only restructures the
+    // located view) — shrink the globe to sit above the locate prompt.
     const lr = el.locate.getBoundingClientRect();
     const r2 = Math.min(0.42 * W, (lr.top - 40) / 2);
     if (r2 > 60) { R = r2 * cam.zoom; cy = 40 + r2; }
-  } else if (rr && cam.zoom < 1.6) {
-    if (W < 640) {
-      if (el.roDetail.hidden) {                       // phones: globe below the readout
-        const top = rr.bottom + 8, bottom = Hh - 90;
-        const r2 = Math.min(0.42 * W, (bottom - top) / 2);
-        if (r2 > 60) { R = r2 * cam.zoom; cy = top + r2; }
-      }
-      // Detail open: there isn't room below a full-length readout on a
-      // phone, so don't fight it for space — leave the globe at its
-      // default centred size and let the (translucent, scrim-backed)
-      // panel sit over it, the same way #about and #locate already do.
-    } else if (cx - R < rr.right + 12) {
-      cx = Math.min(rr.right + 12 + R, W - R - 12);
-    }
+  } else if (rr && cam.zoom < 1.6 && W >= 640) {
+    // desktop only: nudge the globe clear of the readout column. Once
+    // located on a phone, #globe-wrap is its own square box in the
+    // page's normal flow (real scroll, tide.css) — the base R/cx/cy
+    // above are already right, no readout-avoidance hack needed.
+    if (cx - R < rr.right + 12) cx = Math.min(rr.right + 12 + R, W - R - 12);
   }
 }
 function paint() {
@@ -736,7 +735,14 @@ function paint() {
 /* --- CANVAS SIZING ----------------------------------------------------- */
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = window.innerWidth; Hh = window.innerHeight;
+  // the canvas's own rendered box, not the window: on desktop (and the
+  // locate/"just look" screen) #globe-wrap is fixed+inset:0 so this is
+  // pixel-identical to window.innerWidth/innerHeight, but once a phone
+  // switches to the real-scroll layout (phase 10) the canvas is a
+  // normal-flow square smaller than the viewport, and this is the only
+  // correct source for its size.
+  const rect = el.canvas.getBoundingClientRect();
+  W = rect.width; Hh = rect.height;
   if (!W || !Hh) { dirty = true; return; }
   el.canvas.width = Math.round(W * dpr); el.canvas.height = Math.round(Hh * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1166,7 +1172,7 @@ function updateReadout(force) {
   const t = state.t, s = state.series, tz = state.tz;
   const tf = fmt('time', tz), df = fmt('day', tz);
   const mi = moonInfo(t);                       // at t, not at the last painted frame
-  el.roPlace.textContent = state.place;
+  syncPlaceControl();
   const inland = state.inlandKm > INLAND_KM
     ? `You are about <span class="n">${Math.round(state.inlandKm)}</span> km from the sea. The nearest coast: ` : '';
   el.curve.hidden = !s || !s.turns.length;
@@ -1430,16 +1436,41 @@ el.btnDetail.addEventListener('click', () => {
 });
 
 /* --- LOCATION UI ------------------------------------------------------- */
-function savePlace() {
-  try { localStorage.setItem(LS_PLACE, JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, tz: state.tz, country: state.country || '' })); } catch (_) {}
-}
-function loadPlace() {
+// phase 10: up to MAX_PLACES saved, most-recently-used first. The array's
+// own order IS the cycle order, so no separate "current index" to keep in
+// sync — cycling just means "enter() the one currently in second place",
+// and enter() re-promoting it to the front (via rememberPlace) does the
+// rotation for free.
+function savePlaces(list) { try { localStorage.setItem(LS_PLACES, JSON.stringify(list.slice(0, MAX_PLACES))); } catch (_) {} }
+let places = (() => {
   try {
-    const p = JSON.parse(localStorage.getItem(LS_PLACE) || 'null');
-    if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) return p;
+    const p = JSON.parse(localStorage.getItem(LS_PLACES) || 'null');
+    if (Array.isArray(p)) return p.filter(x => x && Number.isFinite(x.lat) && Number.isFinite(x.lon));
   } catch (_) {}
-  return null;
+  try {   // one-time migration from the pre-phase-10 single-place key
+    const old = JSON.parse(localStorage.getItem(LS_PLACE) || 'null');
+    if (old && Number.isFinite(old.lat) && Number.isFinite(old.lon)) { savePlaces([old]); return [old]; }
+  } catch (_) {}
+  return [];
+})();
+function loadPlace() { return places[0] || null; }
+function rememberPlace() {
+  const cur = { lat: state.lat, lon: state.lon, place: state.place, tz: state.tz, country: state.country || '' };
+  places = [cur, ...places.filter(p => kmBetween(p.lat, p.lon, cur.lat, cur.lon) > 1)].slice(0, MAX_PLACES);
+  savePlaces(places);
 }
+function cyclePlace() {
+  if (places.length <= 1) return;
+  const next = places[1];
+  enter({ lat: next.lat, lon: next.lon, name: next.place, tz: next.tz, country: next.country }, 'cycle');
+}
+function syncPlaceControl() {
+  const cyclable = places.length > 1;
+  el.roPlace.textContent = state.place;
+  el.roPlace.style.cursor = cyclable ? 'pointer' : 'default';
+  el.roPlace.setAttribute('aria-label', cyclable ? state.place + ' — switch to your other saved place' : state.place);
+}
+el.roPlace.addEventListener('click', () => { cyclePlace(); track('cycle-place'); });
 function showLocate(show) {
   el.locate.hidden = !show;
   el.controls.hidden = show;                      // one thing at the bottom edge at a time
@@ -1501,9 +1532,10 @@ async function enter(item, how) {
   const nc = nearestCoast(state.lat, state.lon);
   state.inlandKm = nc.km;
   if (nc.km > INLAND_KM) { state.coastLat = nc.lat; state.coastLon = nc.lon; } else { state.coastLat = state.lat; state.coastLon = state.lon; }
-  savePlace();
+  rememberPlace();
   showLocate(false);
   el.readout.hidden = false; el.controls.hidden = false;
+  resize();   // phase 10: on a phone this is the moment #globe-wrap switches from the fixed onboarding layout to the in-flow square — re-measure it
   updateReadout(true);
   flyToPlace();
   loadSeries();
@@ -1701,11 +1733,17 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { di
 async function init() {
   resize();
   const saved = loadPlace();
-  loadLand().then(() => { if (saved) enter({ ...saved, name: saved.place }, 'saved'); });
-  loadField();
   if (!saved) showLocate(true);
   el.moon.hidden = false;
-  requestAnimationFrame(frame);
+  requestAnimationFrame(frame);              // paint() is already safe with no land/field/series loaded
+  // phase 10 first paint: land (and, for a returning visitor, the place
+  // series enter() kicks off) get a clear run at the connection before
+  // the ~1.5 MB field competes for bandwidth — "it is the linger, not
+  // the answer." paint() already draws a flat lit sphere the instant the
+  // frame loop starts, above, so nothing here delays the first pixel.
+  await loadLand();
+  if (saved) await enter({ ...saved, name: saved.place }, 'saved');
+  loadField();
   track('load', { saved: saved ? 1 : 0, reduced: REDUCED ? 1 : 0 });
 }
 init();

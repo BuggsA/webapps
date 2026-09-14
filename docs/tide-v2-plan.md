@@ -338,7 +338,7 @@ word control "This week" that expands them.
   fetch, not a separate backfillable step like `mllwOffset`. Fixed with
   the model cache key's own `:v2` bump.
 
-### Phase 10 — Layout for use, and first paint
+### Phase 10 — Layout for use, and first paint — DONE 2026-09-14
 
 - **Phone (≤ 640 px):** the page becomes a column: readout (place, state,
   curve, next turns, week) first, then the globe as a full-width square
@@ -346,17 +346,99 @@ word control "This week" that expands them.
   opening flourish plays only when nothing is saved (first launch) and on
   "Just look". Body scrolls vertically; the canvas stays `touch-action:
   none` for drag. Desktop keeps readout-left / globe-right.
+  - **Built as:** a new `#globe-wrap` div hangs the canvas, the moon
+    marker and the pick preview off one positioned box. Default (desktop,
+    and the onboarding/"Just look" screen): `position:fixed;inset:0`,
+    pixel-identical to the pre-phase-10 markup (an `absolute` child of a
+    `fixed;inset:0` box lands exactly where a `fixed` one would — no JS
+    positioning math changed). A `@media (max-width:40rem)` rule keyed on
+    `body:has(#readout:not([hidden]))` — true exactly when
+    `state.located` is true, since the readout is only ever un-hidden
+    inside `enter()` — switches *only that state* to a real scrolling
+    column: `#globe-wrap` becomes `position:relative;aspect-ratio:1/1`,
+    order 2; `#readout` becomes `position:static`, order 1; `.controls`
+    is untouched, still `position:fixed` (stays docked to the viewport
+    bottom through the scroll). This means the onboarding/"Just look"
+    screen keeps its exact pre-phase-10 fixed-overlay, shrink-the-globe
+    layout — phase 10 only restructures the *located* view, which is what
+    the acceptance test is actually about. `resize()` now reads the
+    canvas's own `getBoundingClientRect()` instead of
+    `window.innerWidth/innerHeight`, since on phone-located the canvas is
+    a normal-flow square smaller than the viewport, not a full-viewport
+    element; `enter()` calls `resize()` once, right when the layout mode
+    switches. `layout()`'s old "phones: globe below the readout" shrink
+    hack (dynamically resizing R to dodge the readout's fixed-overlay
+    bounding box) is dead code once real scroll exists and was removed;
+    the onboarding-only shrink branch is now explicitly gated on
+    `!state.located`.
 - **First paint.** Draw the globe with land and light immediately; load
   `tide-field.bin` after `land-110m.json` and the place series (it is the
   linger, not the answer). Pre-gzip the field: change
   `scripts/deploy-app.ps1` to upload `data/tide-field.bin` with
   `--content-encoding gzip` from a gzipped copy (1.55 MB → ~690 KB) —
   deploy-script change, human-run; document it in `DEPLOY.md`.
+  - **Built as:** `init()` now starts the frame loop (paint() is already
+    safe with nothing loaded) *before* `await`ing `loadLand()`, then
+    (only for a returning visitor) `await`s `enter()` — which is what
+    actually dispatches the series fetch — and only then calls
+    `loadField()`. Verified via `performance.getEntriesByType('resource')`
+    on a real load: `land-110m.json` starts at ~49 ms, `tide-field.json`
+    doesn't start until ~458 ms — a clear, real gap, not just source order.
+    Gzip step added to `deploy-app.ps1` as a generic
+    `apps\<name>\data\*.bin` loop (`System.IO.Compression.GzipStream`, no
+    external dependency) so it isn't Tide-specific; documented in
+    `docs/DEPLOY.md`. Verified locally: 1519 KB → 672 KB, and a
+    decompress-and-byte-compare round-trip against the original is
+    identical.
 - **Places.** Up to three saved places; the place name in the readout
   becomes a word control that cycles them; "Change place" adds/replaces.
+  - **Built as:** `localStorage['tide.places']` replaces the old
+    single-place key (migrated once, automatically, on first load after
+    this change): an array, most-recently-used first, capped at 3 by
+    `rememberPlace()` (called from `enter()` for every entry path —
+    search, device location, tap-to-pick, cycling — so all of them
+    naturally build the same list). Cycling has no separate "current
+    index" to keep in sync: it just `enter()`s whatever is currently
+    *second* in the array, and `rememberPlace()` re-promotes it to the
+    front as a side effect of entering it, which *is* the rotation.
+    `#ro-place` changed from a bare `<h1>` to `<h1><button
+    id="ro-place">`, keeping heading semantics for screen readers while
+    the button carries the click; cyclable only when more than one place
+    is saved (cursor + `aria-label` reflect this; the click is a no-op
+    otherwise, matching the button's actual affordance rather than
+    hiding it, which would ask "was this always here?" every time a
+    second place gets added).
 - Acceptance: on a 360 × 780 phone viewport the answer (state + curve +
   next two turns) is visible without scrolling and the field loads after
   it; Lighthouse-style check: no layout shift when the field arrives.
+  - **Verified:** at 360×780, the "Detail" toggle (end of the always-
+    visible glance cluster) sits at y≈282 and even the always-visible
+    source/hand-off lines end at y≈327, both comfortably inside the
+    780 px viewport with zero scrolling. `aspect-ratio:1/1` sizes the
+    globe square from CSS alone, before any data arrives, so there is no
+    layout shift when the field loads in behind it. Real scrolling
+    confirmed: `body.scrollHeight` exceeds `innerHeight` once Detail is
+    open, and `.controls` stays pinned to the viewport bottom through a
+    scroll (its own `getBoundingClientRect()` unchanged before/after).
+    Desktop re-verified pixel-for-pixel unchanged at a size the test tool
+    renders cleanly (700×500 — see the note below on tool limits at
+    larger custom sizes).
+  - **Tool limitation hit, not a code bug:** this session's `computer`
+    click tool intermittently reports one (x,y) while the real DOM
+    `click` event fires at a wildly different, sometimes off-screen
+    coordinate — reproduced even on a stock, unmodified `example.com`
+    page and against `Detail` (unchanged by this phase), so it's a
+    session/tool-level coordinate-mapping issue, not a regression here.
+    Also separately confirmed: forcing large custom viewports (1280×900,
+    768×1024) makes this same test tool render the canvas confined to a
+    small corner on the *live, unmodified* production site too — another
+    pre-existing tool artifact, not a rendering bug. Verification fell
+    back to `document.elementFromPoint()` (the browser's real hit-testing
+    algorithm, not a bypass) to confirm a click *would* land on a target,
+    followed by a properly-targeted synthetic event at that same point to
+    confirm the listener fires — weaker than a fully real click, honestly
+    short of this session's own established bar, but the strongest check
+    available once the click tool itself was shown to be unreliable.
 
 ### Phase 11 — Trust and coverage
 

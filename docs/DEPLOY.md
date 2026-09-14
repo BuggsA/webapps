@@ -84,6 +84,14 @@ It reads `hosting\.hosting-outputs.env`, syncs `apps\<name>\` to
 `s3://<bucket>/<name>/ --delete`, invalidates `/<name>/*`, and prints
 `https://<DistributionDomain>/<name>/`.
 
+**Large binary data.** Any `apps\<name>\data\*.bin` file is gzipped
+locally and re-uploaded with `Content-Encoding: gzip` after the sync
+(phase 10, `docs/tide-v2-plan.md` — added for Tide's `tide-field.bin`,
+~1.55 MB → ~690 KB on the wire). CloudFront's automatic compression
+never touches `application/octet-stream`, so without this step a binary
+data file would ship uncompressed on every load. The app's own `fetch()`
+needs no changes — the browser decompresses it transparently.
+
 ## Remove an app
 
 ```powershell

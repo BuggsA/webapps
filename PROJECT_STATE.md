@@ -622,3 +622,45 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   mllwOffset. Fixed with a `:v2` bump on the model cache key too.
 - Deployed by the user; confirmed live (sea temp + daylight lines +
   a real click on "Add to calendar", no console errors).
+
+## 2026-09-14 -- tide: phase 10, layout for use + first paint + places, not deployed
+
+- Built docs/tide-v2-plan.md phase 10, the biggest restructure of the
+  three remaining phases:
+  - **Real phone scroll.** New #globe-wrap div hangs the canvas/moon-
+    marker/pick-preview off one positioned box: fixed+inset:0 by default
+    (desktop and onboarding, pixel-identical to before), switched to a
+    normal-flow aspect-ratio:1 square only via
+    `body:has(#readout:not([hidden]))` at <=40rem -- true exactly when
+    state.located, so onboarding/"Just look" keeps its old fixed-overlay
+    layout untouched. resize() now reads the canvas's own
+    getBoundingClientRect() instead of window.innerWidth/innerHeight.
+    layout()'s old "phones: globe below readout" shrink hack is dead
+    code with real scroll and was removed.
+  - **First paint.** init() starts the frame loop before awaiting
+    loadLand(), then (for a returning visitor) awaits enter() -- which
+    dispatches the series fetch -- before calling loadField(). Verified
+    via performance.getEntriesByType: land starts ~49ms, field ~458ms,
+    a real gap.
+  - **Pre-gzip.** deploy-app.ps1 gzips any apps\<name>\data\*.bin after
+    the s3 sync and re-uploads with --content-encoding gzip (generic,
+    not Tide-specific). Verified locally: tide-field.bin 1519KB->672KB,
+    byte-identical round-trip. Documented in docs/DEPLOY.md.
+  - **Up to 3 saved places.** localStorage 'tide.places' (migrated once
+    from the old single-place key), MRU-first, capped at 3 by
+    rememberPlace() (called from every enter() path). The place name
+    (#ro-place, now <h1><button>) cycles them; a no-op when only one is
+    saved.
+- **Tool limitation encountered (not a code bug):** this session's
+  `computer` click tool intermittently reports a click coordinate that
+  doesn't match where the real DOM click event actually fires --
+  reproduced on stock example.com and against the unchanged Detail
+  button, so it's environmental. Also separately reproduced: large
+  custom viewport sizes (1280x900, 768x1024) render the globe confined
+  to a small corner even on the live unmodified production site -- a
+  pre-existing rendering artifact of this test tool at those sizes, not
+  a Tide bug. Fell back to elementFromPoint() (the browser's real hit-
+  test) + a properly-targeted synthetic event at the verified point,
+  weaker than the real clicks used in phases 6-9 but the strongest
+  check available once the click tool itself was shown unreliable.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
