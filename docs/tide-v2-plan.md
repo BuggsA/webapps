@@ -10,7 +10,10 @@ the plan to fix that, written to be picked up cold by a different model.
 Read in this order: `building-a-new-app.md` (house rules) →
 `tide-brief.md` → `tide-art-direction.md` (LOCKED; every visual change
 runs its checklist) → `tide-data-research.md` (verified endpoints) →
-`tide-build-plan.md` (what v1 did) → this file.
+`tide-build-plan.md` (what v1 did) → this file → **`tide-panel-research.md`**
+(2026-09-15: the readout blocks small screens; three progressive-
+disclosure shapes researched against real precedent, not yet decided —
+read before touching phase 7 or phase 10).
 
 ---
 
