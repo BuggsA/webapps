@@ -15,7 +15,11 @@ runs its checklist) → `tide-data-research.md` (verified endpoints) →
 disclosure shapes researched against real precedent — **decided and
 built 2026-09-16, Option C**: glance stays permanent, the rest is one
 on-demand "Detail" toggle. Read before touching phase 7 — phase 7's
-week rows have a home now, inside that same toggle, not a new panel).
+week rows have a home now, inside that same toggle, not a new panel) →
+**`tide-visibility-research.md`** (2026-09-16: can't actually tell high
+from low tide by looking at the globe, and the moon's location/pull
+isn't legible even though its phase is — researched, not decided; the
+user's priority here is beauty/wow, utility is secondary).
 
 ---
 
