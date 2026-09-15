@@ -694,19 +694,24 @@ function layout() {
   const base = 0.40 * Math.min(W, Hh);
   R = base * cam.zoom;
   cx = W / 2; cy = Hh * 0.53;
-  if (!state.located && !el.locate.hidden && W < 640 && cam.zoom < 1.6) {
-    // onboarding / "Just look": still the pre-phase-10 fixed-overlay
-    // screen (docs/tide-v2-plan.md phase 10 only restructures the
-    // located view) — shrink the globe to sit above the locate prompt.
+  if (!el.locate.hidden && W < 640 && cam.zoom < 1.6) {   // the prompt is open: globe up top
     const lr = el.locate.getBoundingClientRect();
     const r2 = Math.min(0.42 * W, (lr.top - 40) / 2);
     if (r2 > 60) { R = r2 * cam.zoom; cy = 40 + r2; }
-  } else if (rr && cam.zoom < 1.6 && W >= 640) {
-    // desktop only: nudge the globe clear of the readout column. Once
-    // located on a phone, #globe-wrap is its own square box in the
-    // page's normal flow (real scroll, tide.css) — the base R/cx/cy
-    // above are already right, no readout-avoidance hack needed.
-    if (cx - R < rr.right + 12) cx = Math.min(rr.right + 12 + R, W - R - 12);
+  } else if (rr && cam.zoom < 1.6) {
+    if (W < 640) {
+      if (el.roDetail.hidden) {                       // phones: globe below the readout
+        const top = rr.bottom + 8, bottom = Hh - 90;
+        const r2 = Math.min(0.42 * W, (bottom - top) / 2);
+        if (r2 > 60) { R = r2 * cam.zoom; cy = top + r2; }
+      }
+      // Detail open: there isn't room below a full-length readout on a
+      // phone, so don't fight it for space — leave the globe at its
+      // default centred size and let the (translucent, scrim-backed)
+      // panel sit over it, the same way #about and #locate already do.
+    } else if (cx - R < rr.right + 12) {
+      cx = Math.min(rr.right + 12 + R, W - R - 12);
+    }
   }
 }
 function paint() {
@@ -735,14 +740,7 @@ function paint() {
 /* --- CANVAS SIZING ----------------------------------------------------- */
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  // the canvas's own rendered box, not the window: on desktop (and the
-  // locate/"just look" screen) #globe-wrap is fixed+inset:0 so this is
-  // pixel-identical to window.innerWidth/innerHeight, but once a phone
-  // switches to the real-scroll layout (phase 10) the canvas is a
-  // normal-flow square smaller than the viewport, and this is the only
-  // correct source for its size.
-  const rect = el.canvas.getBoundingClientRect();
-  W = rect.width; Hh = rect.height;
+  W = window.innerWidth; Hh = window.innerHeight;
   if (!W || !Hh) { dirty = true; return; }
   el.canvas.width = Math.round(W * dpr); el.canvas.height = Math.round(Hh * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1535,7 +1533,6 @@ async function enter(item, how) {
   rememberPlace();
   showLocate(false);
   el.readout.hidden = false; el.controls.hidden = false;
-  resize();   // phase 10: on a phone this is the moment #globe-wrap switches from the fixed onboarding layout to the in-flow square — re-measure it
   updateReadout(true);
   flyToPlace();
   loadSeries();

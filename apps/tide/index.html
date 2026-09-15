@@ -13,12 +13,6 @@
 <link rel="stylesheet" href="tide.css">
 </head>
 <body>
-<!-- Globe wrap: phase 10 (docs/tide-v2-plan.md) hangs the globe, the moon
-     marker and the pick preview off this one positioned box, so a single
-     CSS switch (fixed full-viewport on desktop / a normal-flow square on
-     a phone once a place is set) repositions all three together without
-     touching the JS that places them — see tide.css for the mechanics. -->
-<div id="globe-wrap">
 <canvas id="globe" aria-label="The Earth seen from the moon, its oceans rising and falling with the tide" role="img"></canvas>
 
 <!-- The moon: the only icon. Drawn on the canvas; this is its hit target. -->
@@ -30,10 +24,8 @@
   <p class="pick-name" id="pick-name"></p>
   <button class="word pick-use" type="button" id="pick-use">Use this place</button>
 </div>
-</div>
 
-<!-- Readout: rows written onto the field, top-left (desktop) or the top
-     of the page (phone, phase 10). Numerals first. -->
+<!-- Readout: rows written onto the field, top-left. Numerals first. -->
 <section id="readout" class="readout" hidden>
   <div class="ro-rule" id="ro-rule"></div>
   <!-- phase 10: up to three saved places — tapping the name cycles them

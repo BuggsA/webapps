@@ -98,17 +98,9 @@ body {
 /* focus: a thin square outline — never a rounded ring */
 :focus-visible { outline: 1px solid var(--chrome); outline-offset: 3px; }
 
-/* --- the globe -------------------------------------------------------
-   #globe-wrap is the one positioned box the globe, moon marker and pick
-   preview all hang off (phase 10, docs/tide-v2-plan.md): fixed and
-   full-viewport by default, matching every screen before this phase
-   exactly (an `absolute` child of a `fixed;inset:0` box lands pixel-
-   identically to a `fixed` one — no JS positioning math changes). The
-   phone rule further down switches only this box to a normal-flow
-   square; #globe/.moon/.pick-card never change. */
-#globe-wrap { position: fixed; inset: 0; }
+/* --- the globe ----------------------------------------------------- */
 #globe {
-  position: absolute; inset: 0;
+  position: fixed; inset: 0;
   width: 100%; height: 100%;
   display: block;
   touch-action: none;
@@ -122,7 +114,7 @@ body {
    tide-visibility-research.md §3). left/top/transform below are only the
    pre-first-paint fallback, overridden the instant paint() runs. */
 .moon {
-  position: absolute;
+  position: fixed;
   z-index: 12;
   width: 44px; height: 44px;
   left: 50%; top: calc(var(--ceil) - 6px);
@@ -142,7 +134,7 @@ body {
    not decorative: see the Detail-button bug, PROJECT_STATE.md 2026-09-17,
    for what happens when a button inherits none from its container. */
 .pick-card {
-  position: absolute;
+  position: fixed;
   z-index: 13;
   width: min(15rem, calc(100vw - 2 * var(--edge)));
   display: grid;
@@ -427,34 +419,6 @@ body {
 .about p { font-size: 0.95rem; color: var(--chrome); }
 .about .about-src { font-size: 0.8rem; color: var(--chrome-soft); }
 .about .word { justify-self: start; }
-
-/* --- phone, once a place is set: a real scrolling column -------------
-   Phase 10 (docs/tide-v2-plan.md): readout first, the globe as a
-   full-width square you scroll to, controls still docked to the
-   viewport bottom. Deliberately NOT the onboarding/"Just look" screen —
-   :has(#readout:not([hidden])) is true at exactly the moments
-   state.located is true in tide.js (readout is only ever un-hidden
-   inside enter()), so the locate prompt keeps today's fixed-overlay,
-   shrink-the-globe-to-fit layout untouched, and only the located view
-   restructures. No JS class-toggling needed: this reacts to the same
-   `hidden` attribute the app already flips. */
-@media (max-width: 40rem) {
-  body:has(#readout:not([hidden])) {
-    overflow-x: hidden; overflow-y: auto;
-    display: flex; flex-direction: column;
-  }
-  body:has(#readout:not([hidden])) #globe-wrap {
-    position: relative; inset: auto;
-    order: 2; flex: none;
-    width: 100%; aspect-ratio: 1 / 1;
-  }
-  body:has(#readout:not([hidden])) #readout {
-    position: static;
-    order: 1;
-    width: 100%;
-    padding: var(--ceil) var(--edge) var(--sp-4);
-  }
-}
 
 /* --- responsive ------------------------------------------------------ */
 @media (max-width: 30rem) {
