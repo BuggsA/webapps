@@ -690,3 +690,22 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   10) were untouched -- the phone complaint had nothing to do with
   either -- and stay in place.
 - **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+
+## 2026-09-14 -- tide: a "Hide" control for the text, not deployed
+
+- User request after seeing the reverted layout live: an option to
+  make the readout text disappear completely and just look at the
+  globe. Added a "Hide"/"Show" word control (commit 11a6532) to the
+  always-visible controls bar, toggling a `.force-hidden` CSS class
+  (not the `hidden` attribute -- showAbout() already borrows that for
+  "one column of words at a time" and restores it on close, which
+  would silently undo this; verified opening/closing About while text
+  is hidden leaves it hidden). paintScrim() also checks the new flag,
+  otherwise a pointless dark patch would sit over the globe where the
+  text used to be. Not persisted -- resets to visible on next visit.
+- Verified real hit-testing + targeted dispatch (the click tool itself
+  is unreliable this session -- see testing-tool-click-coordinate-bug)
+  at both mobile and desktop widths, in a fresh tab: the globe now
+  fills the entire screen with zero text when hidden, and toggles back
+  correctly.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
