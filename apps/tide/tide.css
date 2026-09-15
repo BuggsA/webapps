@@ -188,6 +188,13 @@ body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.42);
 }
 .readout[hidden] { display: none; }
+/* "Hide" (controls bar): a plain viewing preference, not a panel to
+   dismiss, so it's its own class rather than reusing [hidden] — About
+   already borrows the hidden attribute to share "one column of words
+   at a time" (showAbout()) and un-hides it again on close, which would
+   otherwise silently override this. !important guarantees this wins
+   regardless of what else toggles the hidden attribute underneath it. */
+.readout.force-hidden { display: none !important; }
 .ro-rule {
   height: 1px;
   background: var(--chrome-line);

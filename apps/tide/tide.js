@@ -117,7 +117,7 @@ const el = {
   locate: $('locate'), input: $('place-input'), results: $('place-results'), msg: $('locate-msg'),
   useDevice: $('use-device'), justLook: $('just-look'),
   controls: $('controls'), btnNow: $('btn-now'), btnPlay: $('btn-play'), scrub: $('scrub'),
-  clock: $('clock'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
+  clock: $('clock'), btnHide: $('btn-hide'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
   about: $('about'), aboutClose: $('about-close'), curve: $('curve'),
   roDetail: $('ro-detail'), btnDetail: $('btn-detail'),
   roWeek: $('ro-week'), btnWeek: $('btn-week'), roExtreme: $('ro-extreme'),
@@ -681,7 +681,7 @@ function paintGrain() {
 }
 // a soft darkening under the readout so type keeps 4.5:1 over high water
 function paintScrim() {
-  if (el.readout.hidden) return;
+  if (el.readout.hidden || textHidden) return;
   const rect = el.readout.getBoundingClientRect();
   const g = ctx.createRadialGradient(rect.left + rect.width * 0.35, rect.top + rect.height * 0.4, 10,
                                      rect.left + rect.width * 0.35, rect.top + rect.height * 0.4, Math.max(rect.width, rect.height) * 1.1);
@@ -1686,6 +1686,21 @@ function showAbout(show) {
   dirty = true;
 }
 el.btnAbout.addEventListener('click', () => showAbout(el.about.hidden));
+// "an option for the text to completely go away" — just the field, on
+// request. Uses its own class (not the `hidden` attribute showAbout()
+// already borrows for "one column of words at a time") so opening and
+// closing About can't silently undo it; see the CSS comment. Not
+// persisted — a momentary "let me just look at this" toggle, not a
+// setting, so a fresh visit always starts with the readout showing.
+let textHidden = false;
+function setTextHidden(hide) {
+  textHidden = hide;
+  el.readout.classList.toggle('force-hidden', hide);
+  el.btnHide.textContent = hide ? 'Show' : 'Hide';
+  el.btnHide.setAttribute('aria-pressed', hide ? 'true' : 'false');
+  dirty = true;
+}
+el.btnHide.addEventListener('click', () => { setTextHidden(!textHidden); track('hide-text', { on: textHidden ? 1 : 0 }); });
 el.aboutClose.addEventListener('click', () => showAbout(false));
 window.addEventListener('keydown', e => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
