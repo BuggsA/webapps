@@ -338,7 +338,16 @@ word control "This week" that expands them.
   fetch, not a separate backfillable step like `mllwOffset`. Fixed with
   the model cache key's own `:v2` bump.
 
-### Phase 10 — Layout for use, and first paint — DONE 2026-09-14
+### Phase 10 — Layout for use, and first paint — PARTIALLY DONE 2026-09-14
+
+**The phone real-scroll layout below was built, deployed, tested on a
+real phone, and reverted the same day** — see the note right after its
+"Built as" section. First paint and saved places shipped and stayed;
+the phone layout change did not. Read the revert note before touching
+phone layout again — the failure mode (losing the transparent
+overlay-on-the-field look, a visibly smaller globe) is exactly what
+any future attempt needs to design around, not just what happened to
+go wrong this time.
 
 - **Phone (≤ 640 px):** the page becomes a column: readout (place, state,
   curve, next turns, week) first, then the globe as a full-width square
@@ -371,6 +380,43 @@ word control "This week" that expands them.
     bounding box) is dead code once real scroll exists and was removed;
     the onboarding-only shrink branch is now explicitly gated on
     `!state.located`.
+  - **REVERTED 2026-09-14, same day, after real-phone testing.** User
+    feedback, verbatim: "It is deployed but it seems a whole lot worse
+    than before. The information part is not transparent, The viewing
+    window got smaller on the phone." Both are real, and both trace
+    directly to this restructure, not to a bug in it:
+    - Moving the readout into normal document flow, above a *separate*
+      globe box, put it on the plain `body` background instead of over
+      the globe. The old fixed-overlay readout had no background of its
+      own either — it read as transparent specifically *because* the
+      globe was visibly right behind it (that's the art direction's
+      whole premise: "chrome is words written onto the field"). Once
+      there's a flat page background behind the text instead of the
+      globe, "transparent" chrome just looks like plain text on a plain
+      box — the mechanism that made it feel transparent was the thing
+      this change removed.
+    - Capping the globe to a viewport-width square is smaller, full
+      stop, than a globe that can use the entire screen height the old
+      fixed-overlay model gave it — most visible on a short, wide-ish
+      phone where "square" is well short of "full height."
+    - Reverted in commit `fb2359b`: `#globe-wrap` and the
+      `body:has(#readout:not([hidden]))` media query are gone;
+      `#globe`/`.moon`/`.pick-card` are `position:fixed` again;
+      `layout()`'s "phones: globe below the readout" shrink-to-fit
+      branch is restored for the unzoomed moon view; `resize()` is back
+      to `window.innerWidth/innerHeight`. First paint and saved places
+      (below) were untouched by the revert — the phone complaint had
+      nothing to do with either.
+    - **If phone layout is revisited:** any future attempt needs to
+      either keep the globe visible *behind* the readout (a real
+      overlay, not a sibling box) or find some other way to preserve
+      the "text glowing over the ocean" read, and needs the globe to
+      stay able to use the full screen, not a fraction of it. A true
+      scroll-to-see-more-of-the-globe idea might still be viable, but
+      "shrink it to a square and move it below the fold" answers a
+      *layout* problem (the readout and globe competing for one fixed
+      viewport) by breaking the thing that made the app worth looking
+      at in the first place — worth remembering before trying again.
 - **First paint.** Draw the globe with land and light immediately; load
   `tide-field.bin` after `land-110m.json` and the place series (it is the
   linger, not the answer). Pre-gzip the field: change

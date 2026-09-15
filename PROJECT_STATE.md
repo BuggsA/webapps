@@ -664,3 +664,29 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   weaker than the real clicks used in phases 6-9 but the strongest
   check available once the click tool itself was shown unreliable.
 - **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+
+## 2026-09-14 -- tide: phase 10's phone layout reverted after real-phone testing
+
+- User tested phase 10 live on their actual phone: "It is deployed but
+  it seems a whole lot worse than before. The information part is not
+  transparent, The viewing window got smaller on the phone." Both real,
+  both a direct consequence of the real-scroll restructure, not a bug
+  in it -- moving the readout into normal flow above a separate globe
+  box put it on the plain page background instead of over the globe,
+  losing the "words written onto the field" transparency the art
+  direction depends on; capping the globe to a viewport-width square
+  is smaller than a globe that could use the full screen height.
+- Reverted in commit fb2359b: #globe-wrap and the
+  body:has(#readout:not([hidden])) media query removed;
+  #globe/.moon/.pick-card back to position:fixed; layout()'s original
+  "phones: globe below the readout" shrink-to-fit branch restored;
+  resize() back to window.innerWidth/innerHeight. Verified in a fresh
+  browser tab (the reused tab was showing a stale/confined render, a
+  known test-tool artifact -- see
+  testing-tool-click-coordinate-bug in Claude's memory) that the globe
+  and transparent readout overlay are back to the pre-phase-10 look at
+  both mobile and desktop widths, console-clean.
+- First paint and up to 3 saved places (the other two pieces of phase
+  10) were untouched -- the phone complaint had nothing to do with
+  either -- and stay in place.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
