@@ -1,11 +1,16 @@
 # Tide — v2 plan: useful to the people who actually use tides (handoff)
 
-**Status 2026-09-13.** v1 is live at `https://<DISTRIBUTION_DOMAIN>/tide/`
-(commit `ed61b14` deployed; landing page re-synced). v1 is the picture —
-the moon's view of the Earth with the real tide as light on water — plus a
-minimal readout. **It is beautiful and it does not yet earn a daily visit
-from a swimmer, an angler, a dog walker or a boater.** This document is
-the plan to fix that, written to be picked up cold by a different model.
+**Status 2026-09-15: v2 complete, phases 6–12 all done** (phase 10's
+phone-layout piece was built, deployed, and reverted the same day after
+real-phone testing — see its section below before touching phone layout
+again; everything else in phases 6–12 shipped and is live). v1 was the
+picture — the moon's view of the Earth with the real tide as light on
+water — plus a minimal readout, beautiful but not yet earning a daily
+visit from a swimmer, an angler, a dog walker or a boater. This document
+was the plan to fix that; it now doubles as the build record. Read the
+per-phase "Built as" / "Verified" notes below before extending any of
+this — several deviated from the plan as written, for reasons recorded
+in place.
 
 Read in this order: `building-a-new-app.md` (house rules) →
 `tide-brief.md` → `tide-art-direction.md` (LOCKED; every visual change
@@ -552,11 +557,37 @@ go wrong this time.
     text read correctly on the model path and the source-line version
     is absent (not just blank) on the NOAA path.
 
-### Phase 12 (post-v2, optional) — Sound
+### Phase 12 (post-v2, optional) — Sound — DONE 2026-09-15
 
 One slow tone following the place's height, off by default, a word
 control "Listen". Only after everything above; the brief keeps it out of
 v2 proper.
+
+- **Built as:** a single Web Audio `OscillatorNode` (sine — the calmest
+  timbre available, nothing to parse as an alert), mapped across one
+  octave (160–320 Hz, low and warm) against the *place's own* loaded
+  height range rather than a fixed scale — a few centimetres in the
+  Mediterranean and several metres in the Bay of Fundy both use the full
+  register instead of one barely moving and the other slamming the
+  ends. "Slow" is a property of the tone itself: the pitch glides toward
+  the current height via `setTargetAtTime` (a 2.5s time constant) rather
+  than jumping, called every frame while listening. `AudioContext` is
+  created lazily on the first "Listen" click, never before — autoplay
+  policy needs a real user gesture anyway, and this keeps a silent first
+  load exactly silent. Gain fades in/out over 0.4–0.6s on toggle so
+  there's never an audible click; "Listen" ↔ "Quiet" (Play/Pause's own
+  pattern) rather than a checkbox-style label.
+- **Verified:** the frequency formula against real place data (checked
+  the arithmetic by hand against `seriesHeightRange()`/`heightAt()`
+  output, not just that a number came out); the glide itself, by
+  freezing time (`setMode('hold')` — live mode's own per-frame
+  `state.t = Date.now()` would otherwise fight a manual time jump in
+  the test) and confirming the oscillator's actual frequency closed
+  ~80% of the gap toward a new target after ~1.6 time constants,
+  matching the exponential model to the percent; start/stop toggling
+  (`AudioContext` reaches `"running"`, node references null out
+  immediately on stop, no console errors) with a real hit-test-verified
+  click at both mobile and desktop widths.
 
 ---
 

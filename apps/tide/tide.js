@@ -57,6 +57,8 @@
      CURVE               — paintCurve() (36 h hairline in the readout), nightBands(),
                            sizeCurve(), pointer-drag-to-scrub on the curve
      INPUT               — drag, wheel, pinch, keys, buttons
+     SOUND               — one slow tone following the place's height, off
+                           by default (phase 12, optional: docs/tide-v2-plan.md)
      THE LOOP / ENTRY
    ========================================================================== */
 'use strict';
@@ -76,6 +78,9 @@ const EASE_BACK  = 4000;             // ms, drag offset returns to the moon's vi
 const INLAND_KM  = 25;               // beyond this: "N km from the sea"
 const NOAA_KM    = 15;               // within this: official NOAA prediction
 const CURVE_BEFORE = 6 * 3600e3, CURVE_AFTER = 30 * 3600e3;  // the readout curve's window
+const TONE_HZ_LO = 160, TONE_HZ_HI = 320;   // phase 12: one octave, low and warm — heard, not noticed
+const TONE_GAIN = 0.05;                     // quiet on purpose: ambient, never competes with anything
+const TONE_GLIDE_S = 2.5;                   // "slow tone" — the pitch drifts, it never jumps
 const LONGPRESS_MS   = 550;          // hold time to register a pick — matches Maps' own
 const LONGPRESS_SLOP = 8;            // px of drift tolerated before it's a drag, not a hold
 const SEA_L0 = 0.35, SEA_LA = 0.20;  // luminance: L = L0 + LA·tanh(|η/0.6|^0.65)
@@ -121,7 +126,7 @@ const el = {
   locate: $('locate'), input: $('place-input'), results: $('place-results'), msg: $('locate-msg'),
   useDevice: $('use-device'), justLook: $('just-look'),
   controls: $('controls'), btnNow: $('btn-now'), btnPlay: $('btn-play'), scrub: $('scrub'),
-  clock: $('clock'), btnHide: $('btn-hide'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
+  clock: $('clock'), btnHide: $('btn-hide'), btnListen: $('btn-listen'), btnWhere: $('btn-where'), btnAbout: $('btn-about'),
   about: $('about'), aboutClose: $('about-close'), curve: $('curve'),
   roDetail: $('ro-detail'), btnDetail: $('btn-detail'),
   roWeek: $('ro-week'), btnWeek: $('btn-week'), roExtreme: $('ro-extreme'),
@@ -1758,6 +1763,69 @@ el.canvas.addEventListener('touchend', e => { for (const t of e.changedTouches) 
 el.canvas.addEventListener('dblclick', e => { zoomBy(view.mode === 'place' ? 1.8 : ZOOM_PLACE, e.clientX, e.clientY); });
 
 el.moon.addEventListener('click', backToMoon);
+/* --- SOUND (phase 12, optional — docs/tide-v2-plan.md) -----------------
+   One slow tone that follows the place's own height, off by default. A
+   plain sine (the calmest timbre there is — nothing to parse, nothing
+   that reads as an alert) glides toward the current height's pitch
+   rather than jumping to it, so "slow" is a property of the sound
+   itself, not just how often it's asked to move. Mapped against the
+   PLACE'S OWN loaded range, not a fixed scale, so a few centimetres in
+   the Mediterranean and several metres in the Bay of Fundy both use the
+   full register instead of one barely moving and the other slamming
+   the ends. Lazy AudioContext: created on first "Listen" click, never
+   before, since autoplay policy requires a real user gesture anyway. */
+let audioCtx = null, toneOsc = null, toneGain = null, listening = false;
+function seriesHeightRange() {
+  const s = state.series;
+  if (!s || !s.turns || !s.turns.length) return [-1, 1];
+  let lo = Infinity, hi = -Infinity;
+  for (const x of s.turns) { if (x.v < lo) lo = x.v; if (x.v > hi) hi = x.v; }
+  if (hi - lo < 0.1) { const mid = (hi + lo) / 2; lo = mid - 0.5; hi = mid + 0.5; }
+  return [lo, hi];
+}
+function toneFrequency() {
+  const h = heightAt(state.t);
+  if (h == null) return (TONE_HZ_LO + TONE_HZ_HI) / 2;
+  const [lo, hi] = seriesHeightRange();
+  const u = clamp((h - lo) / Math.max(0.01, hi - lo), 0, 1);
+  return TONE_HZ_LO + u * (TONE_HZ_HI - TONE_HZ_LO);
+}
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  return audioCtx;
+}
+function startTone() {
+  const ctx = ensureAudio();
+  toneOsc = ctx.createOscillator(); toneGain = ctx.createGain();
+  toneOsc.type = 'sine';
+  toneOsc.frequency.value = toneFrequency();
+  toneGain.gain.value = 0;
+  toneOsc.connect(toneGain); toneGain.connect(ctx.destination);
+  toneOsc.start();
+  toneGain.gain.linearRampToValueAtTime(TONE_GAIN, ctx.currentTime + 0.6);   // fade in — no click
+}
+function stopTone() {
+  if (!toneOsc || !audioCtx) return;
+  const ctx = audioCtx, osc = toneOsc, gain = toneGain;
+  toneOsc = null; toneGain = null;
+  gain.gain.cancelScheduledValues(ctx.currentTime);
+  gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);              // fade out — no click
+  setTimeout(() => { try { osc.stop(); osc.disconnect(); gain.disconnect(); } catch (_) {} }, 500);
+}
+function updateTone() {
+  if (!listening || !toneOsc) return;
+  toneOsc.frequency.setTargetAtTime(toneFrequency(), audioCtx.currentTime, TONE_GLIDE_S);
+}
+function setListening(on) {
+  listening = on;
+  if (on) startTone(); else stopTone();
+  el.btnListen.textContent = on ? 'Quiet' : 'Listen';
+  el.btnListen.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+el.btnListen.addEventListener('click', () => { setListening(!listening); track('listen', { on: listening ? 1 : 0 }); });
+
 el.btnNow.addEventListener('click', () => { setMode('live'); state.now0 = Date.now(); state.t = Date.now(); updateClock(); updateReadout(true); track('now'); });
 el.btnPlay.addEventListener('click', () => { setMode(state.mode === 'play' ? 'hold' : 'play'); track('play', { on: state.mode === 'play' ? 1 : 0 }); });
 el.scrub.addEventListener('input', () => {
@@ -1826,6 +1894,7 @@ function frame(now) {
   lastFrame = now;
   updateClock();
   updateReadout(false);
+  updateTone();
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { dirty = true; prevT = performance.now(); } });
 

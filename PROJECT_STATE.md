@@ -742,3 +742,31 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   and the new cmp field independently, so a series cached before this
   phase self-heals on next load with no cache-key version bump needed.
 - **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+
+## 2026-09-15 -- tide: phase 12 (optional), sound -- v2 plan complete
+
+- Built docs/tide-v2-plan.md phase 12, the last item on the roadmap: a
+  single Web Audio sine oscillator, one octave (160-320Hz), mapped
+  against the PLACE'S OWN loaded height range (not a fixed scale) so a
+  few cm in the Mediterranean and several metres in the Bay of Fundy
+  both use the full register. Pitch glides toward the current height
+  via setTargetAtTime (2.5s time constant) every frame rather than
+  jumping -- "slow" is a property of the tone itself. AudioContext
+  created lazily on first "Listen" click (autoplay policy needs a real
+  gesture anyway); gain fades in/out over 0.4-0.6s, no click. "Listen"
+  <-> "Quiet" word control in the controls bar, off by default,
+  untouched by anything else on the page.
+- Verified the frequency formula by hand against real place data; the
+  glide itself by freezing time (setMode('hold') -- live mode's own
+  state.t=Date.now() every frame would otherwise fight a manual time
+  jump in the test) and confirming ~80% of the gap closed after ~1.6
+  time constants, matching the exponential model to the percent; real
+  hit-test-verified clicks starting/stopping the tone at both mobile
+  and desktop widths, AudioContext reaching "running", no console
+  errors.
+- **This closes out docs/tide-v2-plan.md.** Every phase (6-12) is now
+  either live or was built-and-deliberately-reverted with the reasons
+  recorded (phase 10's phone layout). Updated the plan doc's top status
+  line to reflect this and point at the per-phase notes for the record
+  of what shipped, what didn't, and why.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
