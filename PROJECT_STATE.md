@@ -712,3 +712,33 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   correctly.
 - Deployed by the user; confirmed live with a real hit-test + targeted
   click against production (readout correctly goes to `display:none`).
+
+## 2026-09-14 -- tide: phase 11, trust and coverage, not deployed
+
+- Built docs/tide-v2-plan.md phase 11: official tide-table links for 15
+  more countries (AU/CA/NZ/IE/FR/ES/PT/DE/NL/DK/NO/JP/ZA/IN/BR) beyond
+  the existing US/GB, every URL web-searched and checked live before
+  going in (a wrong safety-hand-off link is worse than the generic
+  fallback it replaces). IN uses INCOIS rather than the plan's literal
+  "Survey of India" -- that agency doesn't run a public tide service,
+  INCOIS does. Device-location entries (no geocoded country) infer US
+  when a NOAA station is nearby, else fall back to the generic phrase.
+- Model-vs-NOAA honesty line: when the model path has a real NOAA
+  station 15-40km away, fetches just its hi/lo times (cached a day at
+  a time) and shows "NOAA at <station>, X km: high/low <time>, ours
+  <time>" -- but only when the model's own next turn has a same-type
+  match within 6h of the station's, so a genuine mismatch (tested for
+  real near Port Fourchon, LA -- Louisiana's complex tides put the
+  model's next low within 22 min of the station's next HIGH, a
+  half-cycle mismatch) correctly shows nothing rather than a
+  misleading pairing. Verified the matching arithmetic itself with
+  synthetic same-type and >6h cases.
+- Error note ("open-coast estimate; harbours/estuaries can differ by
+  20-40cm and 20-30min") tightened into the About panel (which already
+  had a looser version from v1) and added fresh to the always-visible
+  source line for the model path only -- :empty-collapses to nothing
+  on the NOAA path.
+- attachMLLW() renamed attachExtras(), now backfills both mllwOffset
+  and the new cmp field independently, so a series cached before this
+  phase self-heals on next load with no cache-key version bump needed.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.

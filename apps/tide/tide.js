@@ -41,7 +41,10 @@
                            nearestCoast() snap, a tethered preview card (Tonight's
                            .card shape) with an explicit "Use this place" commit —
                            docs/tide-tap-select-research.md, built 2026-09-17
-     READOUT             — updateReadout(): state line, rows, range, moon, sun
+     READOUT             — updateReadout(): state line, rows, range, moon, sun;
+                           OFFICIAL_TIDES (phase 11: docs/tide-v2-plan.md) —
+                           per-country hand-off links, the model-vs-NOAA
+                           comparison line, the open-coast error note
      WEEK                — the next 7 days as rows + the 14-day lowest/highest
                            line (docs/tide-v2-plan.md phase 7), inside Detail
      DATUM + UNITS       — heightNum()'s datum shift, tideRate() (phase 8:
@@ -113,7 +116,8 @@ const $ = id => document.getElementById(id);
 const el = {
   canvas: $('globe'), moon: $('moon'), readout: $('readout'), rule: $('ro-rule'),
   roPlace: $('ro-place'), roState: $('ro-state'), roTurns: $('ro-turns'), roRange: $('ro-range'),
-  roMoon: $('ro-moon'), roSun: $('ro-sun'), roSrc: $('ro-src'), roHand: $('ro-handoff'),
+  roMoon: $('ro-moon'), roSun: $('ro-sun'), roSrc: $('ro-src'), roError: $('ro-error'),
+  roCompare: $('ro-compare'), roHand: $('ro-handoff'),
   locate: $('locate'), input: $('place-input'), results: $('place-results'), msg: $('locate-msg'),
   useDevice: $('use-device'), justLook: $('just-look'),
   controls: $('controls'), btnNow: $('btn-now'), btnPlay: $('btn-play'), scrub: $('scrub'),
@@ -813,11 +817,11 @@ function nearestCoast(lat, lon) {
   }
   return { km: Math.sqrt(best) * 111.2, lat: bl, lon: bo };
 }
-function nearestStation(lat, lon) {
+function nearestStation(lat, lon, maxKm) {
   if (!stations || !stations.length) return null;
   let best = null, bd = Infinity;
   for (const s of stations) { const d = kmBetween(lat, lon, s[2], s[3]); if (d < bd) { bd = d; best = s; } }
-  return best && bd <= NOAA_KM ? { id: best[0], name: best[1], lat: best[2], lon: best[3], km: bd } : null;
+  return best && bd <= (maxKm ?? NOAA_KM) ? { id: best[0], name: best[1], lat: best[2], lon: best[3], km: bd } : null;
 }
 function cacheGet(key, ttl) {
   try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.at < ttl) return c.v; if (c) return { stale: c.v }; } catch (_) {}
@@ -863,14 +867,65 @@ async function estimateMLLW(lat, lon) {
     return cached ? cached.stale.v : null;
   }
 }
-function attachMLLW(series, lat, lon, key) {
-  if (series.src !== 'model' || series.mllwOffset != null) return;
-  estimateMLLW(lat, lon).then(v => {
-    if (v == null || state.series !== series) return;   // superseded by a newer place
-    series.mllwOffset = v; cacheSet(key, series);
-    syncUnitControls();
-    if (state.datum === 'mllw') updateReadout(true);
-  });
+// phase 11 "model vs official": when the model path has a real NOAA
+// station within reach (15-40 km — closer and loadSeries() would have
+// used it directly) fetch just that station's turns, cached a day at a
+// time, so the source line can show how far off the model's own next
+// turn actually lands compared to the nearest official prediction.
+async function loadModelComparison(lat, lon) {
+  const st = nearestStation(lat, lon, 40);
+  if (!st || st.km <= NOAA_KM) return null;
+  const key = 'tide.cmp:' + st.id, name = titleCase(st.name), km = st.km;
+  const cached = cacheGet(key, 24 * 3600e3);
+  if (cached && !cached.stale) return { turns: cached.turns, name, km };
+  try {
+    const url = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&station=' + st.id
+      + '&begin_date=' + ymd(Date.now() - 1 * DAY) + '&end_date=' + ymd(Date.now() + 2 * DAY)
+      + '&datum=MLLW&units=metric&time_zone=gmt&interval=hilo&format=json';
+    const j = await (await fetch(url)).json();
+    if (!j.predictions || !j.predictions.length) throw new Error('cmp');
+    const turns = j.predictions.map(p => ({ t: Date.parse(p.t.replace(' ', 'T') + 'Z'), type: p.type }));
+    cacheSet(key, { turns });
+    return { turns, name, km };
+  } catch (_) {
+    return cached ? { turns: cached.stale.turns, name, km } : null;
+  }
+}
+// the comparison line itself: the model's own next turn vs. the nearest
+// same-type turn from the comparison station within a 6h window (so a
+// cache that's gone briefly stale can't pair up two unrelated cycles).
+function modelComparisonLine(t) {
+  const s = state.series;
+  if (!s || s.src !== 'model' || !s.cmp || !s.cmp.turns.length) return '';
+  const mine = s.turns.find(x => x.t > t);
+  if (!mine) return '';
+  let theirs = null, bestDiff = Infinity;
+  for (const x of s.cmp.turns) {
+    if (x.type !== mine.type) continue;
+    const diff = Math.abs(x.t - mine.t);
+    if (diff < bestDiff) { bestDiff = diff; theirs = x; }
+  }
+  if (!theirs || bestDiff > 6 * 3600e3) return '';
+  const tf = fmt('time', state.tz), word = mine.type === 'H' ? 'high' : 'low';
+  return `NOAA at ${s.cmp.name}, ${Math.round(s.cmp.km)} km: ${word} ${tf.format(new Date(theirs.t))}, ours ${tf.format(new Date(mine.t))}`;
+}
+function attachExtras(series, lat, lon, key) {
+  if (series.src !== 'model') return;
+  if (series.mllwOffset == null) {
+    estimateMLLW(lat, lon).then(v => {
+      if (v == null || state.series !== series) return;   // superseded by a newer place
+      series.mllwOffset = v; cacheSet(key, series);
+      syncUnitControls();
+      if (state.datum === 'mllw') updateReadout(true);
+    });
+  }
+  if (!series.cmp) {
+    loadModelComparison(lat, lon).then(cmp => {
+      if (!cmp || state.series !== series) return;
+      series.cmp = cmp; cacheSet(key, series);
+      updateReadout(true);
+    });
+  }
 }
 async function loadSeries() {
   const lat = state.coastLat, lon = state.coastLon;
@@ -884,7 +939,7 @@ async function loadSeries() {
   // mllwOffset gets one, since it isn't a separate fetch to retry.
   const key = st ? 'tide.noaa:' + st.id + ':v2' : 'tide.om:' + lat.toFixed(2) + ',' + lon.toFixed(2) + ':v2';
   const cached = cacheGet(key, st ? 24 * 3600e3 : 6 * 3600e3);
-  if (cached && !cached.stale) { state.series = cached; updateReadout(true); attachMLLW(cached, lat, lon, key); return; }
+  if (cached && !cached.stale) { state.series = cached; updateReadout(true); attachExtras(cached, lat, lon, key); return; }
   try {
     let series;
     if (st) {
@@ -924,7 +979,7 @@ async function loadSeries() {
       series = { src: 'model', name: '', turns, pts: { t0, step, v: Array.from(vals) }, seaTemp };
     }
     state.series = series; cacheSet(key, series);
-    attachMLLW(series, lat, lon, key);
+    attachExtras(series, lat, lon, key);
     track('series', { src: series.src, ok: 1 });
   } catch (_) {
     state.series = cached ? cached.stale : null;
@@ -1162,6 +1217,34 @@ el.curve.addEventListener('pointerup', endCurveDrag);
 el.curve.addEventListener('pointercancel', endCurveDrag);
 
 /* --- READOUT ----------------------------------------------------------- */
+// phase 11: official tide tables by country (docs/tide-v2-plan.md) — every
+// URL below was checked live before it went in, not guessed. IN uses
+// INCOIS (the body that actually runs a public tide-prediction service)
+// rather than the plan's literal "Survey of India" suggestion, which
+// doesn't operate one; the goal ("a real link, not a name") wins.
+const OFFICIAL_TIDES = {
+  US: ['NOAA Tides & Currents', 'https://tidesandcurrents.noaa.gov/'],
+  GB: ['UKHO EasyTide', 'https://easytide.admiralty.co.uk/'],
+  AU: ['Bureau of Meteorology', 'https://www.bom.gov.au/australia/tides/'],
+  CA: ['Canadian Hydrographic Service', 'https://www.tides.gc.ca/'],
+  NZ: ['LINZ tide predictions', 'https://www.linz.govt.nz/products-services/tides-and-tidal-streams/tide-predictions'],
+  IE: ['Irish Tides (Marine Institute)', 'https://www.irishtides.ie/'],
+  FR: ['SHOM Marées', 'https://maree.shom.fr/'],
+  ES: ['IHM Previsión de Mareas', 'https://armada.defensa.gob.es/ihm/Aplicaciones/Mareas/index-mareas.html'],
+  PT: ['Instituto Hidrográfico', 'https://www.hidrografico.pt/paginas-genericas/dt/doc/previsao-oceanografica/'],
+  DE: ['BSH Gezeiten', 'https://gezeiten.bsh.de/en'],
+  NL: ['Rijkswaterstaat Waterinfo', 'https://waterinfo.rws.nl/'],
+  DK: ['DMI Tidal Predictions', 'https://ocean.dmi.dk/tides/tides_plots.html'],
+  NO: ['Kartverket Se havnivå', 'https://www.kartverket.no/en/at-sea/se-havniva'],
+  JP: ['JMA Tide Tables', 'https://www.data.jma.go.jp/kaiyou/db/tide/suisan/index.php'],
+  ZA: ['SA Navy Hydrographic Office', 'http://sanho.co.za/Default.htm'],
+  IN: ['INCOIS Tide Predictions', 'https://services.incois.gov.in/portal/osf/tide.jsp'],
+  BR: ['Marinha do Brasil (CHM)', 'https://www.marinha.mil.br/chm/tabuas-de-mare'],
+};
+function officialLink(cc) {
+  const o = OFFICIAL_TIDES[cc];
+  return o ? `<a href="${o[1]}" rel="noopener">${o[0]}</a>` : null;
+}
 let readoutAt = 0;
 function updateReadout(force) {
   if (!state.located) return;
@@ -1208,13 +1291,18 @@ function updateReadout(force) {
     const temp = seaTempAt(t), ft = temp == null ? null : fmtTemp(temp);
     el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}` + (ft == null ? '' : ` · Sea <span class="n">${ft.n}</span>${ft.u}`);
   } catch (_) { el.roMoon.textContent = ''; el.roSun.textContent = ''; }
-  if (s) el.roSrc.textContent = s.src === 'noaa' ? `Official NOAA prediction · ${s.name}` : 'Model estimate · Open-Meteo · heights about mean sea level';
-  else el.roSrc.textContent = '';
-  const cc = (state.country || '').toUpperCase();
-  const off = cc === 'US' ? '<a href="https://tidesandcurrents.noaa.gov/" rel="noopener">NOAA Tides &amp; Currents</a>'
-    : cc === 'GB' ? '<a href="https://easytide.admiralty.co.uk/" rel="noopener">UKHO EasyTide</a>'
-    : 'your national tide tables';
+  if (s) {
+    el.roSrc.textContent = s.src === 'noaa' ? `Official NOAA prediction · ${s.name}` : 'Model estimate · Open-Meteo · heights about mean sea level';
+    // phase 11 error note: the model path only, right on the source line
+    // (not just tucked away in About) — the honesty about accuracy
+    // belongs next to the numbers it qualifies.
+    el.roError.textContent = s.src === 'model' ? 'Open-coast estimate; harbours and estuaries can differ by 20–40 cm and 20–30 min.' : '';
+  } else { el.roSrc.textContent = ''; el.roError.textContent = ''; }
+  let cc = (state.country || '').toUpperCase();
+  if (!cc && s && s.src === 'noaa') cc = 'US';   // device location, no geocoded country — a nearby NOAA station is a fair stand-in
+  const off = officialLink(cc) || 'your national tide tables';
   el.roHand.innerHTML = `Not for navigation or safety. Official: ${off}.`;
+  el.roCompare.textContent = modelComparisonLine(t);
   renderWeek();
   renderDaylight();
   syncUnitControls();

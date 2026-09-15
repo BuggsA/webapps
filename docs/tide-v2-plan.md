@@ -486,7 +486,7 @@ go wrong this time.
     short of this session's own established bar, but the strongest check
     available once the click tool itself was shown to be unreliable.
 
-### Phase 11 — Trust and coverage
+### Phase 11 — Trust and coverage — DONE 2026-09-14
 
 - **Official links by country.** Extend the hand-off table beyond US/GB:
   AU (BOM), CA (CHS), NZ (LINZ), IE (Marine Institute), FR (SHOM), ES
@@ -494,14 +494,63 @@ go wrong this time.
   (JMA), ZA (SAN Hydrographic), IN (Survey of India), BR (DHN). Country
   comes from the geocoder (`country_code`); device location has none →
   pick by nearest NOAA station (US) else generic.
+  - **Built as:** `OFFICIAL_TIDES`, a plain country-code → [name, url]
+    table, each entry web-searched and checked live before it went in —
+    not guessed, since a wrong safety-hand-off link is worse than the
+    generic fallback text it would replace. One deliberate deviation:
+    **IN uses INCOIS**, not the plan's literal "Survey of India" —
+    Survey of India is the national mapping agency and doesn't run a
+    public tide-prediction service; INCOIS (Indian National Centre for
+    Ocean Information Services) does. The acceptance test is "a real
+    link exists," not "match this exact agency name."
+  - `nearestStation()` gained an optional `maxKm` param (default
+    unchanged, `NOAA_KM`) so it can be reused for the 40 km comparison
+    search below without a second near-duplicate function.
 - **Model vs official.** When the place uses the model and a NOAA station
   is 15–40 km away, add a line "NOAA at <station>, 22 km: high 11:12,
   ours 11:00" once per day — makes the model's honesty visible.
+  - **Built as:** `loadModelComparison()` fetches just that station's
+    hi/lo turns (time + type only, no height — the line only ever
+    compares times), cached a day at a time like the rest of the series
+    data. `modelComparisonLine()` pairs the model's own next turn with
+    the *closest same-type* turn from the comparison station, but only
+    within a 6h window — reusing the pairing across a bigger gap would
+    risk comparing unrelated cycles and showing a nonsense line, which
+    is worse than showing nothing. Folded into the existing
+    `attachMLLW()` → renamed `attachExtras()`, which now backfills both
+    `mllwOffset` and `cmp` on a model-path series, self-healing a
+    previously-cached series that predates either field — no new cache-
+    key version bump needed, since both backfills are already
+    conditional on the field being absent.
+  - **Verified against a real, extreme case, not just a clean one:** a
+    point ~23 km from the Port Fourchon, LA station produced *no*
+    comparison line — checked directly, the model's next low landed
+    within 22 minutes of the station's next *high*, a half-cycle
+    mismatch typical of Louisiana's complex, sometimes-diurnal coastal
+    tides. The 6h window correctly refused to pair them. Confirmed the
+    matching logic itself is sound with a synthetic same-type-nearby
+    case (produced a correct line) and a synthetic >6h case (correctly
+    empty) — real coastal geometry, not the code, was why the first
+    real-world test came up blank.
 - **Error note.** One sentence in the About panel and on the source line
   for the model path: "Open-coast estimate; harbours and estuaries can
   differ by 20–40 cm and 20–30 min."
+  - **Built as:** the About panel already had an equivalent sentence
+    ("tens of centimetres and tens of minutes") from v1 — tightened to
+    the plan's precise figures rather than left as a near-duplicate. The
+    source-line copy is new: a separate always-visible `.ro-src` line
+    (`#ro-error`), shown only on the model path, `:empty`-collapsed to
+    nothing on the NOAA path so it costs official-station users zero
+    space.
 - Acceptance: no coast in the world sees "your national tide tables"
   without a link if a public one exists.
+  - **Verified:** all 15 new country links resolve to the correct
+    `href` (checked via `enter()` with each country code, not just that
+    text renders); the device-location→NOAA-station→US inference and
+    the plain generic-fallback path (tested with Italy, not on the
+    list) both behave correctly; the About panel and source-line error
+    text read correctly on the model path and the source-line version
+    is absent (not just blank) on the NOAA path.
 
 ### Phase 12 (post-v2, optional) — Sound
 
