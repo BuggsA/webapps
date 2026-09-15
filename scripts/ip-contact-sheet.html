@@ -1,0 +1,267 @@
+<!doctype html>
+<!--
+  ip — phase 1, THE GATE. A harness, not a page.
+
+  docs/ip-build-plan.md phase 1: the generator must never be ugly. Feed it a
+  few thousand real-shaped inputs, render them as a contact sheet, and look at
+  the WORST cell, not the best one. The sparsest structure has to be as good
+  as the richest, or the direction does not survive.
+
+  Dev-only. Lives in scripts/, NOT in apps/ip/, so it is never synced to
+  production. Serve the repo root and open /scripts/ip-contact-sheet.html.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ip — contact sheet (the gate)</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; background: #0d0a06; color: #cfc6b4;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  header {
+    position: sticky; top: 0; z-index: 2; background: #0d0a06;
+    border-bottom: 1px solid #241c12; padding: 10px 14px;
+    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+  }
+  button, select {
+    background: #1a140d; color: #e6dac4; border: 1px solid #3a2e1e;
+    padding: 5px 10px; font: inherit; cursor: pointer;
+  }
+  button:hover { border-color: #6b563a; }
+  .note { color: #8a7f6c; }
+  #sheet { display: block; width: 100%; height: auto; }
+  #detail {
+    position: fixed; inset: 0; background: #0d0a06; display: none; z-index: 3;
+  }
+  #detail.on { display: block; }
+  #detailCanvas { display: block; width: 100%; height: 100%; }
+  #detailInfo {
+    position: fixed; left: 14px; bottom: 14px; color: #cfc6b4;
+    background: rgba(13,10,6,.8); padding: 8px 10px; white-space: pre;
+  }
+</style>
+</head>
+<body>
+<header>
+  <strong>ip — the gate</strong>
+  <select id="mode">
+    <option value="extremes">extremes sweep (the cases that break it)</option>
+    <option value="random">random sample</option>
+    <option value="sparse">sparsest only (the floor)</option>
+    <option value="onenet">one network, many addresses (ancestry)</option>
+  </select>
+  <button id="prev">&larr; prev</button>
+  <button id="next">next &rarr;</button>
+  <button id="still">motion: on</button>
+  <span class="note" id="status"></span>
+  <span class="note">click a cell to inspect</span>
+</header>
+
+<canvas id="sheet"></canvas>
+
+<div id="detail">
+  <canvas id="detailCanvas"></canvas>
+  <div id="detailInfo"></div>
+</div>
+
+<script src="../apps/ip/lib/dyes.js"></script>
+<script src="../apps/ip/lib/form.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var COLS = 8, ROWS = 5, CELL = 230;
+  var page = 0, mode = 'extremes', reduced = false, corpus = [];
+
+  var sheet = document.getElementById('sheet');
+  var sctx = sheet.getContext('2d');
+  var detail = document.getElementById('detail');
+  var dcanvas = document.getElementById('detailCanvas');
+  var dctx = dcanvas.getContext('2d');
+  var detailFacts = null;
+
+  /* ---- corpus --------------------------------------------------------- */
+
+  function rnd(seed) {
+    var s = seed >>> 0 || 7;
+    return function () {
+      s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0;
+      return s / 4294967296;
+    };
+  }
+
+  function v4(r) {
+    return [1 + Math.floor(r() * 222), Math.floor(r() * 256),
+            Math.floor(r() * 256), Math.floor(r() * 256)].join('.');
+  }
+  function v6(r) {
+    var p = [];
+    for (var i = 0; i < 8; i++) p.push(Math.floor(r() * 65536).toString(16));
+    return p.join(':');
+  }
+
+  // Random sample across the whole input space.
+  function randomCorpus(seed, n) {
+    var r = rnd(seed), out = [];
+    for (var i = 0; i < n; i++) {
+      var six = r() < 0.18;
+      out.push({
+        addr: six ? v6(r) : v4(r),
+        version: six ? 6 : 4,
+        blockLen: six ? 12 : 8,
+        prefixLen: six ? 19 + Math.floor(r() * 30) : 9 + Math.floor(r() * 21),
+        asn: 1 + Math.floor(r() * 400000),
+        rttMs: Math.exp(Math.log(2) + r() * (Math.log(420) - Math.log(2))),
+        jitterMs: r() * r() * 34,
+        uncertainty: r()
+      });
+    }
+    return out;
+  }
+
+  // The cases most likely to be ugly. If the gate fails, it fails here.
+  function extremesCorpus(seed) {
+    var r = rnd(seed), out = [];
+    var prefixes = [9, 10, 12, 16, 20, 21, 24, 26, 29];
+    var rtts = [2, 8, 24, 90, 260, 420];
+    for (var pi = 0; pi < prefixes.length; pi++) {
+      for (var ri = 0; ri < rtts.length; ri++) {
+        out.push({
+          addr: v4(r), version: 4, blockLen: 8, prefixLen: prefixes[pi],
+          asn: 1 + Math.floor(r() * 400000), rttMs: rtts[ri],
+          jitterMs: (ri % 3) * 12, uncertainty: (pi % 5) / 4
+        });
+      }
+    }
+    // the genuinely degenerate ones
+    out.push({ addr: v4(r), version: 4, prefixLen: 24, uncertainty: 1 });          // nothing but the address
+    out.push({ addr: v4(r), version: 4, blockLen: 8, prefixLen: 8, uncertainty: 1 }); // one cage only
+    out.push({ addr: v6(r), version: 6, blockLen: 12, prefixLen: 48, asn: 13335, rttMs: 11, jitterMs: 1, uncertainty: 0 });
+    out.push({ addr: v4(r), version: 4, blockLen: 8, prefixLen: 29, asn: 3333, rttMs: 420, jitterMs: 34, uncertainty: 1 });
+    out.push({ addr: v4(r), version: 4, blockLen: 8, prefixLen: 9, asn: 7018, rttMs: 2, jitterMs: 0, uncertainty: 0 });
+    return out;
+  }
+
+  // The floor: the least we can ever know.
+  function sparseCorpus(seed, n) {
+    var r = rnd(seed), out = [];
+    for (var i = 0; i < n; i++) {
+      out.push({ addr: v4(r), version: 4, prefixLen: 8 + Math.floor(r() * 20), uncertainty: 1 });
+    }
+    return out;
+  }
+
+  // Ancestry: same ASN, same prefix, different addresses. These must read as
+  // siblings — same cord make — without being the same object.
+  function oneNetCorpus(seed, n) {
+    var r = rnd(seed), out = [];
+    var asn = 1 + Math.floor(r() * 400000);
+    var a = Math.floor(r() * 222) + 1, b = Math.floor(r() * 256);
+    for (var i = 0; i < n; i++) {
+      out.push({
+        addr: a + '.' + b + '.' + Math.floor(r() * 256) + '.' + Math.floor(r() * 256),
+        version: 4, blockLen: 8, prefixLen: 21, asn: asn,
+        rttMs: 18 + r() * 10, jitterMs: 3, uncertainty: 0.2
+      });
+    }
+    return out;
+  }
+
+  function rebuild() {
+    var seed = 1000 + page * 97;
+    var n = COLS * ROWS;
+    if (mode === 'random') corpus = randomCorpus(seed, n);
+    else if (mode === 'sparse') corpus = sparseCorpus(seed, n);
+    else if (mode === 'onenet') corpus = oneNetCorpus(seed, n);
+    else {
+      var all = extremesCorpus(1);
+      corpus = all.slice(page * n, page * n + n);
+      if (!corpus.length) { page = 0; corpus = all.slice(0, n); }
+    }
+    document.getElementById('status').textContent =
+      mode + ' · page ' + (page + 1) + ' · ' + corpus.length + ' forms · ' +
+      (COLS * ROWS) + ' per sheet';
+  }
+
+  /* ---- render --------------------------------------------------------- */
+
+  function render(tMs) {
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var w = COLS * CELL, h = ROWS * CELL;
+    if (sheet.width !== w * dpr) {
+      sheet.width = w * dpr; sheet.height = h * dpr;
+      sheet.style.maxWidth = w + 'px';
+    }
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sctx.clearRect(0, 0, w, h);
+
+    for (var i = 0; i < corpus.length; i++) {
+      var col = i % COLS, row = Math.floor(i / COLS);
+      sctx.save();
+      sctx.translate(col * CELL, row * CELL);
+      sctx.beginPath();
+      sctx.rect(0, 0, CELL, CELL);
+      sctx.clip();
+      var form = window.IPForm.build(corpus[i]);
+      window.IPForm.draw(sctx, form, {
+        w: CELL, h: CELL, tMs: tMs, reducedMotion: reduced
+      });
+      sctx.restore();
+      // hairline between cells so the eye can compare without them bleeding
+      sctx.strokeStyle = 'rgba(255,240,215,.055)';
+      sctx.lineWidth = 1;
+      sctx.strokeRect(col * CELL + .5, row * CELL + .5, CELL - 1, CELL - 1);
+    }
+
+    if (detail.classList.contains('on') && detailFacts) {
+      var dw = dcanvas.clientWidth, dh = dcanvas.clientHeight;
+      if (dcanvas.width !== dw * dpr) { dcanvas.width = dw * dpr; dcanvas.height = dh * dpr; }
+      dctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var df = window.IPForm.build(detailFacts);
+      window.IPForm.draw(dctx, df, { w: dw, h: dh, tMs: tMs, reducedMotion: reduced });
+    }
+    requestAnimationFrame(render);
+  }
+
+  /* ---- controls -------------------------------------------------------- */
+
+  sheet.addEventListener('click', function (e) {
+    var rect = sheet.getBoundingClientRect();
+    var scale = (COLS * CELL) / rect.width;
+    var x = (e.clientX - rect.left) * scale, y = (e.clientY - rect.top) * scale;
+    var i = Math.floor(y / CELL) * COLS + Math.floor(x / CELL);
+    if (i < 0 || i >= corpus.length) return;
+    detailFacts = corpus[i];
+    var f = detailFacts;
+    document.getElementById('detailInfo').textContent =
+      f.addr + '\nv' + f.version +
+      '  block /' + (f.blockLen === undefined ? '?' : f.blockLen) +
+      '  prefix /' + f.prefixLen +
+      '\nAS' + (f.asn === undefined ? '?' : f.asn) +
+      '  rtt ' + (f.rttMs === undefined ? '?' : f.rttMs.toFixed(0) + 'ms') +
+      '  jitter ' + (f.jitterMs === undefined ? '?' : f.jitterMs.toFixed(1) + 'ms') +
+      '\nuncertainty ' + f.uncertainty.toFixed(2) +
+      '\n(click to close)';
+    detail.classList.add('on');
+  });
+  detail.addEventListener('click', function () { detail.classList.remove('on'); });
+
+  document.getElementById('mode').addEventListener('change', function (e) {
+    mode = e.target.value; page = 0; rebuild();
+  });
+  document.getElementById('next').addEventListener('click', function () { page++; rebuild(); });
+  document.getElementById('prev').addEventListener('click', function () { page = Math.max(0, page - 1); rebuild(); });
+  document.getElementById('still').addEventListener('click', function (e) {
+    reduced = !reduced;
+    e.target.textContent = 'motion: ' + (reduced ? 'off (reduced-motion still)' : 'on');
+  });
+
+  rebuild();
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>

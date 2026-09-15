@@ -112,3 +112,35 @@ sparse/rich, fast/slow and v4/v6; the reduced-motion still is inspected
 beside a moving frame; the form holds a smooth rhythm on a cheap Android;
 and the plaintext path is verified with a real `curl` against production
 after the human deploys.
+
+---
+
+## Phase 1 result — 2026-09-15: the gate PASSES
+
+Built `apps/ip/lib/form.js`, `apps/ip/lib/dyes.js` and
+`scripts/ip-contact-sheet.html`. It failed twice before it passed, which is
+what the phase is for:
+
+1. **Every form was the same object at the same size.** The outermost cage
+   was always the IANA /8, so prefix length changed almost nothing.
+   Fixed by making the *announced prefix* the object you look at, sized by
+   its length, with containing blocks scaled by the log of the real size
+   ratio so they crop off-frame — you are inside them and cannot see all of
+   one — plus per-address variation in proportion.
+2. **Flat, and the knot looked like the atomic-energy logo.** Rings drawn at
+   one weight all the way round flatten a woven form; a knot drawn as a
+   scaled copy of the cage is not a knot. Fixed with near/far ring halves at
+   different weights, and a real overhand knot — one cord looped through
+   itself with a proper over-and-under, cut by a ground-coloured gap under
+   the crossing strand.
+
+Checked on the sheet afterwards:
+
+- **The floor holds.** One cage, no ASN, no latency, fully frayed: restrained
+  and good, not impoverished. This was the question the phase existed to
+  answer.
+- **Ancestry reads.** One network, forty addresses: same dye, same twist,
+  same cord make, different proportion and knot angle. Siblings, not clones.
+- **The reduced-motion still is as good as the moving frame.**
+
+Proceed to phase 2.

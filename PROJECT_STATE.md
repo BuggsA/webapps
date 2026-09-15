@@ -770,3 +770,65 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   line to reflect this and point at the per-phase notes for the record
   of what shipped, what didn't, and why.
 - **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+
+## 2026-09-15 -- ip: a fourth app, and phase 1 (the gate) passes
+
+- New app from the user's own idea document ("What's My IP") plus four
+  reference stills. Compressed into the house brief template
+  (docs/ip-brief.md); their text treated as intent, not spec.
+- Data layer VERIFIED LIVE before anything was written down
+  (docs/ip-data-research.md): RIPEstat is keyless and sends
+  Access-Control-Allow-Origin: *, and RIS Live's WebSocket returns 101
+  with a foreign Origin, so both are reachable from a static page.
+  Team Cymru's IP-to-ASN is DNS/whois only and is NOT usable from a
+  browser, which the source document had assumed; Cloudflare Radar needs
+  a token; IODA is academic-licensed. RIPEstat + RIS Live is the whole
+  data layer and both are free.
+- Architecture: Tier 1 plus ONE CloudFront Function reading
+  event.viewer.ip at viewer-request, so `curl` gets plaintext off the
+  edge and the page stays static in S3. Rejected a third-party echo
+  (sends every visitor to a company with nothing to do with the site)
+  and Tier 2 (a Lambda cold-start tail on the one thing that must never
+  feel slow). Cost: the browser needs JS for the number.
+  **This is the first app that needs a `cdk deploy` of hosting/ rather
+  than only an `s3 sync`** -- it breaks the system's standing promise
+  that adding an app never touches the stack. Flagged to the user.
+- Privacy: every RIPEstat lookup is deferred until the visitor moves past
+  the answer, so an arrive-copy-leave visit talks to nobody but us and
+  "no IP history stored" needs no footnote.
+- Art direction: five directions generated (Cordage / Suminagashi /
+  Chladni / Watermark / Daylight Register), user picked the recommended
+  **Cordage** -- Ruth Asawa's hanging looped wire, quipu, Anni Albers.
+  Containment drawn as suspension, the address as a knot, a natural-dye
+  palette selected by ASN, motion only ever driven by a measured number.
+  The user's own reference stills were explicitly treated as MOOD, not
+  direction: near-black + blue bloom + particle bokeh is the current
+  AI-render median and two apps in this series are already dark fields,
+  so bloom/bokeh/blue-black are on the banned list. LOCKED in
+  docs/ip-art-direction.md.
+- **Phase 1 (the gate) built and passed.** The user's own gating
+  assumption -- "the generator must never be ugly" -- got a harness
+  rather than a page: apps/ip/lib/{form,dyes}.js plus
+  scripts/ip-contact-sheet.html (dev-only, kept OUT of apps/ip/ so it is
+  never synced), with four corpora including a sparsest-only floor mode
+  and a one-network ancestry mode.
+- It failed twice before it passed, which is what the gate is for.
+  (1) First sheet: every form was the same object at the same size --
+  the outermost cage was always the IANA /8 so prefix length changed
+  almost nothing. Fixed by making the ANNOUNCED PREFIX the object you
+  look at, sized by its length, with containing blocks scaled by the log
+  of the real size ratio so they crop off-frame (you are inside them and
+  cannot see all of one), plus per-address aspect variation.
+  (2) Second sheet: rings drawn at one weight all the way round made the
+  form read flat, and the knot -- a scaled copy of the cage -- came out
+  looking like the atomic-energy logo. Fixed with near/far ring halves at
+  different weights, and a real overhand knot drawn as one cord looped
+  through itself with a proper over-and-under (a ground-coloured gap
+  stroked under the crossing strand).
+- Verified on the sheet: the floor (one cage, no ASN, no latency, fully
+  frayed) is restrained and good, not impoverished; ancestry reads --
+  same dye, same twist, same cord make, different proportion and knot
+  angle, so siblings without being clones; and the reduced-motion still
+  is as good as the moving frame (pulse frozen at a composed phase).
+- Next: phase 2, the answer itself (page + edge function + dev stub).
+  Nothing deployed; nothing in apps/ip/ is production yet.
