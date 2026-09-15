@@ -663,7 +663,8 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   test) + a properly-targeted synthetic event at the verified point,
   weaker than the real clicks used in phases 6-9 but the strongest
   check available once the click tool itself was shown unreliable.
-- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+- Deployed by the user alongside the phone-layout revert and the
+  Hide-text control below; confirmed live.
 
 ## 2026-09-14 -- tide: phase 10's phone layout reverted after real-phone testing
 
@@ -689,9 +690,10 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
 - First paint and up to 3 saved places (the other two pieces of phase
   10) were untouched -- the phone complaint had nothing to do with
   either -- and stay in place.
-- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+- Deployed by the user alongside the Hide-text control below;
+  confirmed live.
 
-## 2026-09-14 -- tide: a "Hide" control for the text, not deployed
+## 2026-09-14 -- tide: a "Hide" control for the text
 
 - User request after seeing the reverted layout live: an option to
   make the readout text disappear completely and just look at the
@@ -708,4 +710,5 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   at both mobile and desktop widths, in a fresh tab: the globe now
   fills the entire screen with zero text when hidden, and toggles back
   correctly.
-- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+- Deployed by the user; confirmed live with a real hit-test + targeted
+  click against production (readout correctly goes to `display:none`).
