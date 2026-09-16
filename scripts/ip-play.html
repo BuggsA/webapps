@@ -1,0 +1,556 @@
+<!doctype html>
+<!--
+  ip — phase 1 gate, v2: ONE SCREEN YOU CAN TOUCH.
+
+  docs/ip-art-direction.md (Sea Fire) · docs/ip-build-plan.md
+
+  Not the app. No address, no network, no chrome. The question this answers
+  is the only one that matters first: is it beautiful on arrival, does it
+  answer your hand in under 100ms, and do you still want to poke it a minute
+  later. Facts here are plausible fakes; the real ones arrive in phase 3.
+
+  Dev-only. Lives in scripts/, never synced to production.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ip — sea fire (the gate)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; cursor: crosshair; }
+  #hud {
+    position: fixed; left: 14px; bottom: 12px; z-index: 2;
+    font: 11px/1.7 ui-monospace, Menlo, Consolas, monospace;
+    color: rgba(190,210,240,.34); white-space: pre; pointer-events: none;
+  }
+  #ctrl {
+    position: fixed; right: 14px; bottom: 12px; z-index: 2;
+    font: 11px/1.7 ui-monospace, Menlo, Consolas, monospace;
+  }
+  #ctrl button {
+    background: rgba(12,18,32,.7); color: rgba(200,220,250,.7);
+    border: 1px solid rgba(120,160,220,.22); padding: 4px 9px;
+    font: inherit; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"></div>
+<div id="ctrl">
+  <button id="reseed">another network</button>
+  <button id="still">motion: on</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var cv = document.getElementById('c');
+  var ctx = cv.getContext('2d', { alpha: false });
+  var W = 0, H = 0, DPR = 1, unit = 0;
+  var reduced = false;
+
+  /* ---------- PALETTE ------------------------------------------------- */
+  // Deep water, cool filaments, warm points. The network owns the warm hue.
+  var WARM = [
+    [255, 196, 122], [255, 172, 96], [255, 214, 150],
+    [255, 150, 110], [250, 226, 180], [255, 184, 140]
+  ];
+  var warm = WARM[0];
+  var COOL = [168, 208, 255];
+
+  /* ---------- SPRITES -------------------------------------------------- */
+  // Light has a hot core AND a huge faint halo at once. One radial gradient
+  // reads as a pasted PNG (the lesson from until-redesign.md), so every
+  // sprite is multi-stop with a warm->cool shift from core to edge.
+  function sprite(size, r, g, b, coreAlpha) {
+    var s = document.createElement('canvas');
+    s.width = s.height = size;
+    var x = size / 2;
+    var q = s.getContext('2d');
+    var grd = q.createRadialGradient(x, x, 0, x, x, x);
+    grd.addColorStop(0.00, 'rgba(255,255,255,' + coreAlpha + ')');
+    grd.addColorStop(0.08, 'rgba(' + r + ',' + g + ',' + b + ',' + coreAlpha * 0.85 + ')');
+    grd.addColorStop(0.22, 'rgba(' + r + ',' + g + ',' + b + ',' + coreAlpha * 0.30 + ')');
+    grd.addColorStop(0.50, 'rgba(' + Math.round(r * 0.6) + ',' + Math.round(g * 0.7) + ',' + b + ',' + coreAlpha * 0.09 + ')');
+    grd.addColorStop(1.00, 'rgba(' + Math.round(r * 0.4) + ',' + Math.round(g * 0.5) + ',' + b + ',0)');
+    q.fillStyle = grd;
+    q.fillRect(0, 0, size, size);
+    return s;
+  }
+
+  var spWarm, spCool, spWide, spCore;
+  function buildSprites() {
+    spWarm = sprite(64, warm[0], warm[1], warm[2], 0.95);
+    spCool = sprite(64, COOL[0], COOL[1], COOL[2], 0.85);
+    spWide = sprite(256, 120, 170, 240, 0.30);
+    spCore = sprite(512, warm[0], warm[1], warm[2], 0.55);
+  }
+
+  function blit(sp, x, y, size, alpha) {
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(sp, x - size / 2, y - size / 2, size, size);
+  }
+
+  /* ---------- GRAIN ---------------------------------------------------- */
+  var grain = null;
+  function buildGrain() {
+    var n = 256;
+    grain = document.createElement('canvas');
+    grain.width = grain.height = n;
+    var q = grain.getContext('2d');
+    var img = q.createImageData(n, n);
+    for (var i = 0; i < img.data.length; i += 4) {
+      var up = Math.random() < 0.5;
+      var v = up ? 255 : 0;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+      img.data[i + 3] = Math.random() * (up ? 16 : 22);
+    }
+    q.putImageData(img, 0, 0);
+  }
+
+  /* ---------- THE BODY ------------------------------------------------- */
+  // Anatomy from the facts. In the real app these come from the network;
+  // here they are plausible fakes so the LOOK can be judged.
+  var facts, fil = [], petals = [], dust = [], far = [], motes = [], pulses = [];
+
+  function rnd(seed) {
+    var s = seed >>> 0 || 1;
+    return function () {
+      s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0;
+      return s / 4294967296;
+    };
+  }
+  var R = rnd(12345);
+
+  function seed(s) {
+    R = rnd(s);
+    facts = {
+      asn: 1 + Math.floor(R() * 400000),
+      prefixLen: 12 + Math.floor(R() * 14),
+      version: R() < 0.2 ? 6 : 4,
+      rttMs: 6 + R() * 120
+    };
+    warm = WARM[facts.asn % WARM.length];
+    buildSprites();
+
+    // Symmetry from the address family, count from the ASN: two networks
+    // look like two species, two addresses on one network like siblings.
+    var fold = facts.version === 6 ? 6 : 4;
+    var arms = fold * (7 + Math.floor(R() * 5));
+    var reach = 0.34 + 0.26 * (1 - facts.prefixLen / 32);
+
+    fil = [];
+    for (var a = 0; a < arms; a++) {
+      var base = (Math.PI * 2 * a) / arms + (R() - 0.5) * 0.10;
+      // A few long arms carry the silhouette; the rest fill the body. One
+      // length for everything reads as a starburst, which is a logo.
+      var long = (a % fold) === 0;
+      fil.push({
+        base: base,
+        len: reach * (long ? 0.95 + R() * 0.45 : 0.42 + R() * 0.46),
+        curl: (R() - 0.5) * 2.2,
+        wob: 0.5 + R() * 1.4,
+        phase: R() * Math.PI * 2,
+        bright: (long ? 0.75 : 0.42) + R() * 0.45,
+        pts: []
+      });
+    }
+
+    // Petals: broad translucent sheets, not lines. The reference stills are
+    // made of overlapping surfaces catching light, and additive overlap is
+    // what gives a bloom its interior brightness. Filaments are detail ON
+    // these, not a substitute for them.
+    petals = [];
+    var np = fold * (2 + Math.floor(R() * 2));
+    for (var pz = 0; pz < np; pz++) {
+      petals.push({
+        base: (Math.PI * 2 * pz) / np + (R() - 0.5) * 0.5,
+        len: reach * (1.0 + R() * 0.75),
+        wide: 0.30 + R() * 0.34,
+        curl: (R() - 0.5) * 1.4,
+        lift: 0.5 + R() * 0.9,
+        phase: R() * Math.PI * 2,
+        bright: 0.55 + R() * 0.55
+      });
+    }
+
+    // Depth of field: far things big, soft and dim; near things small and
+    // sharp. This is most of what makes a flat canvas read as a volume.
+    far = [];
+    for (var i = 0; i < 90; i++) {
+      far.push({ x: R(), y: R(), s: 0.05 + R() * 0.16, a: 0.05 + R() * 0.16, v: R() * 0.3 });
+    }
+    dust = [];
+    for (var j = 0; j < 260; j++) {
+      dust.push({ x: R(), y: R(), s: 0.002 + R() * 0.006, a: 0.15 + R() * 0.5, ph: R() * 6.28, w: R() < 0.22 });
+    }
+    motes = [];
+    for (var k = 0; k < 260; k++) {
+      motes.push({ f: Math.floor(R() * fil.length), t: R(), sp: 0.08 + R() * 0.22, warm: R() < 0.62 });
+    }
+    pulses = [];
+  }
+
+  /* ---------- THE WAKE ------------------------------------------------- */
+  // Disturb water and it lights, then fades over a few seconds. This layer
+  // is the whole three-year-old test: it remembers where your hand went.
+  var wake, wctx;
+  function buildWake() {
+    wake = document.createElement('canvas');
+    wake.width = Math.max(1, Math.floor(W * 0.5));
+    wake.height = Math.max(1, Math.floor(H * 0.5));
+    wctx = wake.getContext('2d');
+  }
+  function depositWake(x, y, size, alpha, sp) {
+    wctx.globalCompositeOperation = 'lighter';
+    wctx.globalAlpha = alpha;
+    var s = size * 0.5;
+    wctx.drawImage(sp, x * 0.5 - s / 2, y * 0.5 - s / 2, s, s);
+  }
+
+  // Light in water is continuous, not a row of dots. Strokes carry the wake
+  // and the pulse; sprites are only the sparkle riding on top.
+  function wakeStroke(path, width, alpha, warmish) {
+    wctx.globalCompositeOperation = 'lighter';
+    wctx.globalAlpha = alpha;
+    wctx.lineWidth = width * 0.5;
+    wctx.lineCap = 'round';
+    wctx.strokeStyle = warmish
+      ? 'rgba(' + warm[0] + ',' + warm[1] + ',' + warm[2] + ',1)'
+      : 'rgba(' + COOL[0] + ',' + COOL[1] + ',' + COOL[2] + ',1)';
+    wctx.beginPath();
+    path(wctx);
+    wctx.stroke();
+  }
+
+  function wakeLine(x0, y0, x1, y1, width, alpha, warmish) {
+    wakeStroke(function (q) {
+      q.moveTo(x0 * 0.5, y0 * 0.5);
+      q.lineTo(x1 * 0.5, y1 * 0.5);
+    }, width, alpha, warmish);
+  }
+
+  function wakeRing(x, y, r, width, alpha, warmish) {
+    wakeStroke(function (q) {
+      q.ellipse(x * 0.5, y * 0.5, r * 0.5, r * 0.5 * 0.92, 0, 0, Math.PI * 2);
+    }, width, alpha, warmish);
+  }
+
+  /* ---------- POINTER -------------------------------------------------- */
+  var ptr = { x: -1e4, y: -1e4, px: -1e4, py: -1e4, down: false, speed: 0, live: false };
+
+  function pointerMove(x, y) {
+    if (!ptr.live) { ptr.px = x; ptr.py = y; ptr.live = true; }
+    ptr.x = x; ptr.y = y;
+    var dx = x - ptr.px, dy = y - ptr.py;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    ptr.speed = ptr.speed * 0.6 + d * 0.4;
+
+    // Light the water along the path, not just at the point — a wake. Faster
+    // movement disturbs more, exactly as it does in real water.
+    var force = Math.min(1, d / 40);
+    wakeLine(ptr.px, ptr.py, x, y, unit * (0.009 + 0.013 * force), 0.022 + 0.045 * force, false);
+    wakeLine(ptr.px, ptr.py, x, y, unit * (0.0016 + 0.0026 * force), 0.05 + 0.09 * force, false);
+    var sparks = Math.min(6, Math.round(d / 12));
+    for (var i = 0; i < sparks; i++) {
+      var t = (i + Math.random()) / Math.max(1, sparks);
+      var jig = unit * 0.012;
+      depositWake(ptr.px + dx * t + (Math.random() - 0.5) * jig,
+                  ptr.py + dy * t + (Math.random() - 0.5) * jig,
+                  unit * (0.005 + Math.random() * 0.010),
+                  0.10 + 0.16 * force, Math.random() < 0.35 ? spWarm : spCool);
+    }
+    ptr.px = x; ptr.py = y;
+  }
+
+  function press(x, y) {
+    ptr.down = true;
+    pulses.push({ r: 0, life: 1, x: x, y: y });
+    depositWake(x, y, unit * 0.13, 0.22, spWarm);
+    depositWake(x, y, unit * 0.04, 0.34, spCool);
+  }
+
+  cv.addEventListener('pointermove', function (e) { pointerMove(e.clientX * DPR, e.clientY * DPR); });
+  cv.addEventListener('pointerdown', function (e) {
+    cv.setPointerCapture(e.pointerId);
+    pointerMove(e.clientX * DPR, e.clientY * DPR);
+    press(e.clientX * DPR, e.clientY * DPR);
+  });
+  cv.addEventListener('pointerup', function () { ptr.down = false; });
+  cv.addEventListener('pointerleave', function () { ptr.live = false; ptr.x = ptr.y = -1e4; });
+
+  /* ---------- FRAME ---------------------------------------------------- */
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.width = Math.floor(window.innerWidth * DPR);
+    H = cv.height = Math.floor(window.innerHeight * DPR);
+    unit = Math.min(W, H);
+    buildWake();
+  }
+
+  function filamentPoints(f, t, cx, cy) {
+    var n = 20;
+    var pts = f.pts;
+    for (var i = 0; i <= n; i++) {
+      var u = i / n;
+      var ang = f.base + f.curl * u * u + Math.sin(t * 0.3 * f.wob + f.phase + u * 2.2) * 0.10 * u;
+      var rad = unit * f.len * u;
+      var x = cx + Math.cos(ang) * rad;
+      var y = cy + Math.sin(ang) * rad * 0.92;
+
+      // Reach toward the hand, like filaments on a plasma lamp.
+      if (ptr.live) {
+        var dx = ptr.x - x, dy = ptr.y - y;
+        var d2 = dx * dx + dy * dy;
+        var infl = (unit * unit * 0.018) / (d2 + unit * unit * 0.010);
+        x += dx * infl * u;
+        y += dy * infl * u;
+      }
+      pts[i] = pts[i] || {};
+      pts[i].x = x; pts[i].y = y; pts[i].u = u;
+    }
+    pts.length = n + 1;
+    return pts;
+  }
+
+  function drawPetal(p, t, cx, cy) {
+    var n = 16, L = [], Rr = [];
+    var sway = reduced ? 0 : Math.sin(t * 0.22 * p.lift + p.phase) * 0.07;
+    for (var i = 0; i <= n; i++) {
+      var u = i / n;
+      var ang = p.base + p.curl * u * u + sway * u;
+      var rad = unit * p.len * u;
+      var dx = Math.cos(ang), dy = Math.sin(ang) * 0.94;
+      // fat through the middle, pinched at the base and the tip
+      var w = unit * p.len * p.wide * 0.5 * Math.sin(Math.PI * Math.pow(u, 0.62));
+      var x = cx + dx * rad, y = cy + dy * rad;
+      if (ptr.live) {
+        var ex = ptr.x - x, ey = ptr.y - y;
+        var infl = (unit * unit * 0.016) / (ex * ex + ey * ey + unit * unit * 0.012);
+        x += ex * infl * u; y += ey * infl * u;
+      }
+      L.push([x - dy * w, y + dx * w]);
+      Rr.push([x + dy * w, y - dx * w]);
+    }
+    var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, unit * p.len);
+    var a = p.bright * (reduced ? 1 : 0.8 + 0.2 * Math.sin(t * 0.5 + p.phase));
+    g.addColorStop(0.00, 'rgba(255,255,255,' + (0.185 * a) + ')');
+    g.addColorStop(0.16, 'rgba(' + warm[0] + ',' + warm[1] + ',' + warm[2] + ',' + (0.150 * a) + ')');
+    g.addColorStop(0.52, 'rgba(120,168,240,' + (0.092 * a) + ')');
+    g.addColorStop(0.80, 'rgba(70,110,205,' + (0.022 * a) + ')');
+    g.addColorStop(1.00, 'rgba(56,92,190,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(L[0][0], L[0][1]);
+    for (var k = 1; k <= n; k++) ctx.lineTo(L[k][0], L[k][1]);
+    for (var m = n; m >= 0; m--) ctx.lineTo(Rr[m][0], Rr[m][1]);
+    ctx.closePath();
+    ctx.fill();
+
+    // rim light along both edges — a surface has an edge, and the edge is
+    // what tells you it is a surface
+    ctx.lineWidth = unit * 0.0012;
+    var rim = ctx.createRadialGradient(cx, cy, 0, cx, cy, unit * p.len);
+    rim.addColorStop(0.00, 'rgba(215,236,255,' + (0.26 * a) + ')');
+    rim.addColorStop(0.45, 'rgba(190,220,255,' + (0.15 * a) + ')');
+    rim.addColorStop(0.85, 'rgba(150,190,250,0)');
+    rim.addColorStop(1.00, 'rgba(150,190,250,0)');
+    ctx.strokeStyle = rim;
+    ctx.beginPath();
+    ctx.moveTo(L[0][0], L[0][1]);
+    for (var k2 = 1; k2 <= n; k2++) ctx.lineTo(L[k2][0], L[k2][1]);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(Rr[0][0], Rr[0][1]);
+    for (var m2 = 1; m2 <= n; m2++) ctx.lineTo(Rr[m2][0], Rr[m2][1]);
+    ctx.stroke();
+  }
+
+  function strokeFilament(pts, r, g, b, alpha, width) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  var t0 = performance.now();
+  function frame(now) {
+    var t = reduced ? 6.0 : (now - t0) / 1000;
+    var cx = W * 0.5, cy = H * 0.5;
+
+    // water
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    var bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#05080f');
+    bg.addColorStop(0.62, '#04060c');
+    bg.addColorStop(1, '#02040a');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.globalCompositeOperation = 'lighter';
+
+    // far field — big, soft, dim: the volume behind everything
+    for (var i = 0; i < far.length; i++) {
+      var p = far[i];
+      var fx = p.x * W + (reduced ? 0 : Math.sin(t * 0.04 + i) * unit * 0.004);
+      var fy = p.y * H + (reduced ? 0 : Math.cos(t * 0.03 + i) * unit * 0.004);
+      blit(spWide, fx, fy, unit * p.s, p.a * 0.5);
+    }
+
+    // the surround: the block that contains you, larger than the frame
+    blit(spWide, cx, cy, unit * 1.7, 0.34);
+
+    // wake — fade what is already there, then it gets added to below
+    wctx.globalCompositeOperation = 'destination-out';
+    wctx.globalAlpha = reduced ? 0.14 : 0.050;
+    wctx.fillStyle = '#000';
+    wctx.fillRect(0, 0, wake.width, wake.height);
+
+    // pulses travelling outward from a press
+    for (var q = pulses.length - 1; q >= 0; q--) {
+      var pu = pulses[q];
+      pu.r += unit * 0.010;
+      pu.life -= 0.012;
+      if (pu.life <= 0) { pulses.splice(q, 1); continue; }
+      // Drawn transiently on the main canvas, NOT deposited into the wake:
+      // accumulating a ring per frame stacks concentric hoops and reads as a
+      // target. One ring, expanding, fading.
+      var ease = pu.life * pu.life;
+      ctx.globalAlpha = ease * 0.30;
+      ctx.lineWidth = unit * 0.018 * pu.life;
+      ctx.strokeStyle = 'rgba(' + COOL[0] + ',' + COOL[1] + ',' + COOL[2] + ',1)';
+      ctx.beginPath();
+      ctx.ellipse(pu.x, pu.y, pu.r, pu.r * 0.92, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = ease * 0.55;
+      ctx.lineWidth = unit * 0.0035;
+      ctx.strokeStyle = 'rgba(235,246,255,1)';
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    for (var pp = 0; pp < petals.length; pp++) drawPetal(petals[pp], t, cx, cy);
+
+    for (var f = 0; f < fil.length; f++) filamentPoints(fil[f], t, cx, cy);
+
+    // Veils: translucent membrane between neighbouring filaments. Additive,
+    // so where they overlap the body gains luminosity on its own — this is
+    // what makes it read as a volume of light rather than a wire starburst.
+    var veil = ctx.createRadialGradient(cx, cy, 0, cx, cy, unit * 0.62);
+    veil.addColorStop(0, 'rgba(' + warm[0] + ',' + warm[1] + ',' + warm[2] + ',0.055)');
+    veil.addColorStop(0.28, 'rgba(120,165,235,0.030)');
+    veil.addColorStop(1, 'rgba(60,95,190,0)');
+    ctx.fillStyle = veil;
+    for (var v = 0; v < fil.length; v++) {
+      var A = fil[v].pts, B = fil[(v + 1) % fil.length].pts;
+      if (!A.length || !B.length) continue;
+      ctx.beginPath();
+      ctx.moveTo(A[0].x, A[0].y);
+      for (var ai = 1; ai < A.length; ai++) ctx.lineTo(A[ai].x, A[ai].y);
+      for (var bi = B.length - 1; bi >= 0; bi--) ctx.lineTo(B[bi].x, B[bi].y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // filaments — three passes make the halo: wide+faint, mid, hot core.
+    // Each fades out with distance, so a filament leaving the frame dissolves
+    // into the dark instead of ruling a hard line across it.
+    for (var f2 = 0; f2 < fil.length; f2++) {
+      var ff = fil[f2];
+      var b = ff.bright * (0.72 + 0.28 * Math.sin(t * 0.6 + ff.phase));
+      var fg = ctx.createRadialGradient(cx, cy, 0, cx, cy, unit * ff.len);
+      fg.addColorStop(0.00, 'rgba(235,246,255,1)');
+      fg.addColorStop(0.30, 'rgba(165,205,252,0.85)');
+      fg.addColorStop(0.72, 'rgba(110,160,240,0.28)');
+      fg.addColorStop(1.00, 'rgba(80,130,220,0)');
+      ctx.strokeStyle = fg;
+      ctx.lineCap = 'round';
+      var passes = [[0.075, 0.016], [0.130, 0.0045], [0.260, 0.0014]];
+      for (var pz2 = 0; pz2 < passes.length; pz2++) {
+        ctx.globalAlpha = passes[pz2][0] * b;
+        ctx.lineWidth = unit * passes[pz2][1];
+        ctx.beginPath();
+        ctx.moveTo(ff.pts[0].x, ff.pts[0].y);
+        for (var pi = 1; pi < ff.pts.length; pi++) ctx.lineTo(ff.pts[pi].x, ff.pts[pi].y);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // motes running the filaments — in the real app these are real events
+    for (var m = 0; m < motes.length; m++) {
+      var mo = motes[m];
+      if (!reduced) {
+        mo.t += mo.sp * 0.006;
+        if (mo.t > 1) { mo.t -= 1; mo.f = Math.floor(Math.random() * fil.length); }
+      }
+      var fp = fil[mo.f].pts;
+      if (!fp.length) continue;
+      var idx = Math.min(fp.length - 1, Math.floor(mo.t * (fp.length - 1)));
+      var pt = fp[idx];
+      var near = 1 - mo.t;
+      blit(mo.warm ? spWarm : spCool, pt.x, pt.y,
+           unit * (0.006 + 0.010 * near), 0.30 + 0.45 * near);
+    }
+
+    // dust — the near, sharp layer
+    for (var d = 0; d < dust.length; d++) {
+      var du = dust[d];
+      var tw = reduced ? 1 : 0.55 + 0.45 * Math.sin(t * 1.1 + du.ph);
+      blit(du.w ? spWarm : spCool, du.x * W, du.y * H, unit * du.s * 3.2, du.a * tw * 0.5);
+    }
+
+    // the core: you
+    blit(spCore, cx, cy, unit * 1.05, 0.30);
+    blit(spCore, cx, cy, unit * 0.46, 0.55);
+    blit(spWarm, cx, cy, unit * 0.115, 0.80);
+    blit(spWarm, cx, cy, unit * 0.030, 1.0);
+
+    // the wake, composited over everything
+    ctx.globalAlpha = 1;
+    ctx.drawImage(wake, 0, 0, W, H);
+
+    // grain
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = window.__grain === undefined ? 0.55 : window.__grain;
+    var pat = ctx.createPattern(grain, 'repeat');
+    ctx.fillStyle = pat;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- controls -------------------------------------------------- */
+  document.getElementById('reseed').addEventListener('click', function () {
+    seed(Math.floor(Math.random() * 1e9));
+    hud();
+  });
+  document.getElementById('still').addEventListener('click', function (e) {
+    reduced = !reduced;
+    e.target.textContent = 'motion: ' + (reduced ? 'off (reduced-motion still)' : 'on');
+  });
+  function hud() {
+    document.getElementById('hud').textContent =
+      'AS' + facts.asn + '  /' + facts.prefixLen + '  v' + facts.version +
+      '   ' + fil.length + ' filaments\nmove the pointer · press and hold · plausible fake facts';
+  }
+
+  window.addEventListener('resize', resize);
+  buildGrain();
+  resize();
+  seed(20260915);
+  hud();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
