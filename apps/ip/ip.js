@@ -758,6 +758,9 @@
                          * around this, not around home. */
     subject: null,      /* the announced block at the aim, as S.net is for home */
     trail: [],          /* where the aim has been, so there is a way back */
+    ptr: null,          /* where the pointer last was, in client pixels, so the
+                         * highlight can be recomputed as the camera settles
+                         * underneath it. Null when it is off the canvas. */
     been: null,         /* the finest axis actually HELD. The descent leaves a
                          * trail behind it, not a diagram of the hierarchy:
                          * a container is outlined because the visitor went
@@ -2013,12 +2016,42 @@
         S.px += (S.tx - S.px) * k;
         S.py += (S.ty - S.py) * k;
         moving = true;
-      } else { S.px = S.tx; S.py = S.ty; }
+      } else if (S.px !== S.tx || S.py !== S.ty) {
+        /* the last hop onto the exact pose. It counts as a moving frame so
+         * that the highlight is redecided once more against where the camera
+         * finally came to rest -- without this the ease stops within 0.0008
+         * of the target and the pick can settle one cell out. The frame
+         * after this one has nothing left to move, so it does not repeat. */
+        S.px = S.tx; S.py = S.ty; moving = true;
+      }
     }
 
     if (moving || needsFrame) {
       needsFrame = false;
       layers();
+      /* WHAT THE POINTER IS OVER, decided against the camera as it will
+       * actually be drawn this frame.
+       *
+       * The parallax leans the eye toward the pointer and eases there over
+       * about 130 ms. pointermove sets the TARGET of that lean and then
+       * immediately asks what is under the pointer -- against the pose the
+       * camera has not finished leaving. So the answer was decided by a
+       * camera that was about to move, and the highlight settled a little
+       * away from the pointer. Measured: the same pixel named
+       * 193.10.4.0/24 on the move and 193.11.90.0/24 once the lean had
+       * finished.
+       *
+       * Redeciding here costs a few frames of picking after each move and
+       * nothing at rest, and it has to come AFTER layers(), because both
+       * pick() and cursorAt() read the layer weights it computes.
+       *
+       * onTap still reads the stored cursor rather than recasting. That
+       * guard is about the gap between the last move and the click, which
+       * this does not close. */
+      if (moving && S.ptr && !S.reduced) {
+        pick(S.ptr.x, S.ptr.y);
+        setCursor(cursorAt(S.ptr.x, S.ptr.y));
+      }
       if (R) R.frame(S.hot);
       syncDom();
     }
@@ -2483,6 +2516,7 @@
         S.ty = (e.clientY / window.innerHeight - 0.5) * 2;
         invalidate();
       }
+      S.ptr = { x: e.clientX, y: e.clientY };
       pick(e.clientX, e.clientY);
       setCursor(cursorAt(e.clientX, e.clientY));
       if (!drag || drag.id !== e.pointerId) return;
@@ -2513,7 +2547,9 @@
     }
     cv.addEventListener('pointerup', end);
     cv.addEventListener('pointercancel', end);
-    cv.addEventListener('pointerleave', function () { setCursor(null); });
+    cv.addEventListener('pointerleave', function () {
+      S.ptr = null; setCursor(null);
+    });
     window.addEventListener('blur', function () { drag = null; });
 
     document.addEventListener('keydown', function (e) {
