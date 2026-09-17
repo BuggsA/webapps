@@ -194,6 +194,32 @@ grounds that six pixels do not matter.
 
 ---
 
+## Making it worth exploring
+
+Researched 2026-09-17 and written up in full in
+**`docs/ip-exploration-research.md`**. The short version, because it changes
+what phases E and F are for:
+
+- **Beat one is the weak one.** Nothing on screen says *go there*. Every cell
+  is the same shape and the brightest are merely the oldest -- a landmark has
+  to be a different KIND of thing, not a brighter instance of the same thing.
+- **The footprint is the whole loop and it only fires for big networks.**
+  Arriving reveals more only when the network you land in announces a lot.
+  Everywhere else the chain terminates, which is most of the map.
+- **Procedural breadth cannot carry it.** No Man's Sky's "wide as an ocean,
+  shallow as a puddle" is the exact warning for a map built from 240,660
+  algorithmically arranged ranges. Being true is better than being generated,
+  but truth alone is not variety.
+- **What Hello Games actually fixed it with, twice over, was cataloguing** --
+  the Discovery Page. Which is the notebook, which is phase C, which means
+  the notebook should hold the things found and not only the counts.
+- **The highest-value single thing: "from here you can see".** Two or three
+  named, reachable things at every arrival, computed from data we already
+  ship -- nearest landmark, oldest block in view, largest run held by nobody.
+  Beats one and four together, and it works in empty space.
+
+---
+
 ## The guide
 
 **Note for whoever builds this.** Four drafts of this section tried to
