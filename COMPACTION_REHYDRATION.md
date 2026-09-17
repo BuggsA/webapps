@@ -11,15 +11,15 @@
 
 ## Operating mode
 
-**WAITING_FOR_USER.** A preservation pass was completed 2026-09-17. The owner
-is reviewing the artifacts before clean-room testing and compaction. **No
-product work until they respond.**
+**WAITING_FOR_USER.** The preservation pass is done and its artifacts were
+reviewed. The working tree is committed (`3d35fca`). **No product work
+without a fresh instruction.**
 
 ## Exact next action
 
-**Ask the owner about the commit gate** (`PRESERVATION_BASELINE.md` §3).
-`apps/ip/` is **entirely untracked**; a commit was prepared and deliberately
-not made because it contains 2.9 MB of generated data.
+**The owner runs `deploy-hosting.ps1`.** The slash-less-URL fix is committed
+but not deployed, and until it ships, `/ip` without the trailing slash shows
+no address at all. Deploy is human-run; prepare the command, never run it.
 
 Then, only with a fresh instruction: finish phase B — the previous container
 outlined as it shrinks, and the descent accumulating.
@@ -60,15 +60,16 @@ outlined as it shrinks, and the descent accumulating.
 
 ## Blockers
 
-- **The working tree is uncommitted.** Only recovery point:
+- **Undeployed: the slash-less-URL fix** in
+  `hosting/hosting_stack/hosting_stack.py`. Needs `deploy-hosting.ps1`.
+- Nothing has been **pushed**; `master` is local-only.
+- Recovery points: `HEAD` (`3d35fca`) and
   `../ip-preservation-snapshot-20260917.tar.gz`, sha256 `986fd788…`.
-- Undeployed: the phase A query layer, the renderer-failure fix, all of
-  phase B.
 
 ## Pending approvals
 
-Commit · deploy · starting any phase after B · removing anything enjoyable ·
-installing a dependency · running `/compact`. Full list in
+Push · any further commit · deploy · starting any phase after B · removing
+anything enjoyable · installing a dependency · running `/compact`. Full list in
 `APPROVAL_STATE.md`.
 
 **Ambiguous approval means NOT APPROVED.**

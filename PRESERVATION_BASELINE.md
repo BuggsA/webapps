@@ -46,20 +46,22 @@ sha256sum ip-preservation-snapshot-20260917.tar.gz
 | **HEAD date** | 2026-09-15 21:43:32 −0400 |
 | **Pushed?** | No push was performed. Nothing was pushed. |
 
-### ⚠ The working tree is NOT committed
+### The working tree IS committed, as of 2026-09-16
 
-**`HEAD` predates the entire application.** All of `apps/ip/` — the renderer,
-the ladder, travel, landmarks, the registry layer, the query layer, phase B —
-is **untracked**. `HEAD` is not a useful recovery point for the app. **The
-snapshot above is the only recovery point that contains it.**
+GATE 1 was opened by the owner and the commit was made: **`3d35fca`**, *"ip:
+preserve the working state before compaction"* — 38 files, 11,645 insertions.
+All of `apps/ip/` is tracked. **Nothing has been pushed.** `HEAD` is now a
+real recovery point for the app; the snapshot is the second one.
 
 ---
 
-## 3. The commit that was prepared and NOT made
+## 3. The commit — prepared, shown, then made as `3d35fca`
 
 Per the instruction — *"If creating a commit would include questionable
 files, secrets, generated data, or anything you're unsure about, stop before
-committing and show me"* — this commit was staged in a dry run only.
+committing and show me"* — this commit was first staged in a dry run and
+shown. The owner then said to run it, and it was made on 2026-09-16 as
+`3d35fca`. The contents below are what it contains.
 
 **Flagged item: `apps/ip/data/space.bin`, 2.9 MB, generated** by
 `scripts/ip-build-space-field.py` from a 55 MB public source. It is a

@@ -41,14 +41,25 @@ class HostingStack(Stack):
             removal_policy=RemovalPolicy.RETAIN,
         )
 
-        # --- URI rewrite: /<name>/ and /<name> -> /<name>/index.html -----------
+        # --- URI rewrite: /<name>/ -> /<name>/index.html, /<name> -> /<name>/ --
         # CloudFront does not apply `default_root_object` to sub-paths, so a
         # request for `/picker/` would 403 against the bucket. This viewer
         # function rewrites directory-style URIs to their index.html.
+        #
+        # A slash-less `/<name>` is REDIRECTED, not rewritten. Serving
+        # `/ip/index.html`'s bytes at `/ip` leaves the browser's base URL at
+        # `/ip`, so every document-relative href in the page resolves against
+        # the root -- `/ip.css`, `/ip.js` -- and 404s. The page then renders
+        # with no stylesheet and no script, which for apps/ip means the
+        # address never loads. Every app here writes its assets relative, so
+        # this broke all four of them at once. Found 2026-09-16, on a phone.
+        #
+        # `/ip/whoami` is unaffected: it has its own behaviour below, so this
+        # function never sees it.
         rewrite_fn = cloudfront.Function(
             self,
             "IndexRewrite",
-            comment="Rewrite directory URIs to index.html for path-prefixed apps",
+            comment="Rewrite directory URIs to index.html; redirect slash-less ones",
             runtime=cloudfront.FunctionRuntime.JS_2_0,
             code=cloudfront.FunctionCode.from_inline(
                 """
@@ -57,9 +68,24 @@ function handler(event) {
     var uri = request.uri;
     if (uri.endsWith('/')) {
         request.uri = uri + 'index.html';
-    } else if (uri.lastIndexOf('.') <= uri.lastIndexOf('/')) {
-        // no file extension in the last path segment -> treat as a directory
-        request.uri = uri + '/index.html';
+        return request;
+    }
+    if (uri.lastIndexOf('.') <= uri.lastIndexOf('/')) {
+        // No extension in the last segment: a directory asked for without its
+        // trailing slash. Redirect to the canonical URL so that relative asset
+        // paths resolve inside the app rather than at the root. The query
+        // string has to be carried over by hand -- ?ip= and ?renderer= are
+        // load-bearing -- because a function only ever sees it parsed.
+        var qs = '';
+        for (var key in request.querystring) {
+            var v = request.querystring[key].value;
+            qs += (qs ? '&' : '?') + key + (v ? '=' + v : '');
+        }
+        return {
+            statusCode: 301,
+            statusDescription: 'Moved Permanently',
+            headers: { 'location': { value: uri + '/' + qs } }
+        };
     }
     return request;
 }

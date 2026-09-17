@@ -16,10 +16,10 @@ Approval boundaries live in `APPROVAL_STATE.md` and that file wins.
 | **Branch** | `master` |
 | **HEAD at preservation time** | `222f56e0c140130fa469304d8bfcad771519abe0` — *"ip: a self-contained handoff — the pieces, for whoever tells the story"* (2026-09-15) |
 | **Golden recovery identifier** | `ip-preservation-snapshot-20260917.tar.gz`, sha256 `986fd788f3c75600e13b4022fdc14942b873b59bc1da2d1f24d4857e5de485cf`, in `scratch-repo/` (the repo's parent) |
-| **Working tree committed?** | **NO.** See `PRESERVATION_BASELINE.md`. This is the largest recovery risk. |
+| **Working tree committed?** | **YES** — `3d35fca`, *"ip: preserve the working state before compaction"*, 2026-09-16. **Not pushed.** |
 
-**All of `apps/ip/` is untracked.** The entire application exists only in the
-working tree and in the snapshot above.
+**All of `apps/ip/` is now tracked**, as of `3d35fca`. Git is a real recovery
+point; the snapshot above is no longer the only one. Nothing has been pushed.
 
 ---
 
@@ -54,9 +54,9 @@ shrinks; passed containers leave nested outlines.
 
 - **COMPLETE** — phases 1, 2, 3, 3b, 4 (travel), 4.5 step 1 (the ladder).
   **Deployed.**
-- **COMPLETE** — phase A, "the map stops being empty". **Partly deployed:**
-  the registry layer and era brightness are live; the query layer is **built
-  but NOT deployed**.
+- **COMPLETE** — phase A, "the map stops being empty". **Deployed** —
+  verified 2026-09-16 by sha256: `index.html`, `ip.css` and `ip.js` are
+  byte-identical live and local, so the query layer is live too.
   - `scripts/ip-build-space-field.py` → `apps/ip/data/space.bin`, 438,937
     bytes gzipped, round-trip verified.
   - Registry loads deferred, parses in **139 ms** (171,333 IPv4 ranges,
@@ -65,7 +65,7 @@ shrinks; passed containers leave nested outlines.
     `fieldMix()` makes the descent sayable.
   - Queries: touch a country code or registry name in the plate. Verified
     for US/BR/SE/IS/VA/AFRINIC/RIPE NCC.
-- **COMPLETE** — the renderer-failure fix (see "Known bugs, fixed").
+- **COMPLETE, deployed** — the renderer-failure fix (see "Known bugs, fixed").
 - **COMPLETE** — `docs/ip-plan-v2.md`, the full revised plan.
 
 ## Work in progress
@@ -88,6 +88,15 @@ shrinks; passed containers leave nested outlines.
 ## Known bugs
 
 ### Open
+
+- **FIXED IN SOURCE, NOT DEPLOYED** — the slash-less URL. `/ip` (no trailing
+  slash) served `/ip/index.html` at 200 with no redirect, so the browser's
+  base URL stayed `/ip` and every document-relative asset resolved to the
+  root and 404'd: no stylesheet, no script, **no address**. It broke all four
+  apps and looked identical on desktop. `IndexRewrite` in
+  `hosting/hosting_stack/hosting_stack.py` now returns a 301 to the canonical
+  URL, carrying the query string over. **Needs `deploy-hosting.ps1`, which is
+  human-run.**
 
 - **OPEN, deliberate** — mobile. The exploration model assumes hover, which
   phones do not have. Pinch is not implemented despite `apps/ip/README.md`
@@ -235,9 +244,9 @@ numbers in `scripts/ip-build-space-field.py`.
 
 ## Immediate next 3–5 actions
 
-1. **Decide the commit** in `PRESERVATION_BASELINE.md` — the app is untracked.
+1. **Deploy the slash-less URL fix** — `deploy-hosting.ps1`, human-run. Until
+   it ships, `/ip` without the trailing slash shows no address.
 2. **Finish phase B**: the previous container outlined as it shrinks, and the
    nested accumulation.
-3. **Deploy** the phase A query layer plus the renderer-failure fix (human-run).
-4. **Judge whether phase A was enough** before committing to C–I.
-5. Phase C, or phase D's writing, per `APPROVAL_STATE.md`.
+3. **Judge whether phase A was enough** before committing to C–I.
+4. Phase C, or phase D's writing, per `APPROVAL_STATE.md`.

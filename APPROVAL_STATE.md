@@ -39,7 +39,9 @@ Approved by a direct instruction in conversation.
 | Phases 1–4.5 step 1 | built and deployed with owner's go-ahead each time | COMPLETE |
 | Phase A (the map stops being empty) | *"Okay lets go!"* then *"It is deployed. onward!"* | COMPLETE, partly deployed |
 | Phase B (registration) | *"remember don't kill the fun. Feel free to build"* | IMPLEMENTING |
-| The renderer-failure fix | *"Peferect sounds like a plan fix. Then give me deployment code"* | COMPLETE, not deployed |
+| The renderer-failure fix | *"Peferect sounds like a plan fix. Then give me deployment code"* | COMPLETE, deployed |
+| The slash-less-URL fix in `hosting/` | *"yes fix please"*, 2026-09-16 | COMPLETE in source, NOT deployed |
+| Committing the working tree | *"run it"*, 2026-09-16 — GATE 1 opened | COMPLETE, `3d35fca`, not pushed |
 | `docs/ip-plan-v2.md` as the plan of record | *"Now I think we need a revised build plan"* + several rounds of correction | COMPLETE |
 | Quests: main, side, optional, gated, eggs | *"Actual quests. Main side, optional, mandatory for some others to do"* | PROPOSED in plan |
 | A narrator/guide **with character** — may exclaim, congratulate, be sarcastic | *"Have the guide with some flavor, spunk, or whatever character"* | PROPOSED in plan |
@@ -69,7 +71,7 @@ Each phase still needs its own go-ahead, per the phase-gating rule.
 - Any mobile work beyond the crash fix — hover alternatives, pinch, a
   reduced mobile layout.
 - Drawing country as well as era in the field.
-- Committing the working tree. **See the gate below.**
+- **Pushing.** The commit was authorized; a push was not.
 
 ## Explicitly rejected
 
@@ -90,22 +92,22 @@ Each phase still needs its own go-ahead, per the phase-gating rule.
 
 ## Pending approval gates
 
-### GATE 1 — the commit (BLOCKING)
+### GATE 1 — the commit — **CLOSED 2026-09-16**
 
-The entire application is **untracked**. A commit was prepared and **not
-made**, because the owner's instruction was to stop and show if a commit
-would include generated data. It would include `apps/ip/data/space.bin`
-(2.9 MB, generated; `apps/tide/data/*.bin` are tracked, so there is
-precedent). The exact file list is in `PRESERVATION_BASELINE.md`.
-
-**Claude must not commit without an explicit instruction.**
+The flagged item (`apps/ip/data/space.bin`, 2.9 MB, generated) was shown to
+the owner, who said *"run it"*. Committed as **`3d35fca`**. **Not pushed —
+pushing still needs its own instruction.** Each future commit needs its own
+go-ahead; this gate closing was about one commit, not a standing licence.
 
 ### GATE 2 — deploying
 
 `scripts/deploy-app.ps1` and `scripts/deploy-hosting.ps1` are **human-run,
 always**. Claude prepares the command and never runs `aws` or `cdk`.
-Currently undeployed: the phase A query layer, the renderer-failure fix, and
-all of phase B.
+
+`apps/ip` itself is fully deployed and byte-identical to local (verified by
+sha256, 2026-09-16). **Undeployed: the slash-less-URL fix in
+`hosting/hosting_stack/hosting_stack.py`**, which needs `deploy-hosting.ps1`,
+not `deploy-app.ps1`.
 
 ### GATE 3 — starting any phase after B
 
