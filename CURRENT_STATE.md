@@ -100,6 +100,21 @@ shrinks; passed containers leave nested outlines.
 
 ### Open
 
+- **FIXED 2026-09-17, NOT DEPLOYED** — the highlight orb sat near the pointer
+  but never under it. `cursorAt` subtracted half a cell when inverting the
+  ray, which does not undo the half-cell that puts a mark at its cell's
+  CENTRE — it shifts the whole pick grid against the marks, so a mark landed
+  on a cell boundary and the highlight drew half a cell up and left. Half a
+  cell is ~1px at a 480px window and ~14px at 1800px, which is why it was
+  invisible here and obvious to the owner. **Third half-cell error in this
+  file, all the same shape: one place treats a cell as a point, another as
+  an area.** `__ip.cur()` now probes orb-against-mark so the next one is
+  caught by measurement rather than by eye.
+- **FIXED 2026-09-17, NOT DEPLOYED** — two contributing causes found with it:
+  the aim's pick radius is two whole cells, and the 30px floor under it is a
+  thumb, not a mouse. The cell the field resolves now wins over a target's
+  radius, and the floor is 11px on devices that can hover.
+
 - **FIXED IN SOURCE, NOT DEPLOYED** — the slash-less URL. `/ip` (no trailing
   slash) served `/ip/index.html` at 200 with no redirect, so the browser's
   base URL stayed `/ip` and every document-relative asset resolved to the

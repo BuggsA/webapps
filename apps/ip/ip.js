@@ -1283,7 +1283,8 @@
       L(b0,b1,C.coldHi,0.9,1.2,0.5,layer); L(b1,b2,C.coldHi,0.9,1.2,0.5,layer);
       L(b2,b3,C.coldHi,0.9,1.2,0.5,layer); L(b3,b0,C.coldHi,0.9,1.2,0.5,layer);
     }
-    targets.push({ x: mx, y: 0.010, z: mz, r: step * 2, id: 99, layer: layer });
+    targets.push({ x: mx, y: 0.010, z: mz, r: step * 2, id: 99, layer: layer,
+                   idx: f.idx });
 
     /* where the aim sits in this field. With the rungs registered this is
      * near zero by construction — the aim IS the origin — so the
@@ -2549,8 +2550,8 @@
        * guard is about the gap between the last move and the click, which
        * this does not close. */
       if (moving && S.ptr && !S.reduced) {
-        pick(S.ptr.x, S.ptr.y);
         setCursor(cursorAt(S.ptr.x, S.ptr.y));
+        pick(S.ptr.x, S.ptr.y);
       }
       if (R) R.frame(S.hot);
       syncDom();
@@ -2681,6 +2682,14 @@
    * leave the field unpickable exactly where there is most to point at. */
   var LIVE = 0.34;
 
+  /* How close counts as pointing at something. See pick(). */
+  var PICK_FLOOR = 30;
+  try {
+    if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+      PICK_FLOOR = 11;
+    }
+  } catch (_) { }
+
   function activeField() {
     var i, ly, best = null, bw = LIVE;
     for (i = 0; i < SLOTS; i++) {
@@ -2745,8 +2754,25 @@
      * with it rather than a second, local, disagreeing xy2d. */
     var lay = g.lay;
     if (!lay) return null;
-    var gx = Math.floor(SCREEN_X(lx) / g.step + lay.ox - 0.5);
-    var gy = Math.floor(lz / g.step + lay.oy - 0.5);
+    /* HALF A CELL, AGAIN.
+     *
+     * A cell is an AREA and its mark is drawn at the CENTRE of it:
+     * buildSpace puts a mark at (gx + 0.5 - ox) * step. The inverse used to
+     * subtract that half back off, which does not undo it -- it shifts the
+     * whole pick grid half a cell against the marks, so a mark sits exactly
+     * on a cell boundary and hovering on one resolves to its neighbour
+     * whenever the arithmetic lands a hair low. The highlight then drew half
+     * a cell up and left of the thing being pointed at: an orb near the
+     * cursor, never under it.
+     *
+     * Invisible at a small window, where half a cell is about a pixel, and
+     * obvious at full size, where it is fourteen. This is the third
+     * half-cell error in this file and they have all had the same shape:
+     * one place treats a cell as a point and another treats it as an area.
+     * Without the offset, a mark's centre lands at gx + 0.5 -- the middle of
+     * the cell's own range, as far from either boundary as it can be. */
+    var gx = Math.floor(SCREEN_X(lx) / g.step + lay.ox);
+    var gy = Math.floor(lz / g.step + lay.oy);
     if (!(gx > -2 && gy > -2 && gx < FIELD + 1 && gy < FIELD + 1)) return null;
     gx = clamp(gx, 0, FIELD - 1); gy = clamp(gy, 0, FIELD - 1);
     var idx = lay.inv[gy * FIELD + gx];
@@ -2774,7 +2800,9 @@
                : 'nothing announced here';
     return { key: 'f' + g.layer + '-' + idx, field: true, layer: g.layer,
              idx: idx, f: g.f, first: first,
-             x: SCREEN_X(g.x0 + gx*g.step), z: g.z0 + gy*g.step, y: 0.006,
+             /* the cell's CENTRE, which is where its mark actually is */
+             x: SCREEN_X(g.x0 + (gx + 0.5) * g.step),
+             z: g.z0 + (gy + 0.5) * g.step, y: 0.006,
              text: name, mine: mine, note: note, mark: lmk };
   }
 
@@ -2784,12 +2812,36 @@
     for (i = 0; i < targets.length; i++) {
       t = targets[i];
       if (layerAlpha[t.layer] < 0.25) continue;
+      /* THE ORB THAT WAS NEVER WHERE THE POINTER WAS.
+       *
+       * The aim carries a pick radius of two whole cells, and the floor
+       * below is another thirty pixels. On a small window that is a few
+       * pixels and nobody noticed; on a full-size display a cell is about
+       * thirty pixels, so the aim lit up whenever the pointer was anywhere
+       * within two cells of it -- an orb hanging near the cursor, following
+       * it, never under it.
+       *
+       * The cause is two systems answering the same question differently:
+       * targets are grabbed by screen distance, cells are resolved by
+       * casting a ray at the plane. Widening one to be forgiving made it
+       * disagree with the other. So when the field has resolved a cell, that
+       * answer wins and a target on the same layer only stays lit if it IS
+       * that cell. The radius still does its job everywhere the field has no
+       * answer, which is what it was for. */
+      if (t.idx !== undefined && cursor && cursor.field &&
+          cursor.layer === t.layer && cursor.idx !== t.idx) continue;
       ws = layerScale[t.layer];
       var tqx = panX(t.layer), tqz = panZ(t.layer);
       sp = toScreen(VP, (t.x+tqx)*ws, t.y*ws, (t.z+tqz)*ws);
       se = toScreen(VP, (t.x + t.r + tqx)*ws, t.y*ws, (t.z+tqz)*ws);
       if (!sp || !se) continue;
-      r = Math.max(30, Math.hypot(se.x - sp.x, se.y - sp.y));
+      /* The floor is a THUMB, and a mouse is not a thumb. Thirty pixels is
+       * a touch target: it makes a small mark grabbable by a finger. With a
+       * pointer that can hover it means the aim lights up from thirty pixels
+       * away while the cursor is over empty floor -- an orb near the cursor
+       * but never under it. Devices that can hover get a floor the size of a
+       * mark; devices that cannot keep the thumb. */
+      r = Math.max(PICK_FLOOR, Math.hypot(se.x - sp.x, se.y - sp.y));
       d = Math.hypot(sp.x - cx, sp.y - cy);
       if (d < r && d - r < bd) { bd = d - r; best = t.id; }
     }
@@ -3035,8 +3087,10 @@
         invalidate();
       }
       S.ptr = { x: e.clientX, y: e.clientY };
-      pick(e.clientX, e.clientY);
+      /* cursor first: pick() defers to whichever cell the field resolved, so
+       * the two cannot disagree about what is being pointed at */
       setCursor(cursorAt(e.clientX, e.clientY));
+      pick(e.clientX, e.clientY);
       if (!drag || drag.id !== e.pointerId) return;
       var dy = e.clientY - drag.y, dxp = e.clientX - drag.x;
       drag.moved += Math.abs(dy) + Math.abs(dxp);
@@ -4537,6 +4591,27 @@
     back: back,
     home: goHome,
     trail: function () { return S.trail.length; },
+    /* Where the highlight is drawn, against where the mark it names
+     * actually is. Half-cell drift between those two has now been found
+     * three times in this file, and it is invisible at a small window --
+     * half a cell is about a pixel -- so it wants a probe rather than an
+     * eye. Both should be the same point, to the pixel. */
+    cur: function () {
+      if (!cursor) return null;
+      var ly = cursor.layer === undefined ? LY.BLOCK : cursor.layer;
+      var ws = layerScale[ly], VP = viewProj();
+      var orb = toScreen(VP, (cursor.x + panX(ly)) * ws, cursor.y * ws,
+                             (cursor.z + panZ(ly)) * ws);
+      var g = activeField(), markPt = null;
+      if (g && g.lay && cursor.idx !== undefined) {
+        var L = g.lay, st = g.step;
+        var mxw = SCREEN_X((L.gx[cursor.idx] + 0.5 - L.ox) * st);
+        var mzw = (L.gy[cursor.idx] + 0.5 - L.oy) * st;
+        markPt = toScreen(VP, (mxw + panX(ly)) * ws, 0.006 * ws,
+                              (mzw + panZ(ly)) * ws);
+      }
+      return { orb: orb, mark: markPt, text: cursor.text };
+    },
     snd: function () {
       if (!snd) return { on: S.sound, built: false };
       var v = [], i;
