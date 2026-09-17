@@ -97,6 +97,39 @@ function handler(event) {
             ],
         )
 
+        # --- apps/ip: the viewer's own address, from the edge --------------
+        # The bucket never sees the viewer's address, so a pure-static answer
+        # is impossible. This viewer-request function reads `event.viewer.ip`
+        # and generates the response itself; the origin is never reached.
+        # Caching is DISABLED because the response varies per viewer, and the
+        # behaviour is separate from the default one so the index rewrite does
+        # not turn /ip/whoami into /ip/whoami/index.html.
+        #
+        # This is the first app that needs this stack redeployed rather than
+        # only an `s3 sync`. See docs/ip-data-research.md section 4.
+        whoami_fn = cloudfront.Function(
+            self,
+            "IpWhoami",
+            comment="apps/ip: return the viewer's IP (plaintext, or JSON for the page)",
+            runtime=cloudfront.FunctionRuntime.JS_2_0,
+            code=cloudfront.FunctionCode.from_file(
+                file_path="edge/ip-whoami.js"
+            ),
+        )
+        distribution.add_behavior(
+            "/ip/whoami",
+            origins.S3BucketOrigin.with_origin_access_control(bucket),
+            viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+            compress=False,
+            function_associations=[
+                cloudfront.FunctionAssociation(
+                    function=whoami_fn,
+                    event_type=cloudfront.FunctionEventType.VIEWER_REQUEST,
+                )
+            ],
+        )
+
         # --- Account-wide cost alarm ---------------------------------------------
         # Not scoped to this stack -- a runaway Tier 2 app (a Lambda in a loop,
         # a paid API called too often) should still trip this. Set the alert

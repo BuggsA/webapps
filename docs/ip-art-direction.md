@@ -1,164 +1,214 @@
 # ip — art direction
 
-**STATUS: PROPOSED 2026-09-15 — Sea Fire.** Replaces the previous lock
-(Cordage), which was built, looked at, and rejected. The record of that is at
-the bottom, because the reasons matter more than the result.
+**STATUS: the LOOK is locked. Several RULES are not — see "Open" at the
+bottom, and do not treat them as settled.**
 
-Brief: `ip-brief.md`. Plan: `ip-build-plan.md`. Data: `ip-data-research.md`.
+"Survey", locked 2026-09-15 by the human's own reference stills, which
+arrived with `Whats-My-IP-Narrative-and-Design-Outline.md` (the narrative +
+outline brief that supersedes the old parts list). The stills are not mood
+this time; they are the direction. Two earlier attempts — **Cordage** (built,
+rejected on sight) and **Sea Fire** (proposed, never built) — are archived in
+`ip-art-direction-rejected-seafire-cordage.md`.
+
+What is locked below is what the stills decide: the chassis, the three colour
+roles, the type, the motion rules and the banned list. What is **not** locked
+is the set of layout rules invented to fill the gaps the stills leave — those
+are proposals, and they are collected at the end of this file rather than
+buried in the tables above, because the last three attempts failed on
+decisions that were made quietly.
+
+Narrative + outline: the human's brief. Plan: `ip-build-plan.md`.
+Data: `ip-data-research.md`.
 
 ---
 
-## What changed, and why
+## Why this direction and not the last two
 
-Three pieces of feedback from the human after seeing the Cordage prototype:
+The last two directions failed the same way in two different costumes.
+Cordage was a line drawing you could only look at. Sea Fire was a material
+you could touch but that referred to nothing — *sensation with no referent is
+a fidget toy.* Both invented a geometry and then hung the data on it.
 
-1. **The reference stills were right and I talked them out of them.** They
-   liked those pictures. They show beauty immediately. I argued they were
-   close to the AI-render median and wrote a banned list that removed bloom,
-   glow and luminous depth — which is most of what makes them good. Beauty
-   was goal number one in their own document and I optimised for *not looking
-   like the median* instead, which is a weaker goal and produced something
-   thin.
-2. **There was nothing to do.** A generative portrait is a picture. You look
-   once.
-3. **Discovery wasn't clear.** Everything past the answer was below the fold
-   with no visible signal that it existed.
+Survey inverts that. **Every position on screen is computed from a real
+number, by a rule that can be stated in one sentence.** The beauty is not
+applied afterward; it is what a truthful diagram of this data looks like when
+it is drawn carefully, at the right scale, in the dark, with enough space
+around it.
 
-And the test that reframes all of it:
+The governing sentence from the brief:
 
-> **If a three-year-old finds it interesting, it is probably doing its job.**
+> **The geometry must remain accountable to the data.**
 
-That is not a softer bar than "a network engineer respects it". It is a
-*harder* one, and it rules out most of what I did. A three-year-old does not
-read, does not scroll to find things, and does not care what an ASN is. What
-holds them is **cause and effect**: I touched it and something happened,
-immediately, and it happens every time, and it is never wrong.
+That is also the art direction. If a mark's position cannot be explained, it
+is removed — not restyled.
 
 ## The thesis
 
-**Light is what happens when something moves through.**
+**An instrument, not an illustration.**
 
-In real water, bioluminescent plankton light up when they are disturbed —
-a wake, an oar, a hand. The light is not decoration on the movement; the
-light *is* the movement, made visible. Cornish fishermen called it sea fire.
+The page is one surveying instrument with a home position. It has a plate
+(the ground), an axis (the plumb line), a reticle (the polar rings at the
+origin), and a subject. Moving the scale moves the instrument, not the world.
+The subject changes; the chassis never does. That continuity is what makes
+nine semantic states read as one place instead of nine screens.
 
-That gives one mechanic that serves everyone at once:
+## The chassis — present in every state
 
-- **A three-year-old:** you move your hand and the dark lights up under it.
-  Nothing to learn, no wrong moves, works everywhere on the screen, works on
-  the hundredth try.
-- **Someone who stays ten seconds:** the light that just bloomed over
-  *there* — nobody touched that. Something else moved through.
-- **A network engineer:** that flare was a real BGP announcement, and the
-  thing in the middle is their own prefix.
+Drawn identically at every scale, which is what proves it is one instrument:
 
-Same material, same vocabulary, three depths. Nothing is a metaphor: real
-traffic really does move through, and the app's rule is that movement makes
-light.
+1. **The ground plane.** A rectilinear grid receding to a horizon at the
+   upper third, under a **polar ring set** centred on the origin: concentric
+   rings, dotted, plus a fine tick scale along the horizontal axis. The grid
+   is the coordinate system the marks are placed in, so it is never
+   decoration — it is why you can see that one slab is further out than
+   another.
+2. **The plumb axis.** A single vertical hairline through the origin, with a
+   small node where the current subject sits on it. This is the scale axis
+   made visible: the thing the title refers to is always *on* that line.
+3. **The origin.** Home is always at the centre of the rings, at every scale,
+   even when it is a single sub-pixel point. You can always find yourself.
+4. **Near-black field.** Not pure black: a very dark blue-black so the grid
+   can sit *under* it in value without clipping.
 
-## References (non-web)
+## The marks — one vocabulary, four relationships
 
-- **Noctiluca / dinoflagellate bloom** — the primary one. Dark water, a
-  bright wake where anything passes, light that fades after a few seconds.
-- **Deep-sea siphonophores** — a filamentary body that is mostly empty
-  space, with light travelling *along* the filaments rather than sitting on
-  them.
-- **A plasma lamp**, for the interaction only: filaments that reach toward a
-  finger on the glass, instantly and every time.
-- The human's own four stills, for the register: near-black field, one
-  luminous body, cool filaments with warm points in them, enormous empty
-  space, a display serif for the numerals.
+The brief's four relationships each get a form, and the forms are constructed
+from the same two primitives (a lit edge, a dotted interior) so they read as
+one family.
 
-## The spec
+| Relationship | Form | What sets its size and position |
+|---|---|---|
+| **Containment** (O1) | A **lattice**: a rectangular plane of dots in perspective, with lit edges | Dot count from the prefix's host count (capped, then *stated*); your address is one lit dot at its real index within the prefix |
+| **Collection** (O2) | Many **slabs** on the plane, each a lattice with thickness | Each slab's area is proportional to the host count on a log scale — a /20 really is visibly bigger than a /24; position is stable, sorted by prefix |
+| **Adjacency** (O3) | **Nodes** joined by hairlines | Node size from that AS's announced-prefix count when known; layout is a deterministic radial placement seeded by ASN, not a force sim |
+| **Population** (O4) | A **field** of marks to the horizon | Position is the ASN's Hilbert index over the 1024x1024 ASN-number plane (see below) |
 
-1. **The answer first, and it never moves.** Address set large and legible,
-   `Copy` beside it, in the first paint, over the field. Nothing about the
-   light is allowed to make it harder to read.
+Inward gets the same vocabulary turned on its side: **stacked planes** at
+different heights on the plumb axis, with risers dropping from each value to
+its plane (still 7). Same grid, same lit-edge language, read as strata rather
+than distance.
 
-2. **The body is already there.** Composed deterministically from the
-   address and its network, alive in the first frame. No entrance, no
-   assembly, ever.
+## The horizon rule — PROPOSED, not closed
 
-3. **Everything responds to the pointer, everywhere.** Not a hit target — the
-   whole screen. Filaments lean toward the cursor or finger; the medium
-   lights where it passes; faster movement makes more light. Response is
-   under ~100 ms, or it fails the test.
+The brief (§5, "The horizon problem") demanded an answer to:
 
-4. **Press and it blooms.** A touch sends a pulse outward along the
-   filaments, which reach the ends and come back. Repeatable forever,
-   satisfying every time, never a mode, never a state to get out of.
+> **Why is this ASN at this position?**
 
-5. **Real light comes in from outside.** Motes arrive along filaments from
-   off-screen, from real routing events. This is the discovery cue and it
-   needs no words: *something out there is doing that, so there is an out
-   there.*
+The answer proposed here, for phase 5, awaiting a decision:
 
-6. **Discovery is visible, not buried.** Filaments run off the edge of the
-   frame. Following one — scroll, pinch, drag — pulls the camera out along
-   it. The affordance is a thing on screen pointing outward, not a scroll
-   hint below the fold.
+> **Position is the Hilbert curve index of the AS number, over a 1024x1024
+> plane covering AS0–AS1048575. Presence means the AS was observed
+> originating a route by RIPE RIS on the dataset's date.**
 
-7. **Light has a hot core and a huge faint halo, at once.** (The lesson from
-   `until-redesign.md`: one radial gradient reads as a pasted PNG.) Every
-   luminous thing is at least three stops — tight bright core, mid falloff,
-   wide dim halo — with a warm-to-cool shift from core to edge, drawn
-   additively, with grain riding on top.
+Chosen over the topology-derived and registry-grouped candidates because:
 
-8. **Depth of field.** Things far away are larger, softer and dimmer; things
-   near are small and sharp. This is what makes a flat canvas read as a
-   volume, and it is most of the difference between the stills and my last
-   attempt.
+- **It is stated in one sentence and it is stable.** The same AS is in the
+  same place on every visit, on every device, forever. You can learn where
+  your provider lives.
+- **The texture is real.** Hilbert keeps numerically adjacent ASNs spatially
+  adjacent, and AS numbers are allocated to registries in contiguous runs, in
+  order, over time. So the clumps really are allocation blocks, the voids
+  really are unassigned or unannounced ranges, and the density gradient
+  really is the history of the number space filling up. None of that was
+  designed; it fell out of plotting the truth.
+- **It is cheap and it works offline.** A 128 KB bitmap, no per-frame layout,
+  no network.
 
-9. **Colour.** Deep blue-black water, cool cyan-white filaments, warm gold
-   at the points where light is strongest. The **network's own colour** is
-   the hue of its warm points, chosen from a curated set by ASN — so your
-   provider has a colour and keeps it, and two addresses on one network are
-   visibly the same species.
+Consequence accepted: the marks at the horizon are **uniform in size**,
+because there is no bulk source for per-AS prefix counts that is keyless and
+CORS-open. The reference still shows varied slabs out to the horizon; that
+variation would have to be invented, so it is cut. Variation returns the
+moment you enter a network, where the counts are real. *This is the single
+visible deviation from the stills, and it is deliberate.*
 
-10. **Reduced motion is a still, and it is beautiful.** The field settles
-    into a composed frame, the pointer still lights it locally (that is a
-    response, not an animation), and nothing drifts on its own.
+## Colour
 
-## What the data drives
+Three roles, no more. Derived, not decorative.
 
-Unchanged from the previous pass — this part was never the problem:
+| Role | Value | Meaning — strictly enforced |
+|---|---|---|
+| **Cream** `#F2EDE3` | display numerals, current subject's name | the thing you are being told |
+| **Cold blue-white** `#CFE3FF` to `#5C7FA8` | every structure, every mark, every grid line | data that is not you |
+| **Warm amber** `#F5A623` to `#FFD9A0` | Home, the current position, the trail | **you, and only you** |
 
-| Fact | In the picture |
-|---|---|
-| Your address | the bright core |
-| Announced prefix | the body it sits in |
-| Containing block | the dim surround, larger than the frame |
-| ASN | anatomy: filament count, branching rhythm, warm hue |
-| Others on your network | visibly the same species |
-| IPv4 / IPv6 | 4-fold vs 6-fold symmetry |
-| Measured round trip | a mote leaves, reaches the dark, returns |
-| Jitter | how steady the drift is |
-| AS neighbours | filaments running off-frame, one per neighbour |
-| Announcement / withdrawal | a filament lights up, or goes dark and drifts apart |
-| Published uncertainty | unlit water — fog, not a guess |
+Amber is the scarcest thing on screen and it never means anything but *you*.
+That is what makes finding yourself at the horizon work without a legend.
+Uncertainty is not a fourth colour — it is **unresolved structure**: lower
+opacity, dotted instead of solid, no endpoint.
+
+## Type
+
+**Archivo** (OFL, self-hosted variable, `fonts/`), and nothing else.
+
+- **Numerals**: `wght 250–300`, `wdth 105–112`, generous tracking, large.
+  The address is the largest thing that has ever been on screen and it is set
+  like a plate on a wall, not like a heading.
+- **Secondary**: `wght 400` at 0.55–0.7x the numeral size, in cold blue-white.
+- **Section labels** (inward only): `wght 500`, letterspaced `0.18em`,
+  uppercase — the one place uppercase is allowed, because those are strata
+  labels on a diagram, not headings.
+- No serif. (Fraunces carries *tonight* and *tide*; this app is the
+  instrument in the series, and it is the one that should not look drawn.)
+
+## Motion
+
+- **Scale is continuous, states are semantic.** Moving the axis dollies the
+  whole scene continuously; each state fades in over its own scale window, so
+  travel feels like travel, not like a slide change.
+- **Nothing animates before the answer is usable.** Still the hardest rule.
+- **Motion explains a change of scale or subject. Nothing decorates idle
+  time.** No drift, no twinkle, no ambient parallax.
+- **Reduced motion is a composed still**, and it is the basis of the saved
+  image. State changes are direct; the field does not move on its own; the
+  frame at every state must be worth printing.
 
 ## Banned
 
-- **No entrance animation.** Still the most important structural rule.
-- No `border-radius`, no `backdrop-filter`, no `box-shadow` on chrome.
-- No system-UI / Inter. Chrome is the display serif (Fraunces, self-hosted).
-- No globe, no map, no geography.
-- No purple-to-blue SaaS gradient, no filled-pill CTA, no centred card.
-- No icon set, no legend, no tutorial, no modal, no onboarding.
-- **No motion that is not caused by either the visitor or a real event.**
-  Ambient drift is allowed only as the medium settling; nothing pretends to
-  be data that isn't.
-- No text that explains the picture before the visitor has touched it.
+- No globe, no world map, no country, no coastline, no geography of any kind.
+- No `border-radius` on anything, no `backdrop-filter`, no `box-shadow`.
+- No system-UI, no Inter.
+- No filled-pill CTA, no centred card, no icon set, no legend, no modal, no
+  tutorial, no onboarding, no consent wall.
+- No indigo-to-violet gradient, no glowing blob, no lens flare, no bloom
+  applied as a post effect. (Light here is the sum of three stops drawn
+  additively — a tight core, a mid falloff, a wide dim halo — never one
+  radial gradient.)
+- **No animated packet, no fake traceroute, no line described as a cable.**
+- No mark whose position cannot be explained in one sentence.
+- No exclamation marks. No emoji.
+- No uniqueness score, no "1 in N", no privacy scare, no shield icon, no
+  green check.
 
-## Considered and rejected
+## The floor — the states that must also be beautiful
 
-- **Cordage** (Asawa's hanging wire, quipu; containment as suspension, the
-  address as a knot). Built as `apps/ip/lib/form.js` and rejected on sight.
-  It was a line drawing — no material, no light, no volume — and being a
-  static portrait, it gave a visitor nothing to do. The *data mapping*
-  underneath it was sound and is carried over wholesale. Kept in git history
-  at commit `4cdd4d0`; the code comes out of `apps/ip/` when Sea Fire's gate
-  passes.
-- Suminagashi, Chladni, Watermark, Daylight Register — the other three from
-  the first pass, all of which share Cordage's fatal property: they are
-  images, not things you can touch.
+Checked every phase, in the app and against the fixtures:
+
+- An address with **no** routing data (unannounced / bogon).
+- An AS with **1** prefix, and an AS with **thousands**.
+- An AS with **no** returned neighbours, and one with ~900 of which most are
+  flagged uncertain.
+- **IPv6** — a /48 inside a /32 is a very different pair of numbers than a /24
+  inside a /8, and the lattice has to survive it.
+- 320 px wide. Reduced motion. Offline after first load. The edge function not
+  deployed at all.
+
+If any of those is merely *acceptable*, the direction has not passed.
+
+---
+
+# Open — decisions that need a call before the phase that uses them
+
+These came out of building a full spike end to end (archived outside the
+repo, not in `apps/ip/`). Each one is a rule I invented to fill a gap the
+stills and the brief leave open. They are written down because they work,
+not because they are settled.
+
+| # | Decision | The proposal | Needed by | Why it is not obvious |
+|---|---|---|---|---|
+| 1 | **The origin holds the SUBJECT, not Home** | At every state, the thing being looked at is centred on the origin; the visitor's own mark is amber wherever it falls, plus a persistent HOME marker. | Phase 2 | The alternative — Home always dead centre — is a stronger "you are here", but it throws the composition off-centre whenever the address sits near the edge of its own block. The stills centre the subject. |
+| 2 | **IPv6 is measured in /64 subnets** | A /48 reads "65,536 subnets of the usual size (/64)" rather than "1,208,925,819,614,629,174,706,176 addresses". Both are true. | Phase 2 | It quietly changes the unit the whole outward ladder counts in, and a reader who knows IPv6 will notice; a reader who does not would otherwise be shown a 25-digit number that tells them nothing. |
+| 3 | **The horizon is a Hilbert field of AS numbers** | Position = the Hilbert index of the AS number over a 1024x1024 plane. See above. | Phase 5 | The brief lists three candidates and asks for a spike of each. This picks one on the argument that it is the only one statable in a sentence. |
+| 4 | **Horizon marks are uniform in size** | No bulk keyless source exists for per-AS prefix counts, so the varied slabs in the reference still would have to be invented. Cut. | Phase 5 | It is a visible departure from the human's own picture. |
+| 5 | **The outward axis stops where the data stops** | An address in no announced prefix can travel to +1 and no further; an address we never learned cannot travel outward at all. | Phase 2 | It is honest, and it also means a visitor on an unannounced address never sees the map at all. |
+| 6 | **Bounds on big collections** | 44 prefixes drawn of any number; 12 neighbours drawn of any number, chosen by RIPEstat's own `power` (how often they were observed), with the real totals always stated. | Phases 3-4 | Choosing *which* twelve is an editorial act, even when the ranking is published data. |
+| 7 | **The physical form of the scale axis** | A controlled full-viewport surface: wheel/drag/pinch move a float and snap to a state; arrows and PageUp/PageDown move state to state. | Phase 3 | The brief explicitly asks for three models to be prototyped before choosing. Only one was built. |

@@ -1,0 +1,101 @@
+<!doctype html>
+<!--
+  ip — "what's my IP".  PHASE 3 of 7.
+
+  Design: ../../docs/ip-art-direction.md  ("Survey")
+  Story:  ../../docs/ip-narrative-and-outline.md
+  Plan:   ../../docs/ip-build-plan.md
+
+  This file's whole job is that the address is a real element, present in
+  the first paint, first in the useful focus order, and that nothing
+  optional is ever allowed in front of it. No modal, no consent, no
+  tutorial, no onboarding — not now and not in any later phase.
+
+  Everything the canvas draws has a twin here: the plate names the subject,
+  #companion carries the facts for assistive technology.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>What's my IP</title>
+<meta name="description" content="Your public IP address, immediately, on a page that asks nobody else for it.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23060810'/%3E%3Ccircle cx='16' cy='16' r='10.5' fill='none' stroke='%233b5c85' stroke-width='1'/%3E%3Ccircle cx='16' cy='16' r='5.5' fill='none' stroke='%232b4466' stroke-width='1'/%3E%3Ccircle cx='16' cy='16' r='2.6' fill='%23f5a623'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="ip.css">
+</head>
+<body data-state="home">
+
+<!-- The picture. Decorative by contract: it carries no fact that is not
+     also in the DOM. -->
+<canvas id="field" aria-hidden="true"></canvas>
+
+<!-- THE ANSWER. First in the focus order, and nothing optional moves it. -->
+<div id="answer">
+  <h1 id="answerLabel">Your public IP address</h1>
+  <div id="answerRow">
+    <p id="address"><span id="addressText">&mdash;</span></p>
+    <button id="copy" type="button" aria-describedby="address">Copy</button>
+  </div>
+  <p id="answerNote"></p>
+</div>
+
+<!-- The subject plate: what the instrument is pointed at. -->
+<div id="plate" aria-hidden="true">
+  <p id="plateTitle"></p>
+  <p id="plateSub"></p>
+  <p id="plateNote"></p>
+</div>
+
+<!-- The annotation on the visitor's own mark, at the end of its leader. -->
+<div id="mark" aria-hidden="true">
+  <p id="markAddr"><span id="markFixed" class="fixed"></span><span id="markVary"></span></p>
+  <p id="markNote"></p>
+</div>
+
+<!-- Whatever mark the pointer is nearest, named. -->
+<div id="tipWrap" aria-hidden="true">
+  <p id="tip"><span id="tipFixed" class="fixed"></span><span id="tipVary"></span><span id="tipMine" class="mine"></span></p>
+  <p id="tipNote"></p>
+</div>
+
+<!-- How to travel. Shown only until the visitor has travelled once,
+     then never again. The interaction was unguessable without it. -->
+<p id="hint" aria-hidden="true"></p>
+
+<!-- The scale rail: the axis made visible. The only thing on the page that
+     says "there is further to go", and it says it without words. -->
+<div id="rail" aria-hidden="true">
+  <div id="railTrack"></div>
+  <div id="railMark"></div>
+</div>
+
+<nav id="controls" aria-label="Page">
+  <!-- Back appears only once there is somewhere to go back to. Wandering
+       needs a way home before it feels safe to wander. -->
+  <button id="goBack" type="button" hidden>Back</button>
+  <button id="goHome" type="button">Home</button>
+  <button id="about" type="button" aria-expanded="false" aria-controls="aboutPanel">About</button>
+</nav>
+
+<!-- The semantic companion: bounded, real, and the keyboard path to
+     everything the canvas shows. Visually hidden until focused. -->
+<section id="companion" aria-label="This view">
+  <h2 id="companionState">Home</h2>
+  <p id="companionSummary"></p>
+  <div id="companionFacts"></div>
+</section>
+
+<p id="live" role="status" aria-live="polite"></p>
+
+<div id="aboutPanel" hidden>
+  <div id="aboutInner">
+    <button id="aboutClose" type="button">Close</button>
+    <div id="aboutBody"></div>
+  </div>
+</div>
+
+<script src="telemetry.js"></script>
+<script src="ip.js"></script>
+</body>
+</html>

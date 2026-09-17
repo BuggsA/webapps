@@ -23,3 +23,6 @@ hosting/.hosting-outputs.env
 
 # ephemeral subagent worktrees
 .claude/worktrees/
+
+# NRO source cache for scripts/ip-build-space-field.py (55 MB, re-fetched)
+scripts/.nro-cache

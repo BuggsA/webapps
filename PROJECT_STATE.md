@@ -832,3 +832,1214 @@ Also mirrored (gitignored) in `hosting/.hosting-outputs.env`, which
   is as good as the moving frame (pulse frozen at a composed phase).
 - Next: phase 2, the answer itself (page + edge function + dev stub).
   Nothing deployed; nothing in apps/ip/ is production yet.
+
+## 2026-09-15 -- ip: direction relocked from the user's stills; built the whole thing, rolled back to phase 1
+
+- The user supplied a full narrative + outline brief ("What's My IP") and
+  seven reference stills. Copied verbatim to docs/ip-narrative-and-outline.md;
+  it supersedes the old parts list (docs/ip-handoff.md), which it critiques
+  directly in its own section 17.
+- **Art direction relocked: "Survey"** (docs/ip-art-direction.md). This time
+  the stills ARE the direction, not mood -- the previous pass explicitly
+  talked the user out of their own references and produced something thin.
+  Cordage (built, rejected) and Sea Fire (proposed, never built) archived to
+  docs/ip-art-direction-rejected-seafire-cordage.md; their code removed from
+  apps/ip/ (still at commit 4cdd4d0).
+  The chassis: a near-black plate, a perspective ground grid under dotted
+  polar rings, a tick scale, a plumb axis, horizon at 0.33H and origin at
+  0.59H -- three camera constants that every one of the nine states must be
+  drawn through, which is what makes them one instrument. Three colour roles
+  only: cream = what you are told, cold blue = structure, amber = you, and
+  amber is spent on nothing else. Archivo, self-hosted (OFL), no serif.
+- Data layer re-verified live: RIPEstat network-info / as-overview /
+  announced-prefixes / asn-neighbours all CORS-open, plus **as-names**, which
+  takes a comma-separated list and returns every neighbour's name in ONE
+  request instead of twelve. ris-asns returns 87,519 originating ASNs
+  (87,204 after dropping private/reserved space) at query time
+  2026-09-16 00:00 UTC.
+- **Built all six phases in one pass, then deliberately rolled back to phase
+  1 at the user's call.** The spike worked end to end against live data --
+  all nine states, recursion into real neighbours, the horizon field, the
+  inward strata, the saved still -- but it was made without a gate between
+  phases and the craft showed it: O2/O3 layouts tuned by screenshot rather
+  than designed, a label-collision test bolted on afterwards, and motion
+  never actually seen (rAF is throttled in the test harness, so every state
+  was verified through the reduced-motion path). Archived outside the repo.
+  **Working rule from here: one phase, then stop and show it.**
+- What survived the rollback, and is worth more than the code was:
+  - **Seven open design decisions**, now collected at the bottom of
+    docs/ip-art-direction.md as PROPOSALS awaiting the user's call rather
+    than quietly written in -- the origin holding the subject rather than
+    Home, IPv6 measured in /64 subnets, the Hilbert horizon rule, uniform
+    horizon marks (the one visible departure from the stills, because
+    per-AS prefix counts have no bulk keyless source), the axis stopping
+    where the data stops, the bounds on big collections, and the physical
+    form of the scale axis.
+  - scripts/ip-build-asn-field.py -- fetches and packages the phase-5
+    population dataset, with the filtering rules that were checked live.
+    Not run; its output is not in apps/ip/.
+- **Phase 1 shipped in apps/ip/**: the address in the first paint as a real
+  element first in the focus order, Copy, the chassis, the amber origin mark,
+  a minimal About carrying the privacy account, and the honest
+  "Not available" state. The address sizes itself from its own character
+  count, so the longest IPv6 (39 chars) fits at 900px and the longest IPv4
+  fits at 320px. Fixed a real bug found in testing: setting canvas.width
+  clears the bitmap, so a resize that only *queued* a repaint left the field
+  stale until the next animation frame -- resize now paints synchronously.
+- **hosting/ now has a stack change**: hosting/edge/ip-whoami.js, a
+  CloudFront Function on a new /ip/whoami behaviour with caching disabled.
+  Reads event.viewer.ip, returns text/plain to anything not asking for JSON
+  (so `curl` gets the address and nothing else) and JSON to the page. 3.4 KB
+  against the 10 KB quota. **Written and reviewed, never run** -- it needs a
+  `cdk deploy` of WebappsHostingStack, which is the first time adding an app
+  has needed more than an `s3 sync`.
+- **Nothing deployed, nothing committed.** Next: the user's call on the seven
+  open decisions, then phase 2 (O1, the announced block) on its own.
+
+## 2026-09-16 -- ip: the renderer (phase 2 of 7), and the Canvas 2D rule changed
+
+- The phase-1 picture was judged flat ("a dumbed down version of photos...
+  I think you are taking the easy route"). Correct: it was built out of
+  primitives that cannot carry light -- 1px hairlines and square fillRect
+  marks -- with light implied by tuning alpha.
+- Researched properly (docs/ip-render-research.md) with a live proof
+  (scripts/ip-render-gate.html, dev-only, three revisions against their
+  notes). Findings: Canvas 2D is capped at 1px line width by ANGLE and
+  ctx.filter blur is too slow for a bloom chain, so the stills are
+  unreachable from it. Raw WebGL2 reaches all of it at ~98% support.
+- **The user's own brief said "Canvas 2D" (section 7), so it was amended
+  rather than worked around** -- both docs/ip-narrative-and-outline.md and
+  docs/building-a-new-app.md section 1 now read "Canvas 2D or raw WebGL2,
+  with a Canvas 2D fallback", with the reason recorded inline. This is the
+  first app in the repo to use WebGL2.
+- The second big finding was the FLOOR, which the stills use and I had
+  ignored entirely: a glossy planar reflection under every luminous object,
+  a pool of light spilled onto the plane around it, and actual surfaces with
+  bright rims rather than bare edges (that last one is why it read as "stick
+  figures"). **Shadows do not apply here** -- additive light over black has
+  no ambient to occlude, so grounding is added, never subtracted.
+- **The plan was re-phased from 6 to 7**, with the renderer INSERTED as
+  phase 2 rather than appended, because it is the foundation under every
+  later phase. Phase 1 is done in part: the DOM answer, whoami, the edge
+  function, the a11y floor and the failure states all survive; the Canvas 2D
+  chassis drawing became the fallback.
+- **Phase 2 built.** apps/ip/ip.js restructured: SCENE is renderer-agnostic
+  data, GL and C2D both consume it, so later phases add geometry once.
+  Planar reflection is done by mirroring about y=0 -- no second camera and no
+  second render target, and the gloss falloff drops out of height above the
+  plane. rAF runs only while the parallax is easing; an idle page costs
+  nothing. Reduced motion disables parallax and freezes the grain seed so the
+  still is a still.
+- Verified: WebGL2 path and forced `?renderer=2d` fallback both render Home
+  correctly with the address in the first paint; longest IPv6 at 320px with
+  no horizontal scroll; clean network (4 same-origin requests, no third
+  party); no console errors; node --check passes.
+- **Not deployed, not committed.** Next: phase 3 (O1, the announced block),
+  which needs the user's call on open decisions 1, 2 and 5 in
+  docs/ip-art-direction.md first.
+
+## 2026-09-16 -- ip: phase 3, the announced block
+
+- Three design calls put to the owner before building, per their standing
+  request to be asked rather than told. 1 (the origin holds the SUBJECT, so
+  the block is centred and the address sits at its real index inside it) and
+  2 (IPv6 counted in /64 subnets, IPv4 in addresses) went as recommended.
+  **5 did NOT**: the recommendation was to stop the axis where the routing
+  data stops; the owner chose to let an unannounced address travel anyway.
+  Their reason, given separately and now written into the plan as a standing
+  rule: wandering is the point of the product and is not a reward for having
+  good routing data.
+- Owner also flagged mid-build that the wander/explore aspect was getting
+  squeezed out by renderer work. Fair. Written into docs/ip-build-plan.md as
+  "The thing that must not get squeezed out": the axis is held not stepped,
+  anything real can be touched, the axis never stops because the data ran
+  out, and no phase is done if it made the space smaller.
+- **Built.** The scene gained LAYERS -- one instance buffer carrying geometry
+  at different world scales and opacities, so one state grows into frame as
+  another shrinks out of it. That is the mechanism every later state needs,
+  so it was worth building properly now rather than per-phase. Surfaces were
+  ported from the gate too (first phase with a face to put one on).
+- The axis is continuous and does NOT snap. Keyboard steps whole states.
+- Data: RIPEstat network-info + as-overview, fired only once the visitor has
+  moved off Home, cached in localStorage for a week. An arrive-copy-leave
+  visit still talks to nobody but our own edge.
+- Two real bugs found and fixed while verifying:
+  (1) A NUL byte had got into ip.css from a mangled `\00b7` escape -- it made
+      the file binary. Replaced with a literal middle dot.
+  (2) The plate is DOM but was only updating inside the render loop, so on a
+      throttled or backgrounded tab the text lagged the data. Text now
+      updates synchronously; only the picture waits for a frame.
+  Also: the annotation on the visitor's mark now flips and clamps rather than
+  running a 39-character IPv6 address off the frame.
+- Verified live: 193.0.6.139 -> 193.0.0.0/21, AS3333, RIPE NCC, 2,048
+  addresses; 2001:67c:2e8:22::c100:68b -> 2001:67c:2e8::/48, "one mark per 16
+  subnets, 65,536 in the block"; 203.0.113.42 -> "No announced block" stated
+  immediately. 320px with no horizontal scroll. node --check passes.
+- Tuning note worth keeping: 2,048 marks at the brightness that suits 256
+  merge into one lit slab. Mark intensity and size now scale with density.
+- **Not deployed, not committed.** Next: phase 4, which is where the
+  wandering actually starts -- O2 the network's other blocks, O3 observed
+  neighbours, and selection re-pointing the instrument.
+
+## 2026-09-16 -- ip: phase 3.5, the block becomes a place
+
+- Owner asked whether any wandering could be added before phase 4 that is
+  still beauty. The answer that needed no new data at all: **every one of the
+  2,048 marks in the announced block is a real address**, and a mark's
+  POSITION IS its offset in the block. So the field can name whichever mark
+  the pointer is nearest, continuously, with zero network requests -- it is
+  arithmetic, not a lookup.
+- Deliberately NOT a hit target. The field answers the hand continuously, so
+  there is nothing to aim at and no way to miss -- which is the three-year-old
+  test from the brief (touch it, something happens, every time).
+- Done by casting the pointer as a ray onto the block's own plane and turning
+  the hit back into a cell: O(1), rather than projecting two thousand points
+  every frame. The camera has no roll and no yaw, so the basis is constant and
+  the ray is three lines of arithmetic.
+- The cursor mark and its light pool live in ONE RESERVED SLOT on the end of
+  the point and pool instance buffers, written with bufferSubData each frame,
+  so the field it moves over is never re-uploaded.
+- When one mark stands for many (a /21 shows one mark per address, but a
+  large IPv6 block does not), the readout says the range rather than implying
+  a single address: "16 subnets" with "2001:db8::  -  2001:db8:0:f::" under it.
+- Verified live on 193.0.0.0/21: hovering names 193.0.4.23, 193.0.0.102 and so
+  on, all genuinely inside the block, and the visitor's own mark reads
+  "193.0.6.139 - yours".
+- **Not deployed, not committed.** Phase 4 next: O2, O3, and selection
+  re-pointing the instrument.
+
+## 2026-09-16 -- ip: orbit, the address's own structure, and an inverted-pointer bug
+
+- **Bug the owner reported: the pointer was inverted while wandering the
+  block.** Root cause worth remembering. `look()` builds its basis from
+  `z = normalize(eye - at)`, which for a camera facing +z gives a right
+  vector of (-1, 0, 0) -- that is correct for a right-handed world, not a
+  bug. But the hand-rolled ray in `cursorAt` assumed right = (+1, 0, 0), so
+  it ran the wrong way; and the parallax had the same sign wrong, pushing the
+  eye AWAY from the pointer instead of leaning toward it. Both now derive
+  from a single `camBasis()`, so they cannot drift apart again.
+- **A second bug the first one exposed: the block read right-to-left.** With
+  world +x rendering on the screen LEFT, laying columns out along +x put
+  address offset 0 on the right. Fixed with a `SCREEN_X()` helper and a loud
+  comment in CONFIG, because every later phase lays out a grid (O2's slabs,
+  the Hilbert field) and would have inherited it. Verified: hovering left
+  gives column 27, right gives column 34.
+- **Orbit added.** Yaw only -- rotating about Y leaves the pitch, the horizon
+  and the origin exactly where the art direction fixes them, so it is still
+  one instrument and you are walking around the plate rather than tilting it.
+  Horizontal drag orbits, vertical drag still moves the scale axis, left/right
+  arrows step it, Home resets both.
+- **The address's own structure.** The part every address in the block shares
+  is dimmed; only the varying tail is bright, in both the visitor's own mark
+  and the hover readout. Wander and the dim part never changes -- the prefix
+  shown rather than said -- with "21 bits fixed, 11 vary" under it. Computed
+  from the common text prefix of the block's first and last address, split
+  only at a separator, and only claimed when it really is a prefix of that
+  address (an IPv6 text form can compress differently, and then the claim
+  would be false).
+- **Not deployed, not committed.** Phase 4 next.
+
+## 2026-09-16 -- ip: phase 3b, the address space (and IPv6 as a real place)
+
+- Owner asked whether the OTHER address space could be explored, and flagged
+  IPv6 explicitly. Put to them first, because it **reverses their own brief's
+  section 17**, which had replaced a six-stop address-space ladder with the
+  network ladder. They chose "both, space first". The argument that won it:
+  address space is free (pure arithmetic, zero lookups), it gives IPv6 equal
+  standing, and it becomes the wandering the product is for --
+  **space is the map, networks are what you find in it.**
+- Their extra ask, and the best note in the whole thing: *"maybe a note or
+  disclaimer that isn't too loud if the exploration goes away from the actual
+  truth"*. So the field draws the epistemic line: your block is lit because
+  it was looked up; every other cell is dark because it is real address space
+  that **nobody has asked about**. Hovering one says "not asked". The plate
+  says it once, quietly, and never again.
+- Two new axis states, both 64x64 Hilbert fields of 4,096 blocks:
+  axis 2 = the containing block (e.g. 193.0.0.0/9 for a /21, or 2001:67c::/36
+  for a /48); axis 3 = all of IPv4, or 2000::/3 for an IPv6 visitor.
+- **The IPv6 size gap is stated rather than implied**: one ordinary /64 holds
+  18,446,744,073,709,551,616 addresses, about four billion times the entire
+  IPv4 space. Verified against IANA/RFC 4291 before putting a number on
+  screen.
+- The layer system earned itself: four outward states now cross-fade on a
+  cos-squared partition of unity and each is drawn at its own power of ZOOM,
+  so pulling the axis is travel rather than a slide change.
+- **Bug found and fixed: IPv6 text compression.** The regex form produced
+  `2000:0:0:0:0:0:0:0/3` instead of `2000::/3`. Replaced with a proper
+  RFC 5952 longest-zero-run collapse, done by hand, and unit-checked.
+- Also fixed: the plate's opacity was still tied to the block layer, so it
+  vanished at the new states.
+- **Not deployed, not committed.** Phase 4 next: the network ladder, which
+  the space now feeds into.
+
+## 2026-09-16 -- ip: blocks are choosable, and five bugs
+
+- Owner asked whether the other cells should be clickable and become the
+  focus "with new info in context to the user's ip". Yes, and it is now the
+  wandering mechanic: point at address space nobody has asked about, click,
+  and asking is what turns it into a place with a name.
+- **The field records what has been asked.** Three honest states per cell:
+  unasked (dark), asked-and-announced (lit, and it stays lit), and
+  asked-and-nothing-there (marked, but dimmer -- "nothing announced here" is
+  a real answer, not an absence). Exploration literally lights the map, and
+  only with things actually looked up. Hover reads "not asked" / "asking" /
+  the AS and holder.
+- **A chosen block is described in terms of the visitor's own address**,
+  which is the only reason another block is interesting: how many blocks away
+  it is, whether it is the same network as theirs, and -- the good one -- when
+  the announced prefix differs in size from the cell they pointed at:
+  "You pointed at 193.106.8.0/21; what is announced there is 193.106.8.0/22."
+  Live-verified against AS215722 LapIT Oy and AS1241 Nova Telecommunications.
+
+### Bugs found and fixed this pass
+
+1. **Hard boot break.** `syncDom` referenced `n` (the net) without declaring
+   it; the throw happened during boot, so the address never loaded at all.
+2. **GL object leak.** `upload()` built new VAOs and buffers on every rebuild
+   and orphaned the previous set. Now tracked and released. This mattered
+   more once rebuilds became frequent (every lookup rebuilds the field).
+3. **Fallback did 4,096 sprite blits a frame** at the space states -- ~21ms a
+   frame on a fast desktop, on the renderer that exists for slow devices.
+   Only marks above an alpha threshold earn a halo sprite now; the rest are
+   a couple of pixels, which is all they are on screen anyway.
+4. **Tap selected a different cell than the hover.** `onTap` re-cast the ray,
+   but the parallax eases the camera between the last pointermove and the
+   click, so the same screen point had moved to a neighbouring cell. Taps now
+   act on whatever is actually lit and labelled. Rule worth keeping: act on
+   what is displayed, never on a fresh raycast.
+5. **Plate opacity** was still tied to the block layer, so it vanished at the
+   space states.
+- Console 404s chased and confirmed harmless: all four of the page's own
+  resources return 200; the 404s are `whoami` (the edge function is not
+  deployed) and stale entries in the tool's console buffer.
+- **Not deployed, not committed.**
+
+## ip — phase 4.5 step 1: the ladder (2026-09-16)
+
+Research first: `docs/ip-infinity-research.md`, commissioned by the owner
+("I think there could be a infinite appearance thing kind of build in", then
+"it should be explorable ... rather than ground truth with it displayed as
+not being ground truth ... Almost like no man sky or minecraft"). Three
+decisions locked by the owner, all of them the recommendation: per-family
+rail at real bit depth, ghost networks only, ship every registry table that
+packs small enough. `docs/ip-build-plan.md` gained phase 4.5, inserted after
+the ladder rather than appended.
+
+### The depth is now true
+
+The axis used to stop at 3 for everyone, because 3 is what IPv4 needs. It is
+now the real bit depth of the family: **2.67 steps for IPv4, 10.42 for IPv6**.
+One step is 12 bits (4096 cells), walked as a ladder of rungs through four
+recycled layer slots, so a ten-rung ladder costs what a two-rung one does.
+
+Live-checked. IPv4 193.0.6.139 is unchanged from before: block /21 AS3333
+RIPE NCC, then /12, then all of IPv4. IPv6 2a00:1450:4009:81f::200e walks
+/116, /100, /88, /76, **/64**, **/48 (AS15169 Google LLC)**, /40, /28, /16,
+2000::/3 — ten stops, all correct, in both renderers, no console errors.
+
+### Three things worth not re-deriving
+
+1. **Floating origin was already satisfied**, by construction rather than by
+   design. A field is a container plus a cell offset, and an offset is never
+   above 4095, so no absolute address ever reaches a float. 128 bits would
+   not survive one. Written down as a standing rule and commented in place.
+2. **The lattice is pinned to /64, not to the announced block.** Pinning to
+   the block was the obvious idea and it is wrong: a v6 /32 anchored on
+   itself gives rungs at /44, /56, /68, straddling /64 and never framing it.
+   /64 is the one boundary every IPv6 network shares. So the block became a
+   LANDMARK BETWEEN RUNGS — drawn by its own layer at its own position,
+   marked wider on the rail, and hit by the keyboard. Truer anyway: a prefix
+   length is a fact about the visitor, not about the shape of the space.
+   The payoff state is the rung at /52: "4,096 blocks of /64, and one of
+   them is yours."
+3. **`layers()` already implemented a Shepard tone** — superposed octaves,
+   cos-squared partition of unity, one fading in as another fades out —
+   built without anyone noticing what it was.
+
+### Bugs found and fixed while verifying
+
+1. **Plate text went stale mid-travel.** `setAxis` only reached `syncDom`
+   when a rung boundary was crossed, so between rungs the plate kept naming
+   a rung the axis had already passed. Same rule as before, now enforced in
+   two more places: TEXT MUST NEVER WAIT ON A FRAME.
+2. **`syncDom` read `layerAlpha` without recomputing it.** The weights decide
+   which state owns the plate and are computed per frame, so on a throttled
+   tab the text could read weights that were never updated. `syncDom` now
+   calls `layers()` itself; it is idempotent with the frame's own call.
+3. **An empty BLOCK layer took a share of the normalised weight**, dimming
+   the field for exactly the visitors with no announced prefix — the ones
+   with least to look at. It only counts when there is geometry.
+4. **A dead first gesture on IPv6.** The nearest rung was a whole step out of
+   range, so the first pull of the axis moved nothing. The deepest rung the
+   family allows is now always offered; it drops out again on IPv4, where it
+   would crowd the block.
+5. **Weights had to be normalised.** cos-squared is a partition of unity only
+   while the rungs are exactly one step apart, and the floor clamp and the
+   block both sit off-lattice, leaving gaps of up to 1.33 steps. Left alone
+   the picture dimmed at every crossing. Dividing through by the sum is what
+   lets the block sit wherever it really is instead of being shoved onto the
+   lattice to keep the maths tidy.
+6. **`PROJECT_STATE.md` itself had a NUL byte** — from the note *about* the
+   NUL byte in `ip.css`, whose middle-dot CSS escape got mangled a second
+   time on the way in. Repaired. Standing rule: do not write that escape
+   sequence literally in any file in this repo -- name it in words. It has
+   now corrupted three files, including this sentence's own first draft.
+
+### Measured, for phase 4.5 step 3
+
+Full NRO delegation dataset, range-merged on (RIR, country), delta-varint
+packed: **291 KB gzipped** (IPv4 204 from 143,466 ranges, IPv6 87 from
+68,863), 240 countries. Too heavy for the first paint, fine deferred to the
+same trigger as the RIPEstat lookups. The small tables — IANA /8s, the 51
+rows that describe all of 2000::/3, RFC 6890 — are a few KB and ship inline.
+
+### Still true
+
+- **Not deployed, not committed.** The edge function has still never run.
+- Steps 2-5 of phase 4.5 not started: registry tables, landmarks, ghosts.
+- Phase 4 (the network ladder: O2, O3, selection re-pointing the instrument)
+  is still open and still carries open decisions 6 and 7.
+
+## ip — phase 4: travel (2026-09-16)
+
+The owner, after the ladder landed:
+
+> *"Hmm this should feel like a powerpoint, but almost like the universe
+> where you could expore a gyser on mars or check out the milkyway then visit
+> the largest crater on europa. Not a one way slide, but exploration."*
+
+Correct, and the cause was structural rather than cosmetic. **One axis
+anchored to the visitor's own address is a slider however many rungs it
+has.** Every rung was a container around *you*, so the ten rungs built the
+day before were ten zoom levels of one place, in a fixed sequence, always
+ending at the same slide. Clicking a cell labelled it; nothing anywhere in
+the app moved sideways.
+
+### The whole fix is one substitution
+
+`S.aim` — a BigInt — replaces home as the thing everything is built around.
+It starts as the visitor's address and stops being it the moment they travel.
+
+- **Choosing a block goes there.** The block takes the origin, the ladder
+  re-anchors to it, `S.subject` replaces `S.net` as what the block layer
+  draws, and the plate describes where you are relative to home:
+  *"2,936,014,475 addresses from yours · a different network from yours"*.
+- **Amber is only ever you.** Travel somewhere your address is not and there
+  is no amber in the frame at all — `fieldAt` returns `homeIdx: -1` and
+  nothing is drawn for it. That absence is what makes the distance mean
+  something.
+- **`Back` retraces a trail, `Home` returns.** Back is hidden until there is
+  somewhere to go back to.
+- **Lateral travel** by horizontal drag and by arrow keys, walking the aim
+  along the address line — so a container boundary is crossed, not hit. A
+  wall is what makes a thing a slide deck. Shift-drag keeps the old yaw.
+
+Owner's calls on the three questions: home becomes a distant marker *plus* a
+Home button (not a permanent tether); landmarks should glow as you near them
+rather than sit in an index; lateral motion should feel free but stay inside
+the nesting.
+
+### Verified live, by real clicks and by the debug API
+
+- `193.0.6.139` home → `193.0.0.0/21` AS3333 RIPE NCC.
+- Click a cell in the `/12` field → travelled to `193.1.36.0`, which is
+  announced as `193.1.0.0/16` by **AS1213 Asiera**; then `193.13.53.0` →
+  `193.12.0.0/14` **AS1257 Tele2 Sverige AB**, 863,861 addresses from home.
+- `18.0.0.0` → `18.0.0.0/16` **AS3, Massachusetts Institute of Technology**.
+  AS3 is genuinely MIT's, and 18/8 has been theirs since 1981.
+- `8.8.8.8` → `8.8.8.0/24` AS15169 Google LLC.
+- Back and Home both work from the buttons and from the keyboard.
+- Both renderers, no console errors.
+
+### Bugs found and fixed while verifying
+
+1. **The block was blowing out to a white capsule and erasing the field
+   behind it.** Two separate causes, both only visible now that travel makes
+   every shape of prefix reachable:
+   - *Concentration.* Accumulation is additive, so a layer that has shrunk
+     puts the same geometry through fewer pixels. Pulled a step past the
+     block, the bloom took it to white and the tone map crushed the field to
+     nothing. The block now fades by its own shrinkage; because the weights
+     are normalised the light goes to the field instead of being lost.
+   - *Fixed-brightness furniture.* The rim and the four corner lamps are the
+     same brightness whatever they frame, and a square prefix is barely half
+     the screen width of a wide one, so they merged. They now scale with the
+     block. **The marks were never the problem** — a /14 draws fewer per unit
+     area than a /21 does. A wide block is untouched, which keeps the look
+     the owner already approved.
+2. **`tidyHolder` left an orphan dash.** RIPE returns `"AS8151 - UNINET"` and
+   stripping the number alone left the plate reading `"- UNINET"`.
+3. **A drag that never got its pointerup kept travelling** on every later
+   move. Now cleared when `e.buttons` is 0 and on window blur.
+
+### The one anomaly: explained, and it was not a bug
+
+During one batched check the aim reported `187.144.0.0` after a
+`travel('18.0.0.0')`. It could not be reproduced in isolation. **The owner
+was clicking the same live page while the checks were driving it** -- their
+travel, not a fault. Recorded because the lesson generalises: a shared
+preview is a shared session, so an unreproducible anomaly during automated
+checking is worth asking about before it is written up as a defect.
+
+The stale-drag guard added above stands on its own merits -- a drag whose
+pointerup is lost really would keep travelling -- but it fixed nothing here.
+
+### Still true
+
+- **Not deployed, not committed.** The edge function has still never run.
+- Phase 4 still owes **O2** (the network's other announced blocks) and **O3**
+  (observed neighbours), plus open decisions 6 and 7.
+- **Free spatial panning is deferred on purpose.** Doing it properly means an
+  unbounded Hilbert window and a BigInt Hilbert transform, with a tiled
+  fast path so a 64x64 window does not cost 237k BigInt iterations a rebuild.
+  Deferred until the travel model had been looked at, which it now has.
+- Phase 4.5 steps 2-5 untouched: registry tables, the 291 KB dataset,
+  landmarks, the ghost tier. Landmarks are what will make travel have
+  destinations rather than only coordinates.
+
+### Deploy tooling fix, 2026-09-16
+
+`scripts\deploy-hosting.ps1` line 62 had `"...$envFile:"`. PowerShell parses
+`$name:` as a drive-qualified variable (the same syntax as `$env:PATH`), so
+the file failed to PARSE -- meaning the script never ran a single line and no
+AWS call was made. Fixed to `${envFile}`. All three deploy scripts now pass
+`[Parser]::ParseFile`, which is a non-executing check worth running on any
+`.ps1` before handing it to the owner, since a parse error hides behind a
+script that has "always worked" until a new caller trips it.
+
+## ip — DEPLOYED AND VERIFIED, 2026-09-17
+
+Live: `https://<DISTRIBUTION_DOMAIN>/ip/`
+
+**The CloudFront Function ran for the first time and works.** The header that
+proves it is `X-Cache: FunctionGeneratedResponse from cloudfront` -- the
+response is generated at viewer-request and never reaches the origin, which
+is the whole architecture in one line. `curl` gets `text/plain`; the page
+gets JSON with the request headers and `"note":"Seen for this response. Not
+kept."`. The live page shows the real address in the first paint. No console
+errors, WebGL2 path.
+
+This is also the first time the system's rule that adding an app never
+touches the stack has been broken on purpose, and it held together: the
+hosting deploy added the `IpWhoami` function, the `/ip/whoami` behaviour and
+the `/ip/` link on the landing page.
+
+### What went wrong on the way, and what each thing taught
+
+1. **`deploy-hosting.ps1` would not parse.** `"...$envFile:"` -- PowerShell
+   reads `$name:` as a drive-qualified variable, the same syntax as
+   `$env:PATH`. Because it is a PARSE error the script never executed a line,
+   so nothing was half-deployed. Fixed to `${envFile}`. All three deploy
+   scripts now pass `[Parser]::ParseFile`, a non-executing check worth
+   running on any `.ps1` before handing it over -- this bug had sat in the
+   file since 2026-09-02 and only surfaced when a new caller tripped it.
+
+2. **`/ip/whoami` 404'd after the app deploy.** Diagnosed from evidence
+   rather than guessed: the 404 carried `Server: AmazonS3` and a
+   `Last-Modified` of 2026-09-02, `hosting/cdk-outputs.json` did not exist,
+   `.hosting-outputs.env` was still dated 02 Sep, and the live landing page
+   had no `/ip/` link. All four said the same thing -- `deploy-app.ps1` had
+   run, `deploy-hosting.ps1` never had. `deploy-app` succeeds without it
+   because the September env file still holds valid bucket and distribution
+   ids, which is a sharp edge worth remembering.
+
+3. **The Back button showed at Home with nothing behind it.** `hidden` was
+   being overridden: the UA rule for `[hidden]` is `display:none`, but any
+   author `display` on the element outranks it, and `#controls button` sets
+   `display: inline-flex`. The same trap was already known in this very file
+   -- `#copy[hidden]` carries a comment about it -- and the new buttons
+   simply did not inherit the fix.
+
+4. **Home was hidden by the axis.** `body[data-state="home"]` is about how
+   far out the axis is, which was correct until travel existed. A visitor can
+   now be a long way from their own address while the axis has barely moved,
+   and that is exactly when Home matters most. Both controls are now decided
+   in `syncDom` from `away()` and the trail, not in CSS.
+
+### A correction to this file's own record
+
+The earlier note about an unexplained aim jump to `187.144.0.0` is resolved:
+**the owner was clicking the same live page while the automated checks were
+driving it.** Not a fault. The lesson generalises -- a shared preview is a
+shared session, so ask before writing an unreproducible anomaly up as a
+defect.
+
+Separately, I briefly reported the deployed `ip.js` as stale. It was not: I
+compared a byte count (106,621) against a character count (104,755). Same
+file. Check the units before calling something stale.
+
+### Still true
+
+- Phases 5-7 unbuilt; phase 4 still owes O2 and O3; phase 4.5 steps 2-5
+  (registry tables, the 291 KB dataset, landmarks, the ghost tier) untouched.
+- **Nothing is committed.** The repo has the whole of `apps/ip/` untracked.
+- A CSS + JS fix (items 3 and 4 above) is on disk and NOT yet deployed --
+  it needs another `deploy-app.ps1 -Name ip`.
+
+## ip — travel was half-broken; found by the owner, 2026-09-17
+
+> *"I cant seem to zoom in on other things. Is that correct?"*
+
+Not correct. Two real bugs, both introduced with travel and both invisible
+while the only reachable place was the visitor's own address.
+
+1. **The ladder collapsed after travelling.** The anti-crowding rule dropped
+   any rung within a third of a step of the block. A /16 block sits exactly
+   0.333 from the rungs on *both* sides, so both were culled: travel to
+   `18.0.0.0` and the ladder went from three rungs to **one**, leaving the
+   axis doing nothing across most of its range. The only genuine duplicate is
+   a rung whose container IS the block -- that field and the block's own grid
+   are the same thing drawn twice. Everything else is a different scale and
+   may overlap freely; the weights are normalised, so nothing brightens.
+   Now `[20, 12, 0]` again, and the axis reads /20 -> the /16 block -> /12 ->
+   all of IPv4.
+
+2. **Cells inside the block were not clickable.** `cursorAt` never set
+   `field: true` on the block branch, so `onTap` bailed. The most detailed
+   view in the app was the one place you could look but not go -- against the
+   plan's own standing rule that anything real on screen can be touched and
+   touching it does something. Clicking a block cell now travels to that
+   address. Also fixed there: the tip was splitting the address against
+   `S.net.cidr` (home's prefix) rather than the subject's, so after travel it
+   underlined the wrong digits.
+
+3. **The plate was decided by if-order, not by weight.** While away, the
+   block kept the plate even when a rung half again as bright was the thing
+   filling the frame. Both `plateFor` and `summary` now compare alphas.
+
+### The part that is NOT a bug, and is worth saying out loud
+
+**IPv4 has almost no inward depth, and that is the truth of IPv4.** The whole
+axis is 2.67 steps. A /16 leaves 16 bits underneath it -- 1.33 steps -- and
+the block's own grid already shows all of it. There is genuinely not much
+"in" to go. IPv6 is a different object: travelling to Cloudflare's
+`2606:4700:4700::1111` gives the full ten-rung descent through `/116, /100,
+/88, /76, /64, /52, /40, /28, /16` to `2000::/3`, with the announced `/48`
+(Cloudflare, Inc.) as a landmark between rungs at s=6.67. The asymmetry the
+owner can feel here is the size difference, not a defect.
+
+### Lesson
+
+A feature exercised only against the user's own data hides its bugs. Travel
+made every prefix shape and every ladder anchoring reachable, and three
+separate faults surfaced within minutes of the owner actually wandering.
+Build the general case, then go somewhere that is not home.
+
+**Needs `deploy-app.ps1 -Name ip` -- these fixes plus the two control bugs
+are on disk and not yet live.**
+
+## ip — arriving, and landmarks (2026-09-17)
+
+> *"I still dont know how I would zoom in on other point. It would be good to
+> learn about other things."*
+
+Two separate failures, and the first was mine to have caught: travel worked
+but was **unguessable and gave no feedback**. Nothing said a cell could be
+clicked, the pointer did not change over one, and a click re-aimed the
+instrument without moving it -- so it read as a dead control. Building a
+mechanic is not the same as making it findable.
+
+### Arriving
+
+- **A click now flies.** The axis eases to the scale that frames what was
+  chosen, then settles on whatever network turns out to be announced there
+  once the lookup answers. Eased on the same curve as the parallax, jumped
+  instantly under reduced motion, and cancelled the moment a hand touches the
+  wheel or drags -- the instrument never fights the visitor.
+- This does not reopen "the axis is held, not stepped". That rule is about a
+  DRAG not snapping when the hand lets go. An explicit choice of somewhere to
+  go is a request to be taken there.
+- **The pointer says so** (`.pick` over any nameable cell) and a line under
+  the frame says it outright -- "Point at any block, then click to travel to
+  it" -- until the visitor has travelled once, then never again.
+
+### Landmarks: things to learn about
+
+A static table, every entry either a fact fixed by an RFC or an address
+published by whoever operates it, so nothing needs a lookup and nothing can
+rot into fiction. Where a landmark has a holder, the holder is still earned
+by the same RIPEstat call as every other block -- the note says what the
+place IS, the instrument says who is actually there.
+
+Verified live: `240.0.0.0/4` "Reserved for the future"; `127.0.0.0/8`
+"16,777,216 addresses that all mean here"; `192.0.2.0/24` TEST-NET-1;
+`8.8.8.8` Google Public DNS (AS15169 confirmed by lookup); `1.1.1.1`
+Cloudflare + APNIC (AS13335 confirmed); and all thirteen root servers in both
+families. **The root addresses are not from memory** -- they are the current
+contents of the IANA root hints, https://www.internic.net/domain/named.root,
+fetched and read rather than recalled.
+
+Best accident so far: `193.0.14.129` is `k.root-servers.net`, and the
+development fixture `193.0.6.139` is **2,038 addresses from it**. The test
+address has been next door to a root server the entire build.
+
+Landmarks are lit WITHOUT being asked about, and are the only thing allowed
+to be -- no lookup was skipped to know them. Everything else still obeys
+lit = known, dark = unasked.
+
+### Bugs found while building this
+
+1. **The plate claimed "and one of them is yours" about fields home is not
+   in.** Introduced by travel and false on every travelled-to field. Now
+   conditional on `f.homeIdx >= 0`.
+2. **A landmark covering a sixteenth of IPv4 lit 256 cells at lamp
+   brightness**, blowing a quarter of the map to white and crushing the rest
+   against it. Brightness per cell now falls with the square root of the
+   cells covered, so a big landmark reads as lit territory and a small one as
+   a point. Same concentration problem as the block, third time in this app.
+3. **The fly-in stepped blindly inward**, so from an already-close axis it
+   flew to zero -- a single address with nothing around it. It now targets
+   the scale that frames the chosen cell.
+4. **Point landmarks never got the plate.** The rule was "the frame is inside
+   the landmark", which is true of regions and never of a single host, so
+   root servers and resolvers were silently outranked by their own block.
+
+### Still true
+
+- **Needs `deploy-app.ps1 -Name ip`.**
+- Nothing committed. Phase 4 still owes O2/O3; phase 4.5 steps 2-3 (the
+  registry tables and the 291 KB dataset) and step 5 (the ghost tier) remain.
+- Free spatial panning still deferred (unbounded Hilbert window).
+
+## ip — the shape of a network (2026-09-17)
+
+> *"a ball seems to follow the mouse but it is weird spots. Also there
+> doesn't seem like a ton of information ... It just feels like the sliding
+> in and out with a new ipaddress on top."*
+
+Both fair. The first was a bug; the second was the truth about the design.
+
+### The ball
+
+`writeCursor` pinned the highlight to `LY.BLOCK`, so a cursor whose
+coordinates are in a FIELD's local space was drawn at the block layer's world
+scale — a glowing ball wandering the frame nowhere near the cell it belonged
+to. It only ever looked right back when the block was the only pickable
+thing. Fixed to use the cursor's own layer, in the GL path, the Canvas 2D
+path, the stale-cursor rule and the label placement. Measured after: pointer
+at CSS (268, 181), highlight at (268.7, 180.7) — sub-pixel.
+
+### Why it felt like an address on top of a slider
+
+Because it was. **Every network looked identical.** A university and a CDN
+drew the same grid of dots; only the caption changed, so travelling to twenty
+places showed one picture twenty times. Landmarks gave destinations but not
+substance on arrival.
+
+A network is not one block — it is every block it announces, and that is
+wildly different from one to the next:
+
+    RIPE NCC  AS3333        6 blocks,     4,608 addresses
+    Google    AS15169   ~1,400 blocks
+    Akamai    AS20940    3,953 blocks, 15,624,128 addresses
+
+Arriving now lights up everywhere else that network lives, and the plate
+says how many of the blocks in view are theirs and how much they hold in
+all. RIPE lights six cells in a corner; Akamai lights 532 in the same frame.
+Same data path as everything else (RIPEstat `announced-prefixes`, cached).
+
+It also makes the standing disclaimer honest: once a network has been asked
+about, "only yours has been looked up" is no longer true, and the copy now
+says what IS known and that nothing else here has been.
+
+### Bugs found while building it
+
+1. **Address totals were summed across families.** `announced-prefixes`
+   returns IPv4 and IPv6 together, and one IPv6 /32 is 2^96 addresses, so
+   RIPE NCC was reported as holding 20,551,738,933,448,695,970,009,600
+   addresses. Counted per family now, and reported in the family in view.
+2. **"N blocks here" was counting lit CELLS, not prefixes** — so a single
+   aggregate covering the frame read as "4,096 blocks". It counts prefixes
+   that reach into the field, which is the number that means anything.
+3. **The footprint blew out.** Akamai holds thousands of separate /24s, each
+   one cell: individually tiny, collectively the whole frame at full
+   brightness. Dimmed by how much of the FIELD is covered rather than by the
+   size of each prefix. Fourth time concentration has bitten in this app —
+   it is now a standing thing to check whenever anything can be drawn many
+   times at once.
+
+### Still true
+
+- **Needs `deploy-app.ps1 -Name ip`.**
+- Nothing committed.
+- O3 (observed neighbours — AS3333 has 965) is still unbuilt, and is the
+  obvious next source of "what is this network" information.
+- Phase 4.5 steps 2-3 (registry tables; the 291 KB dataset) would give the
+  MAP structure, so different regions look different even before anything is
+  asked about. That is the other half of the answer to "not a ton of
+  information".
+
+## ip — the zoom follows the click (2026-09-17)
+
+> *"First I kind of want the zoom to follow the last click. Not whatever it
+> is."*
+
+`arrive()` removed. It re-aimed the axis at whatever prefix the lookup turned
+out to announce, which was wrong twice over: the camera moved a SECOND time,
+on its own, a beat after the visitor had already stopped — nothing on screen
+asked for it and nothing explained it — and it overruled a direct choice with
+an asynchronous one. You pointed at a block and the instrument took you
+somewhere else because a server said so.
+
+**Standing rule: the axis goes where the visitor sent it and stops there.**
+The announced prefix is still drawn and still named on the plate. It does not
+get to steer.
+
+Verified: click a cell in the /12 field at s=1.67 and the axis eases
+1.62 / 1.02 / 0.79 / 0.71 / 0.68 / 0.67 and then holds at 0.67 through the
+lookup landing and for six seconds after. The plate fills in underneath it —
+"193.13.48.0/20 · 4,096 addresses · 1 of these blocks is announced by AS1257
+· Tele2 Sverige AB, which announces 383 blocks" — without the frame moving.
+
+**Needs `deploy-app.ps1 -Name ip`.**
+
+## ip — the camera belongs to the hand holding it (2026-09-17)
+
+> *"I would like to zoom in myself click then that is new focus I zoom in at
+> my pace on it with the center not being what you clicked until you get in
+> far enough."*
+
+A better model than either of the two I built, and the third correction in a
+row on the same theme. **A click moves the AIM and nothing else.** No flight,
+no easing, no re-aiming when a lookup lands. The camera never moves unless
+the visitor moves it.
+
+What makes this work is that the framing converges on its own. Every rung
+derives its container from the aim, so at the scale the visitor is already
+at, the block they picked is inside the same container they were in — only
+the marker moves and the plate fills in. Zoom in and the containers get
+smaller around the new aim until the chosen thing IS the frame. Measured,
+after clicking 193.13.53.0 from the /12 field:
+
+    s=1.67  frame 193.0.0.0/12     (unchanged by the click)
+    s=1.40  frame 193.12.0.0/14    (the announced block)
+    s=1.20  frame 193.13.48.0/20   (the choice is now the centre)
+    s=0.67  frame 193.13.48.0/20
+
+Nothing teleports, and nothing is centred before it has earned it.
+
+All three earlier attempts failed the same way: the instrument moved itself.
+`arrive()` re-aimed at whatever the lookup announced, a beat late. The flight
+took the visitor somewhere they had not asked to be. Both were me deciding
+where the frame should sit.
+
+**Standing rule, now in the source and in memory: the axis belongs to the
+hand holding it. Late-arriving data may fill in the text; it may never move
+the frame. Nor may a click.**
+
+The hint copy teaches the model rather than promising travel: "Click any
+block to focus it — then zoom in on it yourself."
+
+**Needs `deploy-app.ps1 -Name ip`.**
+
+## ip — zoom that converges on the choice (2026-09-17)
+
+> *"It feel less like you are going to the point you click. That is part of
+> the journey. I found a point now let me zoom in on that point. Can you do
+> some research?"*
+
+The owner was right and their explanation was not the problem; mine was.
+
+### What the research says
+
+- **Pointer-anchored zoom** is the standard: the point you picked holds its
+  place on screen while everything scales around it. Google Maps, GIMP,
+  OpenSeadragon, Qt's `AnchorUnderMouse`.
+- **van Wijk & Nuij, "Smooth and efficient zooming and panning" (InfoVis
+  2003)** is the formal model: a view is a (centre, width) pair, and moving
+  to a target traces a path along which **the centre slides toward the target
+  as the width shrinks**. https://vanwijk.win.tue.nl/zoompan.pdf
+- Furnas & Bederson's space-scale diagrams (CHI '95) are the underlying
+  theory of pan-and-zoom as a single space.
+
+### What was wrong
+
+Every rung frames an ALIGNED container, because the arithmetic demands it.
+So the chosen block jumped to a new place on screen at every boundary it
+crossed and never travelled toward anything — flicking through slides of
+different sizes rather than going somewhere. There was no centre sliding
+anywhere, because there was no centre: only a stack of boxes.
+
+### The fix
+
+The container stays aligned; the FIELD is panned. `conv` runs 0 -> 1 over
+about a rung and a half from the zoom the choice was made at, and each live
+rung is translated from container-centred to choice-centred by that amount.
+Measured, clicking a block 46px off centre and then zooming in by hand:
+
+    s=1.67  frame /12   off-centre 46px      (the click: nothing moves)
+    s=1.55  frame /12   off-centre 43px
+    s=1.40  frame /12   off-centre 39px
+    s=1.25  frame /20   off-centre 17px      (the frame hands over)
+    s=0.95  frame /20   off-centre 14px
+    s=0.40  frame /20   off-centre  9px
+
+Monotonic, no jumps, and the visitor drives all of it.
+
+Implemented as a per-layer uniform `uPan[]`, not as baked geometry: it has to
+change continuously with the axis, and rebuilding twelve thousand points per
+frame to express a translation would be absurd. Picking, the hover targets,
+the tip label and the Canvas 2D path all apply the same pan, or the hand and
+the picture disagree.
+
+### Bugs found while doing it
+
+1. **The pool program does not include the COMMON shader block**, so adding
+   `uPan` only to COMMON was a compile error — which took the WHOLE renderer
+   down, not just the pools. Black screen, no console error, because the
+   throw was swallowed. Worth remembering: this file has two uniform blocks.
+2. **Three separate things were keyed off the axis that should have been
+   keyed off `away()`**: the Home button, the body `data-state` (so the big
+   centred address ballooned back over the frame while the visitor was deep
+   inside somebody else's network), and the plate opacity (so the only label
+   naming where they were faded out at low zoom). Travel made "Home" mean a
+   place rather than a zoom level, and these three did not get the memo.
+
+**Needs `deploy-app.ps1 -Name ip`.**
+
+## ip — layer transitions: measured, improved, root cause named (2026-09-17)
+
+> *"def a lot better not quite there. I think it is the transition between
+> layers where it falls apart a bit."*
+
+Right, and measurable. Instrumented the probe to report where the chosen
+block lands **in every live layer at once**. During a cross-fade the two
+layers placed it **23px apart**, both at meaningful alpha — the same block
+visibly in two places. That is what falling apart looks like.
+
+### Root cause, which is structural
+
+The layers are not spatially registered. Each rung draws its container as a
+64x64 grid CENTRED at the origin at its own scale, so a given address lands
+somewhere different in each. For two rungs to overlay exactly, two things
+must hold at once:
+
+1. the scale between adjacent rungs must be FIELD (64), because a rung's
+   container is one cell of the rung above it; and
+2. each field must be drawn at the position its container occupies inside
+   its parent, rather than centred.
+
+**Tried (1) alone: it made things worse, 23px -> 147px.** Scaling up an
+unregistered offset only magnifies it. Recorded because it is the kind of
+half-fix that looks obviously right on paper. ZOOM is back to 3.4 with the
+reasoning written into the source so nobody tries it again.
+
+Proper registration is the unbounded-Hilbert redesign already deferred twice
+(a global Hilbert layout with orientation carried down, so every level is a
+window onto one curve rather than its own local grid). It is the same fix
+that free spatial panning needs.
+
+### What was done instead, and what it bought
+
+The aim IS registered across every layer once the convergence completes,
+because every layer then places it at the origin. So the convergence was
+retuned to finish inside a single step — one layer transition — which locks
+the thing the visitor is actually watching even though the texture around it
+still does not agree. Measured at the crossover, where the two layers are
+equally visible:
+
+    before   19px apart at alphas 0.31 / 0.29
+    after     6px apart at alphas 0.31 / 0.29
+    worst disagreement anywhere, weighted by the fainter layer: 3.2
+
+Honest summary: better, not solved. The residual is the unregistered
+surrounding texture, and it will stay until the layout is global.
+
+**Needs `deploy-app.ps1 -Name ip`.**
+
+## ip — plan v2, and phase A begun (2026-09-17)
+
+A long design conversation ended somewhere neither of us expected. The whole
+of it is in `docs/ip-plan-v2.md`, which supersedes the old plan from phase 5
+onward. Nine phases, ordered, plus cross-cutting design for the guide, the
+content format, the cold open, the tracker, sound, beauty and wonder.
+
+### The findings that changed the product
+
+- **The emptiness was never a content problem.** Open worlds run on a
+  four-beat loop: see something from here, go to it, get something, and from
+  the new position see the next thing. This app had beat two and a weak beat
+  three. Bethesda places points of interest within sight of one another;
+  Breath of the Wild introduces one every ~40 seconds.
+- **The sightline mechanism was already built.** The network footprint IS
+  beat four. It shipped as an information feature and was used as a caption.
+- **The map was never empty.** 86% of cells at the top view and 100% deeper
+  already carry a country, an era and a registry, from data that was sitting
+  on disk unused.
+- **Awe has two conditions and we delivered neither** (Keltner & Haidt):
+  perceived vastness and a need for accommodation. We print a number, which
+  is a string, and nothing we show has ever contradicted anything anyone
+  believed. Kant's mathematical sublime is sharper still: the feeling is a
+  comprehension attempt that FAILS, and the ladder never asks anyone to try.
+- **The curriculum is the wonder engine.** Every misconception broken is an
+  accommodation event, so the quests are not an educational strand bolted to
+  an aesthetic one. They are the same mechanism.
+- **Layer registration is not polish.** It is what lets someone watch the
+  place they just stood become one cell of the place they are now. Deferred
+  twice as a 6px artefact; that judged the artefact right and the stakes
+  wrong. It is phase B.
+
+### Owner decisions, recorded
+
+Quests with a real taxonomy (main, side, gated, optional, eggs), a narrator
+with character who exclaims and congratulates and is sarcastic, completion
+counts, badges, metrics, celebrations, an exported card to brag with, sound,
+and the ghost tier restored. **Four separate drafts trimmed the fun on
+aesthetic grounds and called it judgement; all four were wrong and the plan
+carries a standing note not to reintroduce them.**
+
+Two things were nearly lost silently and were caught: the ghost tier, which
+the owner had explicitly chosen on 2026-09-16 and which a draft cut in a
+bullet, and sound, which nobody had mentioned in the entire project.
+
+### Phase A begun: `scripts/ip-build-space-field.py`
+
+Builds `apps/ip/data/space.bin` — every allocation the five RIRs have made,
+with registry, country and exact year, as sorted non-overlapping ranges with
+a delta-varint encoding. Round trip verified by binary search against real
+addresses: 193.0.6.139 -> ripencc/NL/1993, 1.1.1.1 -> apnic/AU/2011,
+2606:4700:4700::1111 -> arin/US/2011.
+
+**438,937 bytes gzipped.** Four cleverer encodings were tried and all four
+lost to the naive one, because gzip's dictionary already beats a hand-rolled
+delta scheme; the numbers are recorded in the script's docstring so nobody
+re-derives them. The year is what costs: five named eras would be 343 KB,
+no year at all 288 KB. Exact years were kept, because 96 KB buys a specific
+and surprising per-place fact about every block in the world, on a file that
+is deferred until the visitor moves off Home.
+
+The delivery path already exists: `deploy-app.ps1` pre-gzips `apps/*/data/
+*.bin` and uploads with the right Content-Encoding. It was built for Tide,
+which ships a multi-megabyte binary through it.
+
+**Not wired into the app yet, not deployed.** Next: load it, and draw era,
+registry and country into the field.
+
+### Phase A, part two: the registry is in the app (2026-09-17)
+
+`space.bin` loads on the same trigger as the RIPEstat calls and is parsed in
+**139 ms** — 171,333 IPv4 ranges and 69,327 IPv6, 6,285 distinct
+(registry, country, year) keys. Verified in the live app by binary search:
+
+    193.0.6.139           RIPE NCC  NL  1993
+    129.6.15.30           ARIN      US  1987
+    1.1.1.1               APNIC     AU  2011
+    2606:4700:4700::1111  ARIN      US  2011
+    240.0.0.1             null
+    127.0.0.1             null
+    2001:db8::1           null
+
+The nulls are the point: reserved and special-use space is absent from the
+registries because nobody holds it, so it draws as the darkest thing on the
+plate and that darkness is true.
+
+**Era is brightness, never hue** — the art direction allows three colour
+roles and age is not one of them. Unallocated is darkest at 0.055, and the
+gradient runs up to 0.40 for pre-1990 space, which keeps the whole range
+below an answered lookup (0.95) and below a network footprint (0.70) so
+nothing known-without-asking can outshout something actually asked about.
+
+**Every number is now sized against something.** A year alone is inert, so
+`regLine` always states the percentile: *allocated 1993, older than 19% of
+the space anybody holds*.
+
+**`fieldMix` makes the descent sayable**, which is what the wonder research
+asked for — vastness perceived rather than printed:
+
+    all of IPv4      111 countries, mostly US  1983-2026  14% held by nobody
+    193.0.0.0/12      49 countries, mostly SE  1992-2025
+    193.0.0.0/20     all of it NL  1993
+    2000::/3          21 countries, mostly US  1999-2024  99% held by nobody
+    2a00::/16         72 countries, mostly GB  2005-2026  56% held by nobody
+    a /64            all of it IE  2009
+
+**IPv6 global unicast is 99% held by nobody.** That is the first line this
+app has ever produced that qualifies as an accommodation event under
+Keltner & Haidt — something that does not fit what a visitor already
+believes. It came out of the data for free.
+
+Both renderers, no console errors. **Not deployed.** Next in phase A: the
+queries — *show me Brazil* — which the same file already answers.
+
+One bug found and fixed: `rungPlate` computed the field mix after the
+floor-rung early return, so the whole-space view silently read it as
+`undefined` and said nothing.
+
+### Phase A complete: the map answers questions (2026-09-17)
+
+**There is no search box, and there should not be.** The plate already says
+"49 countries, mostly SE" — so those words ARE the query. Touch one and the
+map shows you everywhere it applies; touch it again to stop. No new chrome,
+no syntax, and the question is taught by the answer it came out of.
+
+Verified live at the whole-IPv4 view:
+
+    US        34,880 ranges   1,606,217,376 addresses
+    BR         5,056 ranges      79,645,184 addresses
+    SE         1,962 ranges      31,306,528 addresses
+    IS           163 ranges         920,576 addresses
+    VA             4 ranges          10,752 addresses
+    AFRINIC    4,492 ranges     116,144,896 addresses
+    RIPE NCC  81,386 ranges     854,641,184 addresses
+
+The Brazil figure matches the offline analysis exactly, which is the check
+that the shipped file and the source agree.
+
+**A query highlights, it never filters.** Matches brighten; everything else
+stays exactly as true as it was and merely recedes. A filter would be the
+map lying about what is there.
+
+### Concentration, made a function instead of a fifth patch
+
+`spread(n, full, floor)`. Accumulation is additive and the bloom is
+generous, so N marks at one brightness in one place read as a single white
+hole and the tone map crushes everything around them. This has now bitten
+the block, the landmarks, a network footprint and a query highlight — four
+separate discoveries, four separate patches, one function. Sweden at the /12
+view went from a white blob to a legible shape with the Hilbert structure
+visible in it.
+
+**Standing note: anything that can draw many marks at once goes through
+`spread()`.**
+
+### Also
+
+- `docs/ip-plan-v2.md` gained **the doors** (phase F): NAT64 `64:ff9b::/96`,
+  IPv4-mapped `::ffff:0:0/96`, 6to4 `2002::/16`, Teredo `2001::/32`. Owner's
+  easter-egg request, and it is entirely true — 193.0.6.139 is also
+  `64:ff9b::c100:68b`, arithmetic verified. Walking through one re-derives
+  the ladder at the other family's depth, so an IPv4 visitor steps from a
+  2.67-step axis onto a 10.42-step one. The size gap as an event rather than
+  a sentence.
+- One bug: `rungPlate` read the field mix before computing it, so the
+  whole-space view silently said nothing.
+
+**Phase A is done. Not deployed.** Next is phase B — layer registration, the
+wonder mechanism, watching the place you just stood become one cell of the
+place you are now.
+
+### Phase B: the rungs register (2026-09-17)
+
+**One curve, not one per rung.** Every rung used to run its own `d2xy` over
+its own container, so two rungs disagreed about where an address was and the
+same block appeared twice through every cross-fade. They now index a single
+global Hilbert curve over the whole space at that cell size, which makes a
+container an aligned 64x64 tile of its parent automatically. Researched
+before building: `child >> 12 === parent` verified for a whole window, and
+~20 ms a rung flat with depth, so no tiled fast path was needed.
+
+`ZOOM` is now `FIELD`. It has to be: a rung's container is one cell of the
+rung above, so the scale between adjacent rungs is forced. Setting it alone
+was tried once and made things worse (23px became 147px) because it needs
+the positions too, which it now has.
+
+**Registration verified by geometry, not by eye.** A deeper rung's whole
+field must be exactly the extent of the corresponding cells of the shallower
+one:
+
+    /12 field = 0.743619    one /0 cell = 0.743619    ratio 1.000000
+    /20 field = 0.046476    one /12 cell = 0.011619   ratio 4.000000
+
+Both exact. The 4 is correct, not an error: the ladder's deepest rung is
+forced on at `bits - 12` regardless of the lattice, so /20 and /12 are 8 bits
+apart rather than 12, and the /20 container really is 4 cells per axis of the
+/12 field.
+
+**The convergence survived as a rigid translation.** With the rungs
+registered the aim is world zero in every one of them, so it would otherwise
+be dead centre from the instant of the click — against the owner's model that
+the centre is not what you clicked until you have gone in far enough. So the
+pan is now ONE world offset applied to every layer at once, running from
+container-centred to aim-centred. Rigid is the load-bearing word: translating
+the whole stack together is the only kind of pan that cannot pull the layers
+out of register.
+
+### Three bugs, all silent
+
+1. **`var ZOOM = FIELD;` was written above `var FIELD = 64;`.** `var` hoists
+   the declaration and not the value, so ZOOM was `undefined`, every scale in
+   the app became NaN, and the frame went blank with nothing in the console.
+   FIELD is now declared first, with a comment saying why.
+2. **`var aimX = mx` ran before `mx` existed**, so `undefined` propagated as
+   NaN to the same blank frame. Moved below its inputs.
+3. **A half-cell offset in the reference frame.** `ox` was the centre of the
+   cell the aim sits in rather than the aim's exact position — a different
+   point at every level, and the difference is multiplied by FIELD on the way
+   up, so it came out as 28px of disagreement two rungs away. The exact
+   position is the only thing every level can agree about.
+
+Also: a NaN ray could index the inverse lookup out of bounds and reach
+`BigInt(undefined)`, which throws. Guarded. Verified zero errors across a
+hover sweep — the console entries that persisted through several checks were
+stale buffer, not live faults.
+
+Both renderers clean. Hovering reads registry facts: `193.4.179.0/24 · IS ·
+1993`.
+
+**Still to do in phase B, and it is the wonder half:** the place you just
+stood staying outlined as it becomes one cell, and the descent accumulating
+so the rungs above are still on screen. The registration is what makes both
+possible; neither is built yet. **Not deployed.**
+
+### The phone bug: the fallback never worked (2026-09-17)
+
+Owner reported a black screen on their phone with the text and the controls
+still there. **My first diagnosis was wrong and is worth recording as wrong**:
+I read `R = makeGL(cv) || make2D(cv)` and concluded that a shader failure
+threw out of `boot()` and took `loadAddress()` down with it. It does not.
+`makeGL` has its own `try { ... } catch (_) { return null; }` around program
+creation, so it returns null and the fallback IS reached, exactly as
+designed.
+
+**The real cause, and it has been there since phase 2:**
+
+> A canvas can only ever have one kind of context.
+
+Once `getContext('webgl2')` has succeeded, `getContext('2d')` on that same
+element returns null forever. So on a device that HAS WebGL2 but cannot
+compile the shaders — a phone without highp in fragment shaders, an old GPU,
+a browser with acceleration switched off — makeGL took the context, failed,
+returned null, and then the 2D path could not have the canvas back. Both
+renderers gone, silently, and a black screen with a perfectly good address
+sitting on top of it. **The documented Canvas 2D fallback has never once
+worked in the wild.** It only ever ran in tests via `?renderer=2d`, which
+skips makeGL and leaves the canvas unclaimed.
+
+Falling back now replaces the canvas element first. Proved with a harness
+that forces every shader compile to report failure:
+
+    shaders fail      renderer "2d", picture drawn, address fine, no notice
+    both fail         no renderer, address fine, Copy works, plate works,
+                      companion works, one quiet line on the bottom
+
+Zero live errors in both, and at a 375x812 viewport. (The console errors that
+kept reappearing through several checks were stale buffer entries, confirmed
+with an error counter — not live faults. Second time that has cost time this
+session.)
+
+Also done, and worth keeping regardless:
+
+- **`loadAddress()` moved above the renderer.** `index.html` promises that
+  nothing optional is ever allowed in front of the address, and a shader is
+  optional. It also puts the request in flight while shaders compile, which
+  is better even when everything works.
+- The no-picture notice sits on the bottom line, which was free, rather than
+  printing itself through the plate.
+- The hint does not invite clicking a picture that is not there.
+- That line now wraps: it ran off both edges of a phone and off a desktop.
+
+**Deliberately not done.** The owner's call, and I agree with it: the phone
+is not a first-class target yet. Its reasoning — people who use "what's my
+IP" for more than twenty seconds are probably at a keyboard, because every
+practical reason to look it up is a desktop task — matches how the thing is
+used. One caveat recorded for later: **the share path is mobile**, so phase
+G's card will land on phones, and that is when mobile has to be good.
+
+The likely shape when it comes: **the phone gets the personal half and the
+desktop gets the map.** The inward half (phase H) is DOM, not canvas, so it
+works on a phone with no renderer work at all — and it is the better fit for
+a short visit anyway. That is a split along a line the product already has,
+not a degraded desktop build.
+
+Still open on mobile: the exploration model assumes hover, which phones do
+not have, and pinch is not implemented despite the README claiming it.

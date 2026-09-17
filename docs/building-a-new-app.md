@@ -17,7 +17,12 @@ Related reading: [`../README.md`](../README.md) (roles + envelope),
 **Tier 1, pure static.** One folder, `apps/<name>/`: `index.html`,
 `<name>.css`, `<name>.js`, a `README.md`, and whatever `fonts/` `lib/`
 `data/` it needs. No framework, no bundler, no build step, no `npm install`
-in the app. Vanilla HTML + Canvas 2D + JS. Tier 2 (one Lambda + Function URL)
+in the app. Vanilla HTML + JS, drawing with **Canvas 2D or raw WebGL2** —
+WebGL2 is a browser API, not a dependency, and an app that needs real light
+(HDR accumulation, a bloom chain, feathered lines) cannot get there in
+Canvas 2D. An app that uses it ships a Canvas 2D fallback for the ~2% of
+visitors without it. First established by `apps/ip/`; see
+`ip-render-research.md` for the evidence. Tier 2 (one Lambda + Function URL)
 exists only for an app that genuinely cannot work client-side — assume you
 are Tier 1 unless the brief says otherwise, and say so early if you think you
 need Tier 2.

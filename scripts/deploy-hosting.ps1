@@ -59,7 +59,7 @@ try {
     "DIST_ID=$($o.DistributionId)",
     "DIST_DOMAIN=$($o.DistributionDomain)"
   ) | Set-Content -Encoding utf8 $envFile
-  Write-Host "`nWrote $envFile:"
+  Write-Host "`nWrote ${envFile}:"
   Get-Content $envFile | Write-Host
 
   # NOTE: --exclude "*/*" is load-bearing. Without it, `--delete` against the

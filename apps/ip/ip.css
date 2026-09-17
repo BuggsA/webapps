@@ -1,0 +1,576 @@
+/* ip — Survey.  Design: ../../docs/ip-art-direction.md
+ * PHASE 3 of 7: Home and the announced block.
+ *
+ * The rules this file keeps:
+ *   - no border-radius, no box-shadow, no backdrop-filter, anywhere
+ *   - no system-ui, no Inter: Archivo, self-hosted, and nothing else
+ *   - three colour roles only. cream = what you are being told.
+ *     cold blue = structure that is not you. amber = you, and amber is
+ *     never spent on anything else.
+ *   - nothing moves unless the visitor moved it
+ */
+
+/* ── FONT ────────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('fonts/archivo-latin-var.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('fonts/archivo-latin-ext-var.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+/* ── TOKENS ──────────────────────────────────────────────────────────── */
+
+:root {
+  --ground: #05070d;
+  --cream: #f2ede3;
+  --cold-1: #cfe3ff;
+  --cold-2: #8fa9c9;
+  --cold-3: #5c7fa8;
+  --cold-4: #2a3c55;
+  --amber: #f5a623;
+  --amber-pale: #ffd9a0;
+
+  --ui: 13px;
+  --gutter: clamp(16px, 4vw, 40px);
+}
+
+/* ── RESET ───────────────────────────────────────────────────────────── */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--ground);
+  color: var(--cold-2);
+  font-family: 'Archivo', sans-serif;
+  font-variant-numeric: lining-nums tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  overflow: hidden;
+  touch-action: none;
+  padding:
+    env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#field {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* the axis owns the gesture; there is nothing to scroll */
+  touch-action: none;
+}
+#field.pick { cursor: pointer; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  letter-spacing: .02em;
+}
+
+:focus-visible {
+  outline: 1px solid var(--amber);
+  outline-offset: 4px;
+}
+
+/* ── THE ANSWER ──────────────────────────────────────────────────────── */
+
+#answer {
+  position: fixed;
+  z-index: 3;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - var(--gutter) * 2);
+  text-align: center;
+}
+
+/* The address and Copy are one row; the note is a block under it. Keeping
+   the note out of the flex row is what stops `width: max-content` from
+   dragging it up onto the same line. */
+#answerRow {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(10px, 1.6vw, 22px);
+  flex-wrap: wrap;
+  justify-content: center;
+  /* shrink-to-fit to the SUM of the row, not to the widest item, or Copy
+     wraps under the address on a perfectly wide screen */
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+#answerLabel {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The address is set to fit its own length. A full IPv6 address is 39
+   characters where an IPv4 one is 15, and a fixed size that flatters one
+   runs the other off both edges of a phone. --addr-chars is set by ip.js;
+   0.55em is Archivo's rough advance width at this weight, and the 84px
+   reserve is the Copy control beside it. */
+#address {
+  --addr-chars: 15;
+  color: var(--cream);
+  font-size: clamp(22px, min(8.6vw,
+    calc((100vw - var(--gutter) * 2 - 84px) / (var(--addr-chars) * 0.55))), 104px);
+  font-weight: 260;
+  font-stretch: 108%;
+  line-height: 1.04;
+  letter-spacing: -.005em;
+  overflow-wrap: anywhere;
+}
+#address.is-pending {
+  color: var(--cold-3);
+  font-size: clamp(26px, 5vw, 54px);
+}
+
+#copy {
+  color: var(--cold-3);
+  font-size: clamp(11px, 1.05vw, 14px);
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  /* the visible mark is a word; the target is never smaller than a thumb */
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: color .2s linear;
+}
+#copy:hover { color: var(--cold-1); }
+#copy[data-done="1"] { color: var(--amber); }
+/* display:inline-flex would otherwise beat the [hidden] default */
+#copy[hidden] { display: none; }
+
+#answerNote {
+  text-align: center;
+  font-size: var(--ui);
+  color: var(--cold-3);
+  max-width: 42ch;
+  margin: .9em auto 0;
+  line-height: 1.55;
+}
+#answerNote:empty { display: none; }
+
+/* From O1 outward the answer becomes the HOME marker, top-left. One
+   element, two lives: it never unmounts, so it is never re-announced and
+   Copy is never more than a Tab away. */
+body:not([data-state="home"]) #answer {
+  left: var(--gutter);
+  top: calc(var(--gutter) + 2px);
+  transform: none;
+  width: auto;
+  text-align: left;
+}
+body:not([data-state="home"]) #answerRow { margin: 0; }
+body:not([data-state="home"]) #address {
+  font-size: clamp(13px, 1.25vw, 16px);
+  font-weight: 400;
+  font-stretch: 100%;
+  color: var(--amber-pale);
+  letter-spacing: .04em;
+  line-height: 1;
+}
+body:not([data-state="home"]) #address::before {
+  content: 'HOME · ';
+  color: var(--amber);
+  font-weight: 500;
+  letter-spacing: .14em;
+}
+body:not([data-state="home"]) #copy { font-size: 10px; min-height: 34px; }
+/* Once the answer is the compact HOME marker, its note stays in that
+   top-left column rather than spanning the frame and printing itself
+   through the plate. */
+body:not([data-state="home"]) #answerNote {
+  max-width: 26ch;
+  margin: .6em 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+
+/* ── THE SUBJECT PLATE ───────────────────────────────────────────────── */
+
+#plate {
+  position: fixed;
+  z-index: 3;
+  left: 50%;
+  top: clamp(52px, 11vh, 120px);
+  transform: translateX(-50%);
+  width: calc(100% - var(--gutter) * 2);
+  max-width: min(760px, calc(100% - var(--gutter) * 2));
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+}
+#plateTitle {
+  color: var(--cream);
+  font-size: clamp(24px, 4.6vw, 54px);
+  font-weight: 260;
+  font-stretch: 106%;
+  line-height: 1.06;
+  letter-spacing: -.004em;
+  /* a long unbroken token — an IPv6 prefix — gets a smaller size rather
+     than a break in the middle of itself */
+  overflow-wrap: anywhere;
+}
+body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
+#plateSub {
+  color: var(--cold-2);
+  font-size: clamp(12px, 1.4vw, 17px);
+  margin-top: .55em;
+}
+#plateNote {
+  color: var(--cold-3);
+  font-size: var(--ui);
+  margin-top: .7em;
+  line-height: 1.5;
+}
+#plateTitle:empty, #plateSub:empty, #plateNote:empty { display: none; }
+
+/* The plate says "49 countries, mostly SE". Those words ARE the query:
+   touch one and the map shows you everywhere it applies. No search box,
+   no syntax, and the question is taught by the answer it came from.
+   The plate is pointer-events:none, so only these opt back in. */
+#plate button.ask {
+  pointer-events: auto;
+  color: inherit;
+  font: inherit;
+  padding: 0 1px;
+  border-bottom: 1px dotted var(--cold-3);
+  transition: color .15s linear, border-color .15s linear;
+}
+#plate button.ask:hover { color: var(--cold-1); border-bottom-color: var(--cold-1); }
+
+
+/* ── THE MARK ANNOTATION ─────────────────────────────────────────────── */
+
+#mark {
+  position: fixed;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  max-width: 30ch;
+  transform: translateY(-50%);
+  /* the block behind it is the brightest thing in frame */
+  text-shadow: 0 0 7px #020306, 0 0 16px #020306;
+}
+#mark.left { transform: translate(-100%, -50%); text-align: right; }
+#markAddr {
+  color: var(--cold-1);
+  font-size: clamp(13px, 1.6vw, 19px);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+#markNote {
+  color: var(--cold-3);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: .5em;
+}
+#markNote:empty { display: none; }
+
+/* ── THE READOUT ─────────────────────────────────────────────────────
+   Whatever the pointer is nearest. Not a tooltip that appears on a hit —
+   the field answers the hand continuously, so there is never nothing. */
+
+#tipWrap {
+  position: fixed;
+  z-index: 4;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  opacity: 0;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 0 7px #020306, 0 0 16px #020306;
+}
+#tip {
+  color: var(--cold-1);
+  font-size: clamp(12px, 1.35vw, 15px);
+  letter-spacing: .02em;
+  line-height: 1.2;
+}
+#tipNote {
+  color: var(--cold-3);
+  font-size: 11px;
+  line-height: 1.4;
+  margin-top: .25em;
+}
+#tipNote:empty { display: none; }
+
+/* The part every address in the block shares, dimmed. Wander and it never
+   changes — which is the whole point of a prefix, shown rather than said. */
+#tip .fixed, #markAddr .fixed { color: var(--cold-4); }
+#tip .mine { color: var(--amber); }
+
+/* ── THE HINT ────────────────────────────────────────────────────────── */
+
+#hint {
+  position: fixed;
+  z-index: 3;
+  left: 50%;
+  bottom: calc(var(--gutter) + 10px);
+  transform: translateX(-50%);
+  color: var(--cold-3);
+  font-size: var(--ui);
+  letter-spacing: .04em;
+  /* it wraps. One line fits "Click any block to focus it" on a desktop and
+     runs off both edges of a phone, and the longer no-picture status runs
+     off a desktop too. */
+  max-width: min(46ch, calc(100% - var(--gutter) * 2));
+  text-align: center;
+  text-wrap: balance;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .45s linear;
+}
+#hint:empty { display: none; }
+
+/* ── THE SCALE RAIL ──────────────────────────────────────────────────── */
+
+#rail {
+  position: fixed;
+  z-index: 3;
+  right: calc(var(--gutter) - 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 13px;
+  height: min(30vh, 220px);
+  pointer-events: none;
+}
+#railTrack {
+  position: absolute;
+  left: 6px; top: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom,
+    rgba(92,127,168,0) 0%, rgba(92,127,168,.30) 16%,
+    rgba(92,127,168,.30) 84%, rgba(92,127,168,0) 100%);
+}
+/* One tick per rung of the ladder, so the rail says how far there is to go
+   as well as that there is further. An IPv6 rail carries ten of these and an
+   IPv4 one carries two: that difference is the size gap, made furniture. The
+   wide tick is the announced block — the one rung that is a fact about this
+   visitor rather than arithmetic. */
+#railTrack i {
+  position: absolute;
+  left: -2px;
+  width: 5px;
+  height: 1px;
+  background: rgba(92,127,168,.55);
+}
+#railTrack i.block {
+  left: -4px;
+  width: 9px;
+  background: rgba(150,186,228,.92);
+}
+#railMark {
+  position: absolute;
+  left: 0;
+  width: 13px;
+  height: 1px;
+  background: var(--amber);
+}
+
+/* ── THE COMPANION ───────────────────────────────────────────────────
+   Visually hidden, fully present to assistive technology, and it un-hides
+   the moment anything inside it takes focus. */
+
+#companion {
+  position: fixed;
+  z-index: 5;
+  left: var(--gutter);
+  bottom: calc(var(--gutter) + 8px);
+  font-size: var(--ui);
+  line-height: 1.55;
+  clip-path: inset(50%);
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+#companion:focus-within {
+  clip-path: none;
+  width: min(40ch, calc(100% - var(--gutter) * 2));
+  height: auto;
+  max-height: 55vh;
+  overflow: auto;
+  background: rgba(2, 3, 6, .95);
+  border-left: 1px solid var(--cold-4);
+  padding: 12px 14px;
+}
+#companionState {
+  color: var(--cream);
+  font-size: var(--ui);
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+#companionSummary { margin: .4em 0 .6em; color: var(--cold-2); }
+#companionFacts p { margin: .2em 0; color: var(--cold-2); }
+
+/* ── CONTROLS ────────────────────────────────────────────────────────── */
+
+#controls {
+  position: fixed;
+  z-index: 4;
+  right: var(--gutter);
+  bottom: calc(var(--gutter) - 8px);
+  display: flex;
+  gap: 2px;
+}
+/* `hidden` has to actually hide. The UA rule for [hidden] is display:none,
+   but any author `display` on the element outranks it, so the flex below
+   was quietly overriding it and Back showed with nothing behind it. Which
+   button is offered is decided in syncDom, not here: Home depends on
+   whether the visitor has TRAVELLED, which a stylesheet cannot know. */
+#controls button[hidden] { display: none !important; }
+#controls button {
+  color: var(--cold-4);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  min-height: 44px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  transition: color .2s linear;
+}
+#controls button:hover { color: var(--cold-1); }
+#controls button[aria-expanded="true"] { color: var(--amber); }
+
+#live {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* ── ABOUT ───────────────────────────────────────────────────────────── */
+
+#aboutPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  background: var(--ground);
+  overflow: auto;
+  display: grid;
+  place-items: start center;
+}
+#aboutPanel[hidden] { display: none; }
+
+#aboutInner {
+  width: min(62ch, calc(100% - var(--gutter) * 2));
+  padding: clamp(40px, 9vh, 96px) 0;
+  position: relative;
+}
+#aboutClose {
+  position: absolute;
+  right: 0;
+  top: clamp(16px, 4vh, 40px);
+  color: var(--cold-3);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  min-height: 44px;
+  min-width: 44px;
+}
+#aboutClose:hover { color: var(--cream); }
+
+#aboutBody h2 {
+  color: var(--cream);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 260;
+  font-stretch: 106%;
+  margin: 1.8em 0 .5em;
+  letter-spacing: -.004em;
+}
+#aboutBody h2:first-child { margin-top: 0; }
+#aboutBody h3 {
+  color: var(--cold-1);
+  font-size: var(--ui);
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin: 1.8em 0 .4em;
+}
+#aboutBody p {
+  color: var(--cold-2);
+  font-size: clamp(14px, 1.45vw, 16px);
+  line-height: 1.62;
+  margin: .55em 0;
+}
+#aboutBody .mono {
+  font-variant-numeric: tabular-nums;
+  color: var(--cold-1);
+  font-size: 14px;
+  letter-spacing: .01em;
+  border-left: 1px solid var(--cold-4);
+  padding-left: 12px;
+  margin-top: .9em;
+  overflow-wrap: anywhere;
+}
+#aboutBody .dim { color: var(--cold-3); }
+#aboutBody .plate {
+  color: var(--cold-3);
+  border-top: 1px solid var(--cold-4);
+  padding-top: 1em;
+  margin-top: 2.6em;
+}
+#aboutBody .plate p { font-size: 12px; color: var(--cold-3); }
+
+/* ── SMALL SCREENS ───────────────────────────────────────────────────── */
+
+/* on a narrow frame the sentence wraps to five lines beside the mark; the
+   address is the fact, and the sentence is already on the plate's own note */
+@media (max-width: 560px) {
+  #markNote { display: none; }
+  #controls { right: 6px; bottom: 2px; }
+  #controls button { padding: 0 8px; font-size: 10px; letter-spacing: .12em; }
+  #answer { top: 46%; }
+}
+
+@media (max-height: 460px) {
+  #answer { top: 42%; }
+}
+
+/* ── REDUCED MOTION ──────────────────────────────────────────────────
+ * There is nothing to reduce: the canvas never animates and the only
+ * transition on the page is a colour on the Copy control. This block exists
+ * so that stays true if someone adds one.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: .001ms !important; animation-duration: .001ms !important; }
+}

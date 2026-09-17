@@ -1,0 +1,243 @@
+# CURRENT_STATE.md — engineering state of `apps/ip`
+
+Written 2026-09-17, immediately before compaction. Status tags are used
+strictly: **DISCUSSED**, **PROPOSED**, **APPROVED**, **IMPLEMENTING**,
+**COMPLETE**, **REJECTED**, **BLOCKED**.
+
+Approval boundaries live in `APPROVAL_STATE.md` and that file wins.
+
+---
+
+## Recovery
+
+| | |
+|---|---|
+| **Repo** | `C:\Users\you\Downloads\scratch-repo\webapps` |
+| **Branch** | `master` |
+| **HEAD at preservation time** | `222f56e0c140130fa469304d8bfcad771519abe0` — *"ip: a self-contained handoff — the pieces, for whoever tells the story"* (2026-09-15) |
+| **Golden recovery identifier** | `ip-preservation-snapshot-20260917.tar.gz`, sha256 `986fd788f3c75600e13b4022fdc14942b873b59bc1da2d1f24d4857e5de485cf`, in `scratch-repo/` (the repo's parent) |
+| **Working tree committed?** | **NO.** See `PRESERVATION_BASELINE.md`. This is the largest recovery risk. |
+
+**All of `apps/ip/` is untracked.** The entire application exists only in the
+working tree and in the snapshot above.
+
+---
+
+## Current objective
+
+**COMPLETE / IMPLEMENTING — phase B of `docs/ip-plan-v2.md`**, "the descent
+becomes sublime".
+
+Done in phase B:
+- **COMPLETE** — one global Hilbert curve for every rung, replacing the
+  per-container curve. Rungs now register.
+- **COMPLETE** — `ZOOM = FIELD`.
+- **COMPLETE** — the convergence pan reworked as a rigid translation.
+
+Not done in phase B, and it is the wonder half:
+- **NOT STARTED** — the place you just stood staying outlined as it becomes
+  one cell of the place you are now.
+- **NOT STARTED** — the descent accumulating, so at rung eight the seven
+  above are still on screen.
+
+### Acceptance criteria for phase B (from the plan)
+
+> Someone pulls back through three rungs and says something out loud.
+
+Concretely: a deeper rung's field is exactly the extent of the corresponding
+cells of the shallower one; the previous container stays visible as it
+shrinks; passed containers leave nested outlines.
+
+---
+
+## Completed work
+
+- **COMPLETE** — phases 1, 2, 3, 3b, 4 (travel), 4.5 step 1 (the ladder).
+  **Deployed.**
+- **COMPLETE** — phase A, "the map stops being empty". **Partly deployed:**
+  the registry layer and era brightness are live; the query layer is **built
+  but NOT deployed**.
+  - `scripts/ip-build-space-field.py` → `apps/ip/data/space.bin`, 438,937
+    bytes gzipped, round-trip verified.
+  - Registry loads deferred, parses in **139 ms** (171,333 IPv4 ranges,
+    69,327 IPv6, 6,285 keys).
+  - Era as brightness; `regLine()` always sizes the year against the whole;
+    `fieldMix()` makes the descent sayable.
+  - Queries: touch a country code or registry name in the plate. Verified
+    for US/BR/SE/IS/VA/AFRINIC/RIPE NCC.
+- **COMPLETE** — the renderer-failure fix (see "Known bugs, fixed").
+- **COMPLETE** — `docs/ip-plan-v2.md`, the full revised plan.
+
+## Work in progress
+
+- **IMPLEMENTING** — phase B, as above.
+
+## Not started
+
+- **APPROVED, NOT STARTED** — phase B's outlines and accumulation.
+- **PROPOSED** — phases C–I of `docs/ip-plan-v2.md`: the notebook and
+  celebrations, writing the guide, the main line, side lines/gates/eggs, the
+  card, the inward half, the ghost tier.
+- **PROPOSED** — sound, distributed across phases; the Shepard-tone descent.
+- **PROPOSED** — "the doors": NAT64 / IPv4-mapped / 6to4 / Teredo as the
+  IPv4↔IPv6 easter egg. Arithmetic verified (`193.0.6.139` →
+  `64:ff9b::c100:68b`).
+
+---
+
+## Known bugs
+
+### Open
+
+- **OPEN, deliberate** — mobile. The exploration model assumes hover, which
+  phones do not have. Pinch is not implemented despite `apps/ip/README.md`
+  claiming wheel/drag/pinch. Owner's decision: **not a first-class target
+  yet.** Caveat recorded: the share path (phase G) is mobile.
+- **OPEN, cosmetic** — the block renders hot at some scales. `spread()` and a
+  shrink fade have reduced it; it is not fully solved.
+- **OPEN, unquantified** — cross-fade residual. Adjacent rungs agreed to 1px
+  in one measurement; a rung two steps away was further off. Registration is
+  geometrically exact, so the residual is believed to be the sub-cell
+  reference frame, **NOT VERIFIED**.
+- **UNEXPLAINED, not reproducible** — during one batched check the aim jumped
+  to an address nobody had chosen. Could not be reproduced. The owner was
+  interacting with the same live page at the time and that is the most likely
+  explanation.
+
+### Fixed this session, worth not regressing
+
+- The Canvas 2D fallback **never worked in the wild**: a canvas can only have
+  one context type, so after `makeGL` took a WebGL2 context and failed, the
+  2D path could not have the canvas back. Falling back now replaces the
+  canvas element. This was the phone's black screen.
+- `loadAddress()` moved above the renderer — nothing optional in front of the
+  address.
+- `var ZOOM = FIELD;` written above `var FIELD = 64;` — `var` hoists the
+  declaration, not the value, so every scale became NaN and the frame went
+  blank with nothing in the console.
+- `var aimX = mx` read before `mx` existed. Same blank frame.
+- A half-cell offset in the reference frame, magnified 64× per level.
+- `rungPlate` read the field mix before computing it.
+- Plate text went stale mid-travel; `setAxis` now syncs the DOM itself.
+- `tidyHolder` left an orphan dash on `"AS8151 - UNINET"`.
+
+## Failing tests
+
+**None — there is no automated test suite.** Verification in this project is
+`node --check`, `python -m py_compile`, and driving the live app in the
+browser pane. See `PRODUCT_SOUL_EVALS.md`.
+
+---
+
+## Unresolved questions
+
+1. Whether phase A alone is enough before committing to B–I. **The plan says
+   build A and stop; A is built and partly deployed; this has not been
+   judged.**
+2. How to show era and country without breaking the three-colour rule.
+   Currently brightness only; country is not drawn at all, only said.
+3. Whether the guide's voice survives forty repetitions. A writing problem,
+   unknowable until about the tenth line.
+4. Whether the ghost tier stays scoped to deep rungs.
+5. Mobile: what it should be, and when.
+
+---
+
+## Architecture decisions
+
+- **Raw WebGL2, no library**, GLSL as template strings; Canvas 2D fallback.
+- **Single file, no build step.** ES5 `var` style deliberately — no
+  transpiler, no bundler, no dependencies.
+- **BigInt for all address arithmetic.** Never a float.
+- **One global Hilbert curve**, not one per rung.
+- **Deferred data**: nothing but our own edge is contacted until the visitor
+  moves off Home.
+- **`localStorage` only.** No server, no accounts.
+- **CloudFront Function at viewer-request** for `/ip/whoami`.
+
+## Rejected technical approaches, and why
+
+- **Canvas 2D as primary** — 1px line cap, no affordable bloom.
+  `docs/ip-render-research.md`.
+- **`ZOOM = 64` without repositioning** — measured: 23px of disagreement
+  became 147px. Scaling an unregistered offset magnifies it.
+- **Four "cleverer" encodings of `space.bin`** — frequency-ordered keys,
+  grouped keys, delta payloads. All lost to the naive one; gzip's dictionary
+  already beats a hand-rolled scheme. Numbers in the script's docstring.
+- **Coarser year buckets** in `space.bin` — 343 KB for five named eras vs
+  438,937 for exact years. Exact kept.
+- **Droste / complex-log self-similarity** — fabricates detail that is not
+  there.
+- **A truly endless recycled axis** — the subject stops being a map of a
+  finite thing.
+- **Anchoring the rung lattice on the announced block** — gives rungs that
+  straddle `/64` and never frame it. Pinned to `/64` (v6) and `/24` (v4).
+- **Leaderboards** — architectural, not taste: there is no server.
+
+---
+
+## Important modified/created files
+
+**Untracked, the entire app:** `apps/ip/index.html`, `ip.css`, `ip.js`,
+`telemetry.js`, `data/space.bin`, `fonts/`.
+
+**Untracked, new:** `docs/ip-plan-v2.md`, `docs/ip-infinity-research.md`,
+`docs/ip-render-research.md`, `docs/ip-narrative-and-outline.md`,
+`docs/ip-art-direction-rejected-seafire-cordage.md`,
+`scripts/ip-build-space-field.py`, `scripts/ip-build-asn-field.py`,
+`scripts/ip-render-gate.html`, `hosting/edge/ip-whoami.js`.
+
+**Modified, tracked:** `PROJECT_STATE.md`, `apps/ip/README.md`,
+`docs/ip-build-plan.md`, `docs/ip-art-direction.md`,
+`docs/building-a-new-app.md`, `hosting/hosting_stack/hosting_stack.py`,
+`hosting/site-root/index.html`, `scripts/deploy-hosting.ps1`, `.gitignore`.
+
+**Deleted, tracked:** `apps/ip/lib/dyes.js`, `apps/ip/lib/form.js`,
+`scripts/ip-contact-sheet.html`, `scripts/ip-play.html` — all from the
+rejected Cordage direction.
+
+---
+
+## Commands
+
+```bash
+node --check apps/ip/ip.js                     # the only JS check there is
+python -m py_compile hosting/hosting_stack/hosting_stack.py
+python scripts/ip-build-space-field.py          # rebuild space.bin
+```
+
+```powershell
+# DEPLOY IS HUMAN-RUN. Claude never runs these.
+$env:AWS_PROFILE = 'story-deploy'
+.\scripts\deploy-app.ps1 -Name ip               # app only
+.\scripts\deploy-hosting.ps1 -AlertEmail <addr> # only if hosting/ changed
+```
+
+```bash
+curl https://<DISTRIBUTION_DOMAIN>/ip/whoami   # expect text/plain address
+```
+
+Local preview: `.claude/launch.json` config **`webapps`**, port 8766, served
+from the repo root. The app is at `/apps/ip/`. Force the fallback with
+`?renderer=2d`; drive a fixture address with `?ip=<address>`.
+
+Debug surface, in-page: `window.__ip` — `renderer()`, `axis(v)`, `net()`,
+`aim()`, `subject()`, `travel(t)`, `step(n)`, `back()`, `home()`, `trail()`,
+`probe()`, `lay()`, `query(q)`, `reg(t)`, `regState()`.
+
+## Background tasks
+
+None running. One completed during the session (`bqpxuqwsb`, an early
+packing-variant measurement); its result is obsolete and superseded by the
+numbers in `scripts/ip-build-space-field.py`.
+
+---
+
+## Immediate next 3–5 actions
+
+1. **Decide the commit** in `PRESERVATION_BASELINE.md` — the app is untracked.
+2. **Finish phase B**: the previous container outlined as it shrinks, and the
+   nested accumulation.
+3. **Deploy** the phase A query layer plus the renderer-failure fix (human-run).
+4. **Judge whether phase A was enough** before committing to C–I.
+5. Phase C, or phase D's writing, per `APPROVAL_STATE.md`.

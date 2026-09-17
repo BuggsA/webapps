@@ -1,0 +1,838 @@
+<!doctype html>
+<!--
+  ip — THE RENDER GATE, v3.  Dev-only. Never synced to production.
+
+  v1 proved the browser can carry the light. v2 added what the floor was
+  doing — gloss, light pools, surfaces. v3 is the note that mattered most:
+
+    "they probably shouldn't have access to the render settings to modify
+     things. I think it takes away from it all."
+
+  So there are no settings. This is the picture, tuned, with the address on
+  it and the objects live. Everything below is fixed:
+
+    - the dark is darker: higher bloom threshold, less grain lift, a
+      stronger vignette, and the far grid dies sooner
+    - the points are sharper: a tight core with the halo left to the bloom
+      chain, rather than a soft blob pretending to be glow
+    - the planes are lighter: the announced block reads as a lit field, not
+      a dark one with lit edges
+    - the objects are live: hover lights one, click makes it the subject
+    - the address is always on screen, always copyable
+
+  Research: ../docs/ip-render-research.md
+  Serve the repo root and open /scripts/ip-render-gate.html
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ip — the render gate</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --cream: #f2ede3;
+    --cold-1: #cfe3ff;
+    --cold-2: #8fa9c9;
+    --cold-3: #5c7fa8;
+    --cold-4: #2a3c55;
+    --amber: #f5a623;
+    --amber-pale: #ffd9a0;
+    --gutter: clamp(16px, 4vw, 40px);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%; background: #020306; overflow: hidden;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-variant-numeric: lining-nums tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  @font-face {
+    font-family: 'Archivo'; font-weight: 100 900; font-stretch: 62% 125%;
+    font-display: swap;
+    src: url('../apps/ip/fonts/archivo-latin-var.woff2') format('woff2');
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: default; }
+  canvas.pick { cursor: pointer; }
+
+  /* the address, always there, always copyable */
+  #answer {
+    position: fixed; left: var(--gutter); top: calc(var(--gutter) + 2px);
+    z-index: 3; display: flex; align-items: center; gap: 12px;
+  }
+  #addr {
+    color: var(--amber-pale); font-size: clamp(13px, 1.25vw, 16px);
+    font-weight: 400; letter-spacing: .04em; white-space: nowrap;
+  }
+  #addr::before {
+    content: 'HOME \00b7 '; color: var(--amber); font-weight: 500;
+    letter-spacing: .14em;
+  }
+  #copy {
+    font: inherit; background: none; border: 0; cursor: pointer;
+    color: var(--cold-4); font-size: 10px; font-weight: 500;
+    letter-spacing: .16em; text-transform: uppercase;
+    min-height: 34px; display: inline-flex; align-items: center;
+  }
+  #copy:hover { color: var(--cold-1); }
+  #copy[data-done="1"] { color: var(--amber); }
+
+  /* the subject plate */
+  #plate {
+    position: fixed; left: 50%; top: clamp(52px, 11vh, 120px);
+    transform: translateX(-50%); z-index: 3; text-align: center;
+    width: calc(100% - var(--gutter) * 2); max-width: 720px;
+    pointer-events: none;
+  }
+  #ptitle {
+    color: var(--cream); font-size: clamp(26px, 5vw, 58px); font-weight: 260;
+    font-stretch: 106%; line-height: 1.04; letter-spacing: -.004em;
+  }
+  #psub {
+    color: var(--cold-2); font-size: clamp(12px, 1.4vw, 17px);
+    margin-top: .55em;
+  }
+  #pnote {
+    color: var(--cold-3); font-size: 12px; margin-top: .7em;
+  }
+  #psub:empty, #pnote:empty { display: none; }
+
+  /* the hover readout, positioned over the canvas */
+  #tip {
+    position: fixed; z-index: 4; pointer-events: none; opacity: 0;
+    transform: translate(-50%, -100%);
+    color: var(--cold-1); font-size: 12px; letter-spacing: .02em;
+    white-space: nowrap; text-shadow: 0 0 6px #020306, 0 0 12px #020306;
+    transition: opacity .12s linear;
+  }
+  #tip.on { opacity: 1; }
+
+  #err {
+    position: fixed; inset: 0; display: none; place-items: center;
+    color: #ff9a9a; font: 13px/1.6 ui-monospace, monospace; padding: 40px;
+    text-align: center; z-index: 9;
+  }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="answer">
+  <span id="addr">203.0.113.42</span>
+  <button id="copy" type="button">Copy</button>
+</div>
+
+<div id="plate">
+  <p id="ptitle">203.0.113.0/24</p>
+  <p id="psub">AS64496 &middot; Example Network</p>
+  <p id="pnote">256 addresses</p>
+</div>
+
+<div id="tip"></div>
+<div id="err"></div>
+
+<script>
+(function () {
+'use strict';
+
+var cv = document.getElementById('gl');
+var gl = cv.getContext('webgl2', { antialias: false, alpha: false });
+if (!gl) {
+  var e0 = document.getElementById('err');
+  e0.style.display = 'grid';
+  e0.textContent = 'No WebGL2 here. That is itself the finding: ~2% of visitors need a canvas fallback.';
+  return;
+}
+var hasFloat = !!gl.getExtension('EXT_color_buffer_float');
+gl.getExtension('OES_texture_float_linear');
+
+function sh(t, src) {
+  var s = gl.createShader(t);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+function prog(vs, fs) {
+  var p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  p.u = {};
+  var n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), i, inf;
+  for (i = 0; i < n; i++) {
+    inf = gl.getActiveUniform(p, i);
+    p.u[inf.name.replace('[0]', '')] = gl.getUniformLocation(p, inf.name);
+  }
+  return p;
+}
+var H = '#version 300 es\nprecision highp float;\n';
+
+/* uFlip = -1 mirrors the world about the ground plane: that is the whole of
+ * the planar reflection. No second camera, no second target. The gloss
+ * falloff — sharp at the contact point, smeared further away — falls out of
+ * the object's original height above the plane. */
+var COMMON = `
+uniform mat4 uVP;
+uniform vec3 uEye;
+uniform vec2 uRes;
+uniform float uWorld;
+uniform float uFocal;
+uniform float uFlip;
+uniform float uGloss;
+uniform float uFogK;
+
+vec3 place(vec3 p) { vec3 q = p * uWorld; q.y *= uFlip; return q; }
+float reflFade(float h) { return uFlip > 0.0 ? 1.0 : uGloss * exp(-h * uWorld * 9.0); }
+float reflBlur(float h) { return uFlip > 0.0 ? 0.0 : clamp(h * uWorld * 3.4, 0.0, 1.0); }
+`;
+
+var LINE_VS = H + COMMON + `
+layout(location=0) in vec2 aCorner;
+layout(location=1) in vec3 aA;
+layout(location=2) in vec3 aB;
+layout(location=3) in vec4 aCol;
+layout(location=4) in vec3 aMeta;   // width px, glow, group id
+uniform float uHot;                  // group id lit by the pointer
+out float vSide; out vec4 vCol; out float vFeather; out float vFog; out float vGlow;
+void main() {
+  float hi = max(aA.y, aB.y);
+  if (uFlip < 0.0 && hi < 0.004) { gl_Position = vec4(2.0); return; }
+  vec3 A = place(aA), B = place(aB);
+  vec4 ca = uVP * vec4(A, 1.0), cb = uVP * vec4(B, 1.0);
+  vec4 cp = mix(ca, cb, aCorner.x);
+  vec3 wp = mix(A, B, aCorner.x);
+  vec2 na = ca.xy / max(ca.w, 1e-4), nb = cb.xy / max(cb.w, 1e-4);
+  vec2 d = (nb - na) * uRes; d /= max(length(d), 1e-4);
+  vec2 nrm = vec2(-d.y, d.x);
+
+  float dist = distance(wp, uEye);
+  float coc = clamp(abs(dist - uFocal) / max(uFocal, 0.001), 0.0, 3.0);
+  float blur = reflBlur(hi);
+  float depthW = clamp(2.1 / max(dist, 0.6), 0.5, 1.7);
+  float lit = (uHot > 0.5 && abs(aMeta.z - uHot) < 0.5) ? 1.45 : 1.0;
+  float w = aMeta.x * depthW * (1.0 + coc * 2.0) * (1.0 + blur * 3.0);
+  cp.xy += (nrm * aCorner.y * w * 0.5 / uRes) * 2.0 * cp.w;
+  gl_Position = cp;
+
+  vSide = aCorner.y;
+  vCol = vec4(aCol.rgb, aCol.a * reflFade(hi) * lit);
+  vFeather = clamp(0.24 + coc * 0.5 + blur * 0.5, 0.24, 0.97);
+  vFog = exp(-uFogK * dist);
+  vGlow = aMeta.y;
+}`;
+
+var LINE_FS = H + `
+in float vSide; in vec4 vCol; in float vFeather; in float vFog; in float vGlow;
+out vec4 o;
+void main() {
+  float a = abs(vSide);
+  float core = 1.0 - smoothstep(1.0 - vFeather, 1.0, a);
+  float halo = exp(-a * a * 2.6) * vGlow;
+  o = vec4(vCol.rgb * vCol.a * (core + halo) * vFog, 1.0);
+}`;
+
+/* Points: a TIGHT core, with the spreading left to the bloom chain. A soft
+ * blob pretending to be glow is the thing that read as mushy. */
+var PT_VS = H + COMMON + `
+layout(location=0) in vec3 aP;
+layout(location=1) in vec4 aCol;
+layout(location=2) in vec2 aMeta;   // size, group id
+uniform float uDpr;
+uniform float uHot;
+out vec4 vCol; out float vFog; out float vSoft;
+void main() {
+  if (uFlip < 0.0 && aP.y < 0.004) { gl_Position = vec4(2.0); gl_PointSize = 1.0; return; }
+  vec3 P = place(aP);
+  float dist = distance(P, uEye);
+  float coc = clamp(abs(dist - uFocal) / max(uFocal, 0.001), 0.0, 3.0);
+  float blur = reflBlur(aP.y);
+  float lit = (uHot > 0.5 && abs(aMeta.y - uHot) < 0.5) ? 1.5 : 1.0;
+  float s = aMeta.x * clamp(2.1 / max(dist, 0.6), 0.35, 1.8)
+          * (1.0 + coc * 1.5) * (1.0 + blur * 2.4);
+  gl_PointSize = max(s, 1.0) * uDpr;
+  gl_Position = uVP * vec4(P, 1.0);
+  vCol = vec4(aCol.rgb, aCol.a * reflFade(aP.y) * lit);
+  vFog = exp(-uFogK * dist);
+  vSoft = clamp(0.10 + coc * 0.30 + blur * 0.55, 0.10, 0.92);
+}`;
+
+var PT_FS = H + `
+in vec4 vCol; in float vFog; in float vSoft; out vec4 o;
+void main() {
+  float r = length(gl_PointCoord * 2.0 - 1.0);
+  float core = 1.0 - smoothstep(1.0 - vSoft, 1.0, r);
+  float halo = exp(-r * r * 3.6) * 0.34;
+  o = vec4(vCol.rgb * vCol.a * (core + halo) * vFog, 1.0);
+}`;
+
+var SURF_VS = H + COMMON + `
+layout(location=0) in vec2 aCorner;
+layout(location=1) in vec3 aC;
+layout(location=2) in vec3 aU;
+layout(location=3) in vec3 aV;
+layout(location=4) in vec4 aCol;
+layout(location=5) in float aId;
+uniform float uHot;
+out vec2 vUv; out vec4 vCol; out float vFog; out float vGraze;
+void main() {
+  if (uFlip < 0.0 && aC.y < 0.004) { gl_Position = vec4(2.0); return; }
+  vec3 p = aC + aU * aCorner.x + aV * aCorner.y;
+  vec3 P = place(p);
+  gl_Position = uVP * vec4(P, 1.0);
+  vUv = aCorner + 0.5;
+  float lit = (uHot > 0.5 && abs(aId - uHot) < 0.5) ? 1.55 : 1.0;
+  vCol = vec4(aCol.rgb, aCol.a * reflFade(aC.y) * lit);
+  vFog = exp(-uFogK * distance(P, uEye));
+  vec3 n = normalize(cross(aU, aV));
+  vGraze = pow(1.0 - abs(dot(n, normalize(uEye - P))), 2.2);
+}`;
+
+var SURF_FS = H + `
+in vec2 vUv; in vec4 vCol; in float vFog; in float vGraze; out vec4 o;
+void main() {
+  vec2 d = min(vUv, 1.0 - vUv);
+  float edge = min(d.x, d.y);
+  float rim = 1.0 - smoothstep(0.0, 0.035, edge);
+  float a = (0.020 + vGraze * 0.12 + rim * 1.15);
+  o = vec4(vCol.rgb * vCol.a * a * vFog, 1.0);
+}`;
+
+var POOL_VS = H + `
+layout(location=0) in vec2 aCorner;
+layout(location=1) in vec3 aC;
+layout(location=2) in vec4 aCol;
+layout(location=3) in float aR;
+uniform mat4 uVP; uniform vec3 uEye; uniform float uWorld; uniform float uFogK;
+out vec2 vUv; out vec4 vCol; out float vFog;
+void main() {
+  vec3 p = vec3(aC.x, 0.0, aC.z) * uWorld
+         + vec3(aCorner.x, 0.0, aCorner.y) * aR * uWorld * 2.0;
+  p.y = 0.0015 * uWorld;
+  gl_Position = uVP * vec4(p, 1.0);
+  vUv = aCorner; vCol = aCol;
+  vFog = exp(-uFogK * distance(p, uEye));
+}`;
+
+var POOL_FS = H + `
+in vec2 vUv; in vec4 vCol; in float vFog; out vec4 o;
+void main() {
+  float r = length(vUv) * 2.0;
+  float a = exp(-r * r * 2.6) * (1.0 - smoothstep(0.70, 1.0, r));
+  o = vec4(vCol.rgb * vCol.a * a * vFog, 1.0);
+}`;
+
+var FS_VS = H + `
+out vec2 vUv;
+void main() {
+  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  vUv = p; gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+var BRIGHT_FS = H + `
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTex; uniform float uThresh; uniform float uKnee;
+void main() {
+  vec3 c = texture(uTex, vUv).rgb;
+  float b = max(c.r, max(c.g, c.b));
+  float s = clamp((b - uThresh + uKnee) / max(2.0 * uKnee, 1e-4), 0.0, 1.0);
+  float w = max(s * s * uKnee, b - uThresh);
+  o = vec4(c * clamp(w / max(b, 1e-4), 0.0, 1.0), 1.0);
+}`;
+
+var DOWN_FS = H + `
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTex; uniform vec2 uTexel;
+void main() {
+  vec3 a = texture(uTex, vUv + uTexel * vec2(-1.0, 1.0)).rgb;
+  vec3 b = texture(uTex, vUv + uTexel * vec2( 0.0, 1.0)).rgb;
+  vec3 c = texture(uTex, vUv + uTexel * vec2( 1.0, 1.0)).rgb;
+  vec3 d = texture(uTex, vUv + uTexel * vec2(-1.0, 0.0)).rgb;
+  vec3 e = texture(uTex, vUv).rgb;
+  vec3 f = texture(uTex, vUv + uTexel * vec2( 1.0, 0.0)).rgb;
+  vec3 g = texture(uTex, vUv + uTexel * vec2(-1.0,-1.0)).rgb;
+  vec3 h = texture(uTex, vUv + uTexel * vec2( 0.0,-1.0)).rgb;
+  vec3 i = texture(uTex, vUv + uTexel * vec2( 1.0,-1.0)).rgb;
+  o = vec4(e * 0.25 + (b + d + f + h) * 0.125 + (a + c + g + i) * 0.0625, 1.0);
+}`;
+
+var UP_FS = H + `
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTex; uniform vec2 uTexel;
+void main() {
+  vec3 s = texture(uTex, vUv + uTexel * vec2(-1.0, 1.0)).rgb
+         + texture(uTex, vUv + uTexel * vec2( 0.0, 1.0)).rgb * 2.0
+         + texture(uTex, vUv + uTexel * vec2( 1.0, 1.0)).rgb
+         + texture(uTex, vUv + uTexel * vec2(-1.0, 0.0)).rgb * 2.0
+         + texture(uTex, vUv).rgb * 4.0
+         + texture(uTex, vUv + uTexel * vec2( 1.0, 0.0)).rgb * 2.0
+         + texture(uTex, vUv + uTexel * vec2(-1.0,-1.0)).rgb
+         + texture(uTex, vUv + uTexel * vec2( 0.0,-1.0)).rgb * 2.0
+         + texture(uTex, vUv + uTexel * vec2( 1.0,-1.0)).rgb;
+  o = vec4(s / 16.0, 1.0);
+}`;
+
+var COMP_FS = H + `
+in vec2 vUv; out vec4 o;
+uniform sampler2D uScene; uniform sampler2D uBloom;
+uniform float uBloomAmt; uniform float uTime;
+vec3 aces(vec3 x) {
+  return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+}
+float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+void main() {
+  vec3 c = texture(uScene, vUv).rgb + texture(uBloom, vUv).rgb * uBloomAmt;
+  c = aces(c);
+  vec2 q = vUv - 0.5;
+  c *= clamp(1.0 - dot(q, q) * 1.05, 0.0, 1.0);
+  // grain rides on what is already lit, so it cannot lift the black
+  float g = (hash(gl_FragCoord.xy + uTime) - 0.5) * 0.030;
+  c += g * smoothstep(0.0, 0.10, max(c.r, max(c.g, c.b)));
+  o = vec4(c, 1.0);
+}`;
+
+var pLine, pPt, pSurf, pPool, pBright, pDown, pUp, pComp;
+try {
+  pLine = prog(LINE_VS, LINE_FS);
+  pPt = prog(PT_VS, PT_FS);
+  pSurf = prog(SURF_VS, SURF_FS);
+  pPool = prog(POOL_VS, POOL_FS);
+  pBright = prog(FS_VS, BRIGHT_FS);
+  pDown = prog(FS_VS, DOWN_FS);
+  pUp = prog(FS_VS, UP_FS);
+  pComp = prog(FS_VS, COMP_FS);
+} catch (ex) {
+  var e1 = document.getElementById('err');
+  e1.style.display = 'grid';
+  e1.textContent = 'Shader failed: ' + ex.message;
+  return;
+}
+
+/* ── the scene ─────────────────────────────────────────────────────── */
+
+var lines = [], pts = [], surfs = [], pools = [], targets = [];
+var COLD = [0.40, 0.56, 0.82];
+var COLD_HI = [0.80, 0.89, 1.0];
+var AMBER = [1.0, 0.66, 0.13];
+
+function L(a,b,c,i,w,g,id){ lines.push({a:a,b:b,c:c,i:i,w:w||1.3,g:g===undefined?0.4:g,id:id||0}); }
+function P(p,c,i,s,id){ pts.push({p:p,c:c,i:i,s:s||6,id:id||0}); }
+function S(cen,u,v,c,i,id){ surfs.push({cen:cen,u:u,v:v,c:c,i:i,id:id||0}); }
+function O(x,z,r,c,i){ pools.push({x:x,z:z,r:r,c:c,i:i}); }
+
+var HOME_IP = '203.0.113.42';
+var PREFIX = '203.0.113.0/24';
+
+function build() {
+  var i, j, r, t0, t1;
+
+  /* the plate. The far field dies sooner than it did — the empty dark is
+   * supposed to be empty. */
+  var EXT = 14;
+  for (i = -EXT; i <= EXT; i++) {
+    L([i, 0, -2], [i, 0, 20], COLD, 0.13, 1.0, 0.22);
+    L([-EXT, 0, i + 6], [EXT, 0, i + 6], COLD, 0.10, 1.0, 0.18);
+  }
+  var rings = [0.22, 0.40, 0.68, 1.12, 1.85, 3.0];
+  for (i = 0; i < rings.length; i++) {
+    r = rings[i];
+    for (j = 0; j < 96; j += 2) {
+      t0 = j/96*6.2832; t1 = (j+1)/96*6.2832;
+      L([Math.cos(t0)*r,0,Math.sin(t0)*r], [Math.cos(t1)*r,0,Math.sin(t1)*r],
+        COLD, 0.30, 1.0, 0.30);
+    }
+  }
+  for (i = -24; i <= 24; i++) {
+    if (!i) continue;
+    L([i*0.5,0,0], [i*0.5,(i%4===0)?0.05:0.026,0], COLD, 0.26, 1.0, 0.26);
+  }
+  L([0,0,0],[0,2.6,0], COLD, 0.22, 1.0, 0.4);
+
+  /* the announced block — a LIT field, not a dark one with lit edges */
+  var cols = 32, rows = 16, W = 1.45, D = 0.78, H0 = 0.035;
+  var x0 = -W/2, z0 = -D/2 + 0.1;
+  for (j = 0; j < rows; j++) for (i = 0; i < cols; i++) {
+    P([x0 + W*i/(cols-1), H0 + 0.001, z0 + D*j/(rows-1)], COLD_HI, 0.62, 3.0, 1);
+  }
+  var c0=[x0,H0,z0], c1=[x0+W,H0,z0], c2=[x0+W,H0,z0+D], c3=[x0,H0,z0+D];
+  L(c0,c1,COLD_HI,1.35,1.4,0.7,1); L(c1,c2,COLD_HI,1.35,1.4,0.7,1);
+  L(c2,c3,COLD_HI,1.35,1.4,0.7,1); L(c3,c0,COLD_HI,1.35,1.4,0.7,1);
+  [c0,c1,c2,c3].forEach(function(c){ P(c, COLD_HI, 2.3, 7, 1); });
+  S([0,H0,z0+D/2],[W,0,0],[0,0,D], COLD_HI, 0.34, 1);
+  O(0, z0 + D/2, 0.95, COLD_HI, 0.20);
+  targets.push({ x:0, y:H0, z:z0+D/2, r:0.55, id:1,
+                 title:PREFIX, sub:'AS64496 · Example Network',
+                 note:'256 addresses', tip:PREFIX });
+
+  /* the other blocks this network announces, at real relative sizes */
+  var slabs = [
+    [-2.6, 3.4, 0.52, '198.51.100.0/22'],
+    [ 2.2, 4.1, 0.40, '192.0.2.0/24'],
+    [-3.6, 6.2, 0.66, '198.18.0.0/21'],
+    [ 3.1, 7.0, 0.34, '192.0.2.128/25'],
+    [-1.2, 8.4, 0.58, '203.0.113.128/25'],
+    [ 1.9, 9.6, 0.46, '2001:db8::/32']
+  ];
+  for (i = 0; i < slabs.length; i++) {
+    var sx = slabs[i][0], sz = slabs[i][1], s = slabs[i][2], nm = slabs[i][3];
+    var h = s * 0.30, id = i + 2;
+    var q = [[sx-s/2,sz-s*0.38],[sx+s/2,sz-s*0.38],[sx+s/2,sz+s*0.38],[sx-s/2,sz+s*0.38]];
+    for (j = 0; j < 4; j++) {
+      var k = (j+1)%4;
+      L([q[j][0],h,q[j][1]],[q[k][0],h,q[k][1]], COLD_HI, 0.85, 1.3, 0.5, id);
+      L([q[j][0],0,q[j][1]],[q[k][0],0,q[k][1]], COLD, 0.34, 1.1, 0.3, id);
+      L([q[j][0],0,q[j][1]],[q[j][0],h,q[j][1]], COLD, 0.34, 1.1, 0.3, id);
+      P([q[j][0],h,q[j][1]], COLD_HI, 1.4, 5, id);
+    }
+    S([sx,h,sz],[s,0,0],[0,0,s*0.76], COLD_HI, 0.46, id);
+    S([sx,h/2,sz-s*0.38],[s,0,0],[0,h,0], COLD, 0.20, id);
+    S([sx,h/2,sz+s*0.38],[s,0,0],[0,h,0], COLD, 0.20, id);
+    S([sx-s/2,h/2,sz],[0,0,s*0.76],[0,h,0], COLD, 0.20, id);
+    S([sx+s/2,h/2,sz],[0,0,s*0.76],[0,h,0], COLD, 0.20, id);
+    O(sx, sz, s*1.6, COLD_HI, 0.18);
+    targets.push({ x:sx, y:h, z:sz, r:s*0.7, id:id, title:nm,
+                   sub:'AS64496 · Example Network',
+                   note:'Announced as part of this network', tip:nm });
+  }
+
+  /* you */
+  P([0, H0 + 0.004, 0], AMBER, 2.2, 9, 99);
+  O(0, 0, 0.32, AMBER, 0.34);
+  targets.push({ x:0, y:H0, z:0, r:0.16, id:99, title:HOME_IP,
+                 sub:'Your address, inside ' + PREFIX,
+                 note:'This address is announced as part of this block.',
+                 tip:HOME_IP });
+}
+build();
+
+/* ── buffers ───────────────────────────────────────────────────────── */
+
+var qLine = new Float32Array([0,-1, 1,-1, 0,1, 1,1]);
+var qCen  = new Float32Array([-0.5,-0.5, 0.5,-0.5, -0.5,0.5, 0.5,0.5]);
+
+function mkVao(quadData, instData, stride, attrs, dynamic) {
+  var vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  var qb = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, qb);
+  gl.bufferData(gl.ARRAY_BUFFER, quadData, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  var ib = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, ib);
+  gl.bufferData(gl.ARRAY_BUFFER, instData, dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
+  attrs.forEach(function (a) {
+    gl.enableVertexAttribArray(a[0]);
+    gl.vertexAttribPointer(a[0], a[1], gl.FLOAT, false, stride, a[2]);
+    gl.vertexAttribDivisor(a[0], 1);
+  });
+  gl.bindVertexArray(null);
+  return { vao: vao, buf: ib };
+}
+
+var lineData = new Float32Array(lines.length * 13);
+lines.forEach(function (l, n) {
+  var o = n * 13;
+  lineData.set(l.a,o); lineData.set(l.b,o+3); lineData.set(l.c,o+6);
+  lineData[o+9]=l.i; lineData[o+10]=l.w; lineData[o+11]=l.g; lineData[o+12]=l.id;
+});
+var lineVao = mkVao(qLine, lineData, 52, [[1,3,0],[2,3,12],[3,4,24],[4,3,40]]).vao;
+
+var surfData = new Float32Array(surfs.length * 14);
+surfs.forEach(function (s, n) {
+  var o = n * 14;
+  surfData.set(s.cen,o); surfData.set(s.u,o+3); surfData.set(s.v,o+6);
+  surfData.set(s.c,o+9); surfData[o+12]=s.i; surfData[o+13]=s.id;
+});
+var surfVao = mkVao(qCen, surfData, 56, [[1,3,0],[2,3,12],[3,3,24],[4,4,36],[5,1,52]]).vao;
+
+var poolData = new Float32Array((pools.length + 1) * 8);
+pools.forEach(function (p, n) {
+  var o = n * 8;
+  poolData[o]=p.x; poolData[o+1]=0; poolData[o+2]=p.z;
+  poolData.set(p.c,o+3); poolData[o+6]=p.i; poolData[o+7]=p.r;
+});
+var poolPack = mkVao(qCen, poolData, 32, [[1,3,0],[2,4,12],[3,1,28]], true);
+var HOT_POOL = pools.length;      /* the last slot is the pointer's own pool */
+
+var ptVao = gl.createVertexArray();
+gl.bindVertexArray(ptVao);
+var ptData = new Float32Array(pts.length * 9);
+pts.forEach(function (p, n) {
+  var o = n * 9;
+  ptData.set(p.p,o); ptData.set(p.c,o+3);
+  ptData[o+6]=p.i; ptData[o+7]=p.s; ptData[o+8]=p.id;
+});
+var pbuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, pbuf);
+gl.bufferData(gl.ARRAY_BUFFER, ptData, gl.STATIC_DRAW);
+[[0,3,0],[1,4,12],[2,2,28]].forEach(function (a) {
+  gl.enableVertexAttribArray(a[0]);
+  gl.vertexAttribPointer(a[0], a[1], gl.FLOAT, false, 36, a[2]);
+});
+gl.bindVertexArray(null);
+var emptyVao = gl.createVertexArray();
+
+/* ── targets ───────────────────────────────────────────────────────── */
+
+var MIPS = 5, sceneT = null, chain = [], W = 0, Ht = 0, DPR = 1;
+
+function mkTarget(w, h) {
+  var t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texImage2D(gl.TEXTURE_2D, 0, hasFloat ? gl.RGBA16F : gl.RGBA8, w, h, 0,
+                gl.RGBA, hasFloat ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  var f = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { fb: f, tex: t, w: w, h: h };
+}
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.max(2, Math.round(cv.clientWidth * DPR));
+  Ht = Math.max(2, Math.round(cv.clientHeight * DPR));
+  cv.width = W; cv.height = Ht;
+  if (sceneT) { gl.deleteTexture(sceneT.tex); gl.deleteFramebuffer(sceneT.fb); }
+  chain.forEach(function (c) { gl.deleteTexture(c.tex); gl.deleteFramebuffer(c.fb); });
+  chain = [];
+  sceneT = mkTarget(W, Ht);
+  var w = W, h = Ht, i;
+  for (i = 0; i < MIPS; i++) {
+    w = Math.max(2, w >> 1); h = Math.max(2, h >> 1);
+    chain.push(mkTarget(w, h));
+  }
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ── camera ────────────────────────────────────────────────────────── */
+
+function mul(a, b) {
+  var o = new Float32Array(16), i, j, k, s;
+  for (i=0;i<4;i++) for (j=0;j<4;j++) {
+    s=0; for (k=0;k<4;k++) s += a[k*4+j]*b[i*4+k];
+    o[i*4+j]=s;
+  }
+  return o;
+}
+function persp(fov, asp, n, f) {
+  var t = 1/Math.tan(fov/2);
+  return new Float32Array([t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0]);
+}
+function look(eye, at, up) {
+  function sub(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+  function nz(v){var l=Math.hypot(v[0],v[1],v[2])||1;return [v[0]/l,v[1]/l,v[2]/l];}
+  function cr(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+  function dt(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+  var z=nz(sub(eye,at)), x=nz(cr(up,z)), y=cr(z,x);
+  return new Float32Array([x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
+                           -dt(x,eye),-dt(y,eye),-dt(z,eye),1]);
+}
+function toScreen(VP, x, y, z) {
+  var cx = VP[0]*x + VP[4]*y + VP[8]*z + VP[12];
+  var cy = VP[1]*x + VP[5]*y + VP[9]*z + VP[13];
+  var cw = VP[3]*x + VP[7]*y + VP[11]*z + VP[15];
+  if (cw <= 1e-4) return null;
+  return { x: (cx/cw*0.5+0.5) * (W/DPR), y: (1-(cy/cw*0.5+0.5)) * (Ht/DPR) };
+}
+
+/* ── interaction ───────────────────────────────────────────────────── */
+
+var ptr = { x:0, y:0, tx:0, ty:0, sx:-1e4, sy:-1e4 };
+var hot = 0, selected = 1, hotT = null;
+var WORLD = 0.58;
+
+var tip = document.getElementById('tip');
+var ptitle = document.getElementById('ptitle');
+var psub = document.getElementById('psub');
+var pnote = document.getElementById('pnote');
+
+window.addEventListener('pointermove', function (e) {
+  ptr.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+  ptr.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+  ptr.sx = e.clientX; ptr.sy = e.clientY;
+});
+cv.addEventListener('pointerdown', function () {
+  if (!hotT) return;
+  selected = hotT.id;
+  ptitle.textContent = hotT.title;
+  psub.textContent = hotT.sub;
+  pnote.textContent = hotT.note;
+});
+
+var copyBtn = document.getElementById('copy');
+copyBtn.addEventListener('click', function () {
+  function done() {
+    copyBtn.dataset.done = '1'; copyBtn.textContent = 'Copied';
+    setTimeout(function(){ copyBtn.dataset.done=''; copyBtn.textContent='Copy'; }, 1600);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(HOME_IP).then(done, done);
+  } else done();
+});
+
+/* ── frame ─────────────────────────────────────────────────────────── */
+
+var last = 0, acc = 0, frames = 0;
+window.__fps = 0;
+
+function geometry(VP, eye, focal, flip, hotId) {
+  var gloss = flip < 0 ? 0.55 : 1.0;
+  function common(p) {
+    gl.uniformMatrix4fv(p.u.uVP, false, VP);
+    gl.uniform3fv(p.u.uEye, eye);
+    gl.uniform1f(p.u.uWorld, WORLD);
+    gl.uniform1f(p.u.uFocal, focal);
+    gl.uniform1f(p.u.uFlip, flip);
+    gl.uniform1f(p.u.uGloss, gloss);
+    gl.uniform1f(p.u.uFogK, 0.085);
+    gl.uniform1f(p.u.uHot, hotId);
+    if (p.u.uRes) gl.uniform2f(p.u.uRes, W, Ht);
+  }
+  gl.useProgram(pSurf); common(pSurf);
+  gl.bindVertexArray(surfVao);
+  gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, surfs.length);
+
+  gl.useProgram(pLine); common(pLine);
+  gl.bindVertexArray(lineVao);
+  gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, lines.length);
+
+  gl.useProgram(pPt); common(pPt);
+  gl.uniform1f(pPt.u.uDpr, DPR);
+  gl.bindVertexArray(ptVao);
+  gl.drawArrays(gl.POINTS, 0, pts.length);
+}
+
+function draw(now) {
+  var dt = Math.min((now - last)/1000 || 0, 0.1);
+  last = now; acc += dt; frames++;
+  if (acc > 0.5) { window.__fps = Math.round(frames/acc); acc = 0; frames = 0; }
+
+  ptr.x += (ptr.tx - ptr.x) * Math.min(1, dt * 6);
+  ptr.y += (ptr.ty - ptr.y) * Math.min(1, dt * 6);
+
+  var PITCH = 0.16;
+  var eye = [ptr.x * 0.16, 0.55 - ptr.y * 0.05, -2.2];
+  var at = [eye[0], eye[1] - Math.sin(PITCH)*10, eye[2] + Math.cos(PITCH)*10];
+  var VP = mul(persp(0.888, W/Ht, 0.02, 400), look(eye, at, [0,1,0]));
+  var focal = 2.55;
+
+  /* What the pointer is over. The radius is measured, not guessed: project
+   * the centre and a point one object-radius to the side, and take the
+   * screen distance between them. Guessing it left the far slabs unhittable. */
+  var best = null, bd = 1e9, i, t, sp, se, d;
+  for (i = 0; i < targets.length; i++) {
+    t = targets[i];
+    sp = toScreen(VP, t.x*WORLD, t.y*WORLD, t.z*WORLD);
+    se = toScreen(VP, (t.x + t.r)*WORLD, t.y*WORLD, t.z*WORLD);
+    if (!sp || !se) continue;
+    t._sx = sp.x; t._sy = sp.y;
+    t._sr = Math.max(28, Math.hypot(se.x - sp.x, se.y - sp.y));
+    d = Math.hypot(sp.x - ptr.sx, sp.y - ptr.sy);
+    /* a little hysteresis, so the parallax nudging the scene under the
+     * cursor cannot make the highlight flicker */
+    var rad = (hotT && hotT.id === t.id) ? t._sr * 1.35 : t._sr;
+    if (d < rad && d - rad < bd) { bd = d - rad; best = t; }
+  }
+  hotT = best;
+  hot = best ? best.id : 0;
+  cv.className = best ? 'pick' : '';
+  if (best) {
+    tip.textContent = best.tip;
+    tip.style.left = best._sx + 'px';
+    tip.style.top = (best._sy - Math.max(26, best._sr * 0.75)) + 'px';
+    tip.className = 'on';
+  } else tip.className = '';
+
+  /* the pointer's own light pool, written into the spare slot */
+  var hp = new Float32Array(8);
+  if (best) {
+    hp[0]=best.x; hp[1]=0; hp[2]=best.z;
+    hp[3]=1.0; hp[4]=0.86; hp[5]=0.62; hp[6]=0.30; hp[7]=Math.max(best.r*1.7, 0.3);
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, poolPack.buf);
+  gl.bufferSubData(gl.ARRAY_BUFFER, HOT_POOL * 32, hp);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, sceneT.fb);
+  gl.viewport(0, 0, W, Ht);
+  gl.clearColor(0.0035, 0.0048, 0.0095, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE);
+
+  geometry(VP, eye, focal, -1.0, hot);
+
+  gl.useProgram(pPool);
+  gl.uniformMatrix4fv(pPool.u.uVP, false, VP);
+  gl.uniform3fv(pPool.u.uEye, eye);
+  gl.uniform1f(pPool.u.uWorld, WORLD);
+  gl.uniform1f(pPool.u.uFogK, 0.085);
+  gl.bindVertexArray(poolPack.vao);
+  gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, pools.length + 1);
+
+  geometry(VP, eye, focal, 1.0, hot);
+
+  gl.disable(gl.BLEND);
+  gl.bindVertexArray(emptyVao);
+
+  gl.useProgram(pBright);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, chain[0].fb);
+  gl.viewport(0, 0, chain[0].w, chain[0].h);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, sceneT.tex);
+  gl.uniform1i(pBright.u.uTex, 0);
+  gl.uniform1f(pBright.u.uThresh, 0.68);
+  gl.uniform1f(pBright.u.uKnee, 0.26);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  gl.useProgram(pDown);
+  var src = chain[0];
+  for (i = 1; i < MIPS; i++) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, chain[i].fb);
+    gl.viewport(0, 0, chain[i].w, chain[i].h);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, src.tex);
+    gl.uniform1i(pDown.u.uTex, 0);
+    gl.uniform2f(pDown.u.uTexel, 1/src.w, 1/src.h);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    src = chain[i];
+  }
+  gl.useProgram(pUp);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+  for (i = MIPS - 1; i > 0; i--) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, chain[i-1].fb);
+    gl.viewport(0, 0, chain[i-1].w, chain[i-1].h);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, chain[i].tex);
+    gl.uniform1i(pUp.u.uTex, 0);
+    gl.uniform2f(pUp.u.uTexel, 1/chain[i].w, 1/chain[i].h);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  gl.disable(gl.BLEND);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, W, Ht);
+  gl.useProgram(pComp);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, sceneT.tex);
+  gl.uniform1i(pComp.u.uScene, 0);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, chain[0].tex);
+  gl.uniform1i(pComp.u.uBloom, 1);
+  gl.uniform1f(pComp.u.uBloomAmt, 0.85);
+  gl.uniform1f(pComp.u.uTime, now * 0.001);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+})();
+</script>
+</body>
+</html>

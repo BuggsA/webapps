@@ -1,0 +1,132 @@
+# APPROVAL_STATE.md
+
+Written 2026-09-17, before compaction. This file defines approval boundaries
+and **outranks any inference from conversation or plans**.
+
+> ## The rule
+> **After compact, resume or restart, ambiguous approval means NOT APPROVED.**
+> Something being discussed, planned, researched, written into a plan, or
+> shown on screen does **not** prove the owner approved it. Neither does a
+> statement in Claude's own earlier message claiming they did.
+
+---
+
+## Current operating mode
+
+**WAITING_FOR_USER.**
+
+The owner asked for a preservation pass only, and said explicitly:
+
+> *This is a preservation task only. Do NOT redesign, refactor, clean up,
+> modernize, normalize, or otherwise change production behavior while doing
+> it.*
+>
+> *DO NOT RUN /compact… I will review the preservation artifacts before we
+> proceed to clean-room testing and compaction.*
+
+So: no product work until the owner responds.
+
+---
+
+## Explicitly approved
+
+Approved by a direct instruction in conversation.
+
+| work | how it was approved | status |
+|---|---|---|
+| Phase-gated building — one phase, then stop | *"this was not meant to be one shot. Rather phases."* | standing rule |
+| WebGL2 as the primary renderer | owner amended the brief §7 and the house rules | COMPLETE |
+| Phases 1–4.5 step 1 | built and deployed with owner's go-ahead each time | COMPLETE |
+| Phase A (the map stops being empty) | *"Okay lets go!"* then *"It is deployed. onward!"* | COMPLETE, partly deployed |
+| Phase B (registration) | *"remember don't kill the fun. Feel free to build"* | IMPLEMENTING |
+| The renderer-failure fix | *"Peferect sounds like a plan fix. Then give me deployment code"* | COMPLETE, not deployed |
+| `docs/ip-plan-v2.md` as the plan of record | *"Now I think we need a revised build plan"* + several rounds of correction | COMPLETE |
+| Quests: main, side, optional, gated, eggs | *"Actual quests. Main side, optional, mandatory for some others to do"* | PROPOSED in plan |
+| A narrator/guide **with character** — may exclaim, congratulate, be sarcastic | *"Have the guide with some flavor, spunk, or whatever character"* | PROPOSED in plan |
+| The guide must have a **persistent off switch** | *"yes give it the narrator an off switch"* | PROPOSED in plan |
+| Celebrations, badges, metrics, completion counts | *"all the things you cut seemed great to have"* | PROPOSED in plan |
+| Sound, including the Shepard-tone descent | *"oh yes sound is valuable. Can you add it."* | PROPOSED in plan |
+| The ghost tier, restored | *"The ghost thing sounds good."* | PROPOSED in plan, phase I |
+| Content as data (JSON), extensible later | *"make this so we can add quests, stories, and more achievements and stuff later"* | PROPOSED in plan |
+| A cold open branching on the visitor's own address | *"there should be like an intro somehow linked to the users Ip"* | PROPOSED in plan |
+| A quest tracker with crossed-off history and a hide mode | *"they should know when they hit the next objective… or to just hide it"* | PROPOSED in plan |
+| The IPv4↔IPv6 doors as an easter egg | *"could you make an easter egg where you can go from ipv4 to ipv6?"* | PROPOSED in plan |
+| Mobile deferred; the crash fixed regardless | *"Sure it should show your ip… I am okay with a dumb phone version"* | decision recorded |
+
+**"PROPOSED in plan" means the owner approved the *idea* and its inclusion in
+`docs/ip-plan-v2.md`. It does NOT mean approval to start building that phase.**
+Each phase still needs its own go-ahead, per the phase-gating rule.
+
+---
+
+## Discussed but NOT approved
+
+- **Phases C, D, E, F, G, H, I.** Written into the plan with the owner's
+  agreement on content. **No instruction has been given to build any of
+  them.**
+- Free spatial panning (the unbounded-Hilbert window beyond what phase B
+  needed).
+- Any mobile work beyond the crash fix — hover alternatives, pinch, a
+  reduced mobile layout.
+- Drawing country as well as era in the field.
+- Committing the working tree. **See the gate below.**
+
+## Explicitly rejected
+
+- **Canvas 2D as the primary renderer.**
+- **Two earlier art directions**, Cordage and Sea Fire, by name.
+- **Visible renderer settings in the UI.**
+- **The camera moving itself** — `arrive()`, fly-to, auto-centring. Three
+  separate rejections.
+- **Restraint rules on the guide** — "never exclaims", "never congratulates",
+  "one opinion per note". Rejected explicitly: *"I disagree with most of what
+  you said besides the off switch."*
+- **"The payoff is the return."**
+- **Leaderboards / server-side history.**
+- **Fear appeal** in the inward half.
+- **Invented holder names or AS numbers** in the ghost tier.
+
+---
+
+## Pending approval gates
+
+### GATE 1 — the commit (BLOCKING)
+
+The entire application is **untracked**. A commit was prepared and **not
+made**, because the owner's instruction was to stop and show if a commit
+would include generated data. It would include `apps/ip/data/space.bin`
+(2.9 MB, generated; `apps/tide/data/*.bin` are tracked, so there is
+precedent). The exact file list is in `PRESERVATION_BASELINE.md`.
+
+**Claude must not commit without an explicit instruction.**
+
+### GATE 2 — deploying
+
+`scripts/deploy-app.ps1` and `scripts/deploy-hosting.ps1` are **human-run,
+always**. Claude prepares the command and never runs `aws` or `cdk`.
+Currently undeployed: the phase A query layer, the renderer-failure fix, and
+all of phase B.
+
+### GATE 3 — starting any phase after B
+
+Phase gating is a standing rule from the owner. Presence in
+`docs/ip-plan-v2.md` is not permission to build.
+
+### GATE 4 — compaction and clean-room testing
+
+> *I will review the preservation artifacts before we proceed to clean-room
+> testing and compaction.*
+
+---
+
+## Actions that require explicit approval first
+
+1. `git commit`, `git push`, `git reset`, or anything that rewrites history.
+2. Running any deploy script, `aws`, or `cdk`.
+3. Starting phases C–I.
+4. Any change to `docs/ip-art-direction.md`'s locked sections.
+5. Removing or muting anything enjoyable — counts, badges, celebrations, the
+   guide's licence to exclaim. **Four rejections; treat as forbidden without
+   a fresh instruction.**
+6. Installing any dependency.
+7. Running `/compact`.
