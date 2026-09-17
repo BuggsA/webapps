@@ -390,6 +390,14 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   height: 1px;
   background: rgba(92,127,168,.55);
 }
+/* A rung the visitor has actually passed through, on the way out or on the
+   way back in. The whole ladder is on this rail at once, which is the only
+   place the accumulation can be shown at full depth -- in the field each
+   rung is 64x the last, so the third one in is already under a pixel.
+   Brightness, not width: width already means "the announced block". */
+#railTrack i.been {
+  background: rgba(150,186,228,.92);
+}
 #railTrack i.block {
   left: -4px;
   width: 9px;

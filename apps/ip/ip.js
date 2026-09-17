@@ -761,6 +761,9 @@
     ptr: null,          /* where the pointer last was, in client pixels, so the
                          * highlight can be recomputed as the camera settles
                          * underneath it. Null when it is off the canvas. */
+    gone: null,         /* and the coarsest. Together with `been` these are the
+                         * two ends of the traverse, so every rung between
+                         * them is one the visitor has genuinely passed. */
     been: null,         /* the finest axis actually HELD. The descent leaves a
                          * trail behind it, not a diagram of the hierarchy:
                          * a container is outlined because the visitor went
@@ -2093,8 +2096,10 @@
                            Math.round(160 * rel) + 'px)';
     var html = '', i, a;
     for (i = 0; i < S.ladder.length; i++) {
-      a = axisOfLen(S.ladder[i]) / S.maxAxis * 100;
-      html += '<i style="top:' + a.toFixed(2) + '%"></i>';
+      var ra = axisOfLen(S.ladder[i]);
+      a = ra / S.maxAxis * 100;
+      html += '<i data-a="' + ra.toFixed(4) + '" style="top:' +
+              a.toFixed(2) + '%"></i>';
     }
     if (S.net && S.net.status === 'ready') {
       a = S.blockAxis / S.maxAxis * 100;
@@ -2117,6 +2122,7 @@
     /* the low-water mark of the whole session. Recorded before the ring
      * can rebuild and return early, or a rung crossing would lose it. */
     S.been = S.been === null ? next : Math.min(S.been, next);
+    S.gone = S.gone === null ? next : Math.max(S.gone, next);
     if (cursor && layerAlpha[cursor.layer === undefined ? LY.BLOCK : cursor.layer] < 0.35) {
       cursor = null;
     }
@@ -2137,7 +2143,12 @@
     S.yaw = 0;
     S.pickAxis = null;
     S.trail.length = 0;
-    S.been = null;
+    /* Seeded at the home axis, not left null. setAxis returns early when the
+     * axis is already where it is asked for, so relying on it to seed these
+     * leaves the visitor's own starting rung marked unvisited -- and they
+     * are standing on it. */
+    S.been = 0;
+    S.gone = 0;
     S.aim = S.home ? S.home.big : null;
     S.subject = S.net;
     rebuild();
@@ -3498,6 +3509,25 @@
     if (el.goBack) el.goBack.hidden = !S.trail.length && !away();
     if (el.goHome) el.goHome.hidden = !away() && S.s < 0.5;
     el.railMark.style.top = (S.s / S.maxAxis * 100).toFixed(2) + '%';
+    /* THE DESCENT ACCUMULATES -- here, because the field cannot carry it.
+     * Each rung is 64x the last, so the second container in is 1/4096th of
+     * the frame and the third is under a pixel: about two levels are ever
+     * visible down there, however they are drawn. The rail is logarithmic,
+     * so all ten fit on it at once. "At rung eight the seven above are still
+     * on screen" is true of this, and could never have been true of the
+     * field.
+     *
+     * Every rung between the two ends of the traverse is lit, and they stay
+     * lit -- going back in does not un-pass them. Lit = known, dark =
+     * unasked, on the one piece of furniture that shows the whole ladder. */
+    if (el.railTrack && S.been !== null) {
+      var tk = el.railTrack.children, ti, ta;
+      for (ti = 0; ti < tk.length; ti++) {
+        ta = tk[ti].getAttribute('data-a');
+        if (ta === null) continue;
+        tk[ti].classList.toggle('been', +ta >= S.been && +ta <= S.gone);
+      }
+    }
     var ar = activeRung();
     el.companionState.textContent =
       ar ? (ar.len === floorLen(ar.f.v)
