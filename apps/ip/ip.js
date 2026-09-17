@@ -576,7 +576,7 @@
    * cell lights every cell it covers, which is the point — 240.0.0.0/4
    * should read as a whole empty region of the map, not as a dot. */
   function marksInField(f) {
-    var out = {}, cells = FIELD * FIELD, i, m, a, b, k, n, lit, sz;
+    var out = {}, list = [], cells = FIELD * FIELD, i, m, a, b, k, n, lit, sz;
     var lo = f.containerNet;
     var hi = lo + (BigInt(cells) << f.cellShift) - 1n;
     for (i = 0; i < MARKS.length; i++) {
@@ -597,8 +597,14 @@
       for (k = a; k <= b; k++) {
         if (out[k] === undefined || out[k].n < n) out[k] = { m: m, i: lit, s: sz, n: n };
       }
+      list.push({ m: m, a: a, b: b, n: n, i: lit });
     }
-    return out;
+    /* `cells` is the per-cell map the field reads while it draws; `list` is
+     * the landmarks themselves, so each can be drawn ONCE as a shape instead
+     * of only as a scatter of brighter dots. A landmark has to be a
+     * different KIND of thing, not a brighter instance of the same thing --
+     * that is what makes it navigable. See docs/ip-exploration-research.md. */
+    return { cells: out, list: list };
   }
 
   /* The landmark an address is standing in, if any; the most specific wins,
@@ -1193,7 +1199,8 @@
     function wx(gx) { return SCREEN_X((gx + 0.5 - lay.ox) * step); }
     function wz(gy) { return (gy + 0.5 - lay.oy) * step; }
 
-    var lm = marksInField(f);
+    var lmAll = marksInField(f);
+    var lm = lmAll.cells;
     f.marks = lm;
     /* what the registries say about every cell here: allocated or not, and
      * how old. Free, and it is what stops the field being 4,096 identical
@@ -1285,6 +1292,59 @@
      * at this did not do, and undefined propagates as NaN silently all the
      * way to a blank frame with nothing in the console. */
     var aimX = mx, aimZ = mz;
+
+    /* LANDMARKS AS THINGS.
+     *
+     * A landmark used to be a cell drawn brighter, which is the same kind of
+     * mark as everything around it with the volume turned up. The level
+     * design literature is consistent that a landmark -- a dominant, a focal
+     * point, Disney's "wienie" -- has to be a UNIQUE ELEMENT OF THE
+     * ARCHITECTURE that stands out from the composition. Brightness is a
+     * degree; a landmark needs to differ in kind, or the eye has no reason
+     * to pick it out of four thousand other dots.
+     *
+     * The art direction gives four materials -- points, hairlines, rimmed
+     * surfaces, ground pools -- and landmarks were only using the first. So
+     * a one-cell landmark gets a pool: it becomes a thing that casts light
+     * on the floor rather than a dot. A landmark covering many cells gets a
+     * hairline rim around its extent: it becomes a TERRITORY with a border,
+     * and the shape of 10.0.0.0/8 is suddenly a thing you can see.
+     *
+     * An aligned prefix always lands on a Hilbert rectangle -- square when
+     * it spans an even number of bits, a 2:1 domino when odd -- so the
+     * bounding box IS the extent. That is asserted rather than trusted: if
+     * the box does not contain exactly as many cells as the landmark does,
+     * no rim is drawn, because a true rectangle around the wrong cells is
+     * worse than no rectangle. See docs/ip-exploration-research.md. */
+    var li, lk, lmr, lgx0, lgx1, lgy0, lgy1, lgxk, lgyk;
+    for (li = 0; li < lmAll.list.length; li++) {
+      lmr = lmAll.list[li];
+      if (lmr.n === 1) {
+        /* a lamp: it now stands on its own light */
+        Pool(wx(lay.gx[lmr.a]), wz(lay.gy[lmr.a]), 0.052, C.coldHi,
+             0.10 * lmr.i, layer);
+        continue;
+      }
+      lgx0 = lgy0 = Infinity; lgx1 = lgy1 = -Infinity;
+      for (lk = lmr.a; lk <= lmr.b; lk++) {
+        lgxk = lay.gx[lk]; lgyk = lay.gy[lk];
+        if (lgxk < lgx0) lgx0 = lgxk;
+        if (lgxk > lgx1) lgx1 = lgxk;
+        if (lgyk < lgy0) lgy0 = lgyk;
+        if (lgyk > lgy1) lgy1 = lgyk;
+      }
+      if ((lgx1 - lgx0 + 1) * (lgy1 - lgy0 + 1) !== lmr.n) continue;
+      var rx0 = (lgx0 - lay.ox) * step, rz0 = (lgy0 - lay.oy) * step;
+      var rx1 = (lgx1 + 1 - lay.ox) * step, rz1 = (lgy1 + 1 - lay.oy) * step;
+      /* Capped below the container boundary's 0.42. A landmark is a thing
+       * inside the field; it does not get to outshout the edge of the field
+       * it is inside. */
+      var ri = clamp(0.22 * lmr.i * Math.sqrt(lmr.n), 0.08, 0.34);
+      var q0=[SCREEN_X(rx0),0.003,rz0], q1=[SCREEN_X(rx1),0.003,rz0];
+      var q2=[SCREEN_X(rx1),0.003,rz1], q3=[SCREEN_X(rx0),0.003,rz1];
+      L(q0,q1,C.coldHi,ri,1.0,0.3,layer); L(q1,q2,C.coldHi,ri,1.0,0.3,layer);
+      L(q2,q3,C.coldHi,ri,1.0,0.3,layer); L(q3,q0,C.coldHi,ri,1.0,0.3,layer);
+    }
 
     /* the boundary of the container, so the field is a THING and not a
      * texture that happens to fill the frame. In global coordinates the tile
