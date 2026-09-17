@@ -758,6 +758,10 @@
                          * around this, not around home. */
     subject: null,      /* the announced block at the aim, as S.net is for home */
     trail: [],          /* where the aim has been, so there is a way back */
+    been: null,         /* the finest axis actually HELD. The descent leaves a
+                         * trail behind it, not a diagram of the hierarchy:
+                         * a container is outlined because the visitor went
+                         * there, not because it happens to contain them. */
     renderFail: '',     /* why there is no picture, if there is no picture */
     query: null,        /* what the visitor asked the map to show, if anything */
     pickAxis: null,     /* the zoom the last choice was made at; the frame
@@ -1053,7 +1057,7 @@
         S.ref = { k: refK, x: rxy[0], y: rxy[1] };
       }
       for (i = 0; i < SLOTS; i++) {
-        if (S.rungs[i] && S.rungs[i].f) buildSpace(LY.SLOT0 + i, S.rungs[i].f);
+        if (S.rungs[i] && S.rungs[i].f) buildSpace(LY.SLOT0 + i, S.rungs[i].f, S.rungs[i]);
       }
     }
   }
@@ -1132,7 +1136,7 @@
   /* A field of 4096 blocks. Yours is the only lit one, and that is the
    * honest state of it: every other cell is real address space, but whether
    * anything announces it is not known unless it is asked. */
-  function buildSpace(layer, f) {
+  function buildSpace(layer, f, rung) {
     if (!f || !S.ref) return;
     /* A cell is an AREA, not a point: FIELD cells span exactly W, so a
      * container is exactly one cell of its parent and the nesting is exact.
@@ -1249,6 +1253,86 @@
     var c2=[SCREEN_X(bx0+W),0.002,bz0+W], c3=[SCREEN_X(bx0),0.002,bz0+W];
     L(c0,c1,C.cold,0.42,1.1,0.3,layer); L(c1,c2,C.cold,0.42,1.1,0.3,layer);
     L(c2,c3,C.cold,0.42,1.1,0.3,layer); L(c3,c0,C.cold,0.42,1.1,0.3,layer);
+
+    /* WHERE YOU CAME FROM.
+     *
+     * The aim's own cell, outlined -- and that cell IS the container of the
+     * rung one finer, because registration makes a rung's whole field
+     * exactly one cell of the rung above it. So this rectangle and that
+     * rung's own boundary are the SAME rectangle on screen. As the finer
+     * rung fades out its boundary does not vanish: this one is already drawn
+     * underneath it, at this rung's alpha, and takes over. That handoff is
+     * the whole effect. The place you just stood becomes one cell of the
+     * place you are now, and stays outlined while it shrinks.
+     *
+     * Drawn only for rungs the visitor has actually been below. It is a
+     * trail, not a diagram: the outline is there because they went there. On
+     * a first descent the two are identical -- passing through the ladder is
+     * the ladder -- and they part company the moment somebody travels away
+     * and comes back.
+     *
+     * Contrast carries the depth because it is the only cue available here:
+     * nested frames never occlude one another, and contrast reads as
+     * distance even when size argues the other way (Rohaly & Wilson, 1994).
+     * One frame, not a stack. Powers of Ten uses one, and the geometry
+     * agrees -- a second level in is 1/64 of this one, which is under a
+     * pixel. The nesting the eye actually sees comes from the live rungs
+     * each drawing their own, which is three deep during a pull-back. */
+    /* It is NOT always one cell. Rungs are pinned to a lattice, so the gap
+     * between two of them is a whole step only some of the time -- an IPv4
+     * ladder runs /20, /12, /0, and /20 to /12 is eight bits, not twelve.
+     * The rectangle wanted is the finer rung's CONTAINER, which is a square
+     * of 2^m cells on a side. The global curve makes that square contiguous
+     * and lattice-aligned, so its corner is the aim's cell floored to it.
+     * Outlining one cell regardless would draw a true rectangle that is not
+     * the one the visitor came out of, which is worse than drawing none. */
+    if (S.been !== null && rung && rung.k > 0) {
+      var finerLen = S.ladder[rung.k - 1];
+      var finerAxis = axisOfLen(finerLen);
+      var bits = f.cellLen - finerLen;
+      /* bits can be NEGATIVE: where two rungs are more than a step apart the
+       * finer container is smaller than one cell of this field, and a
+       * quarter-cell outline is still true and still visible. Below a
+       * sixteenth it is not, so it is dropped rather than drawn as a smudge.
+       *
+       * ODD bits are skipped entirely. A prefix an odd number of bits inside
+       * a square grid level covers half a cell, and which half depends on
+       * the curve's local orientation -- it is a domino, not a square.
+       * Rounding it up to the enclosing cell would draw a rectangle that is
+       * not the container the visitor came out of, and a true rectangle in
+       * the wrong place is worse than none. Happens once on an IPv6 ladder,
+       * at /16 inside /3, which is the outermost view of all. */
+      if (S.been <= finerAxis + 0.1 && bits >= -4 && bits % 2 === 0) {
+        var side = Math.pow(2, bits / 2);
+        /* aligned off the aim's EXACT position, not its cell index, so the
+         * same line works for sub-cell containers */
+        var cgx = Math.floor(lay.ox / side) * side;
+        var cgy = Math.floor(lay.oy / side) * side;
+        var ax0 = (cgx - lay.ox) * step, az0 = (cgy - lay.oy) * step;
+        var aw = side * step;
+        /* Flat, deliberately. The depth ramp the research asks for is
+         * already here and already continuous: layerAlpha falls away from
+         * whichever rung the axis is nearest and multiplies this, so the
+         * container just left reads as nearest and the ones above it recede,
+         * per frame, for free. Contrast does the work occlusion does
+         * everywhere else, because nested frames never occlude.
+         *
+         * An intensity keyed to S.s was tried and taken out: buildScene runs
+         * on rung crossings, not on frames, so it would have been frozen at
+         * whatever the axis read when a slot last changed hands. Same shape
+         * of bug as the plate going stale mid-travel, which cost three
+         * fixes. Anything that must vary within a rung belongs in a uniform,
+         * not in the geometry. */
+        var camI = 0.70;
+        if (camI > 0.03) {
+          var e0=[SCREEN_X(ax0),0.004,az0], e1=[SCREEN_X(ax0+aw),0.004,az0];
+          var e2=[SCREEN_X(ax0+aw),0.004,az0+aw], e3=[SCREEN_X(ax0),0.004,az0+aw];
+          L(e0,e1,C.cold,camI,1.0,0.35,layer); L(e1,e2,C.cold,camI,1.0,0.35,layer);
+          L(e2,e3,C.cold,camI,1.0,0.35,layer); L(e3,e0,C.cold,camI,1.0,0.35,layer);
+          f.cameFrom = { x0:ax0, z0:az0, w:aw, len:finerLen };
+        }
+      }
+    }
 
     fieldGeoms[layer] = { x0:bx0, z0:bz0, step:step, f:f, layer:layer,
                           lay:lay, aimX:aimX, aimZ:aimZ };
@@ -1997,6 +2081,9 @@
     var next = clamp(v, 0, S.maxAxis);
     if (next === S.s) return;
     S.s = next;
+    /* the low-water mark of the whole session. Recorded before the ring
+     * can rebuild and return early, or a rung crossing would lose it. */
+    S.been = S.been === null ? next : Math.min(S.been, next);
     if (cursor && layerAlpha[cursor.layer === undefined ? LY.BLOCK : cursor.layer] < 0.35) {
       cursor = null;
     }
@@ -2017,6 +2104,7 @@
     S.yaw = 0;
     S.pickAxis = null;
     S.trail.length = 0;
+    S.been = null;
     S.aim = S.home ? S.home.big : null;
     S.subject = S.net;
     rebuild();

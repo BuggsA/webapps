@@ -544,6 +544,48 @@ constant, no cuts, the whole film a single camera move. Our axis is already
 logarithmic, so constant axis velocity is already constant zoom rate. What we
 lack is the *no cuts* part, which is precisely what registration buys.
 
+### Researched before building the wonder half, 2026-09-17
+
+Four findings, all load-bearing for how the outlines get drawn.
+
+**Our condition has a name in the literature: desert fog.** Jul & Furnas,
+*Critical Zones in Desert Fog: Aids to Multiscale Navigation* (UIST 1998),
+define it as a view of an information world that contains no information on
+which to base navigational decisions -- you zoom into a region and there is
+nothing there to steer by. That is exactly the diagnosis from the open-world
+research ("arriving somewhere reveals nothing to go to next"), arrived at
+independently. Their prescribed aid is **cues integrated into the detail
+view** rather than a separate overview, plus landmarks. The accumulated
+outlines are that aid.
+
+**Do not build a minimap.** Hornbaek, Bederson & Plaisant measured zoomable
+interfaces with and without an overview: **80% of subjects preferred having
+the overview, and were 22% slower with it** (68.76 s vs 84.23 s on multi-level
+maps). Switching between the overview and the detail view correlated with
+higher task time (r=.404, p<.001). **The cost is the switch, not the
+context.** Context drawn into the scene keeps the thing people prefer without
+charging them for it. This rules out an inset or corner overview for good.
+
+**Powers of Ten uses ONE frame, not a stack.** The film's device is a single
+thin white square marking the current field of view -- a viewfinder, not a
+trail. It never accumulates. So accumulation is *our* departure from the
+reference and has to earn itself: start with the immediate parent marked
+clearly and the ancestors falling away, not N outlines of equal weight.
+
+**Contrast is the only depth cue available to us, and it is enough.**
+Occlusion is the strongest monocular cue but nested frames do not occlude one
+another. Contrast attenuation -- aerial perspective -- reads as distance
+**even when size opposes it** (Rohaly & Wilson, *Contrast as a depth cue*,
+1994). So one mechanism, outline contrast falling with ancestry depth,
+delivers recession and clutter control together. Keep it clear of the cell
+fill: era is already brightness, and the two must not be confusable. Outlines
+are line geometry; era is fill.
+
+**The call this adds up to:** contrast-ramped nested outlines drawn into the
+scene, immediate parent strongest, no minimap, no labels in the first cut.
+Whether they need names is a judgement to make while looking at them, not
+before.
+
 ### What to build
 
 - Global-curve layout for every rung, replacing per-container `d2xy`.
