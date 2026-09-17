@@ -25,8 +25,10 @@ point; the snapshot above is no longer the only one. Nothing has been pushed.
 
 ## Current objective
 
-**COMPLETE / IMPLEMENTING — phase B of `docs/ip-plan-v2.md`**, "the descent
-becomes sublime".
+**COMPLETE — phase B of `docs/ip-plan-v2.md`**, "the descent becomes
+sublime". All five items built and deployed except the sound, which is built
+and not yet deployed. The exit criterion — *someone pulls back through three
+rungs and says something out loud* — has **NOT been judged by the owner**.
 
 Done in phase B:
 - **COMPLETE** — one global Hilbert curve for every rung, replacing the
@@ -34,11 +36,20 @@ Done in phase B:
 - **COMPLETE** — `ZOOM = FIELD`.
 - **COMPLETE** — the convergence pan reworked as a rigid translation.
 
-Not done in phase B, and it is the wonder half:
-- **NOT STARTED** — the place you just stood staying outlined as it becomes
-  one cell of the place you are now.
-- **NOT STARTED** — the descent accumulating, so at rung eight the seven
-  above are still on screen.
+Also done in phase B:
+- **COMPLETE** — the container you came out of stays outlined as it shrinks.
+  A rung outlines the container of the rung one finer; registration makes
+  that the same rectangle on screen as the finer rung's own boundary, so the
+  handoff needs nothing. Verified at ratio 1.000000 across 61 samples and
+  every ladder-adjacent pair in both families.
+- **COMPLETE, with a correction to the plan** — the descent accumulates, on
+  the **rail**, not in the field. Each rung is 64x the last, so the second
+  container in is 1/4096th of the frame and the third is under a pixel:
+  "at rung eight the seven above are still on screen" was never achievable
+  in the field and is exactly true of the rail.
+- **COMPLETE, NOT DEPLOYED** — the descent tone. WebAudio, synthesised, four
+  octaves driven by `layerAlpha` — the same weights the picture is drawn
+  from. Off until asked, remembered in `localStorage`, silent at rest.
 
 ### Acceptance criteria for phase B (from the plan)
 

@@ -395,6 +395,11 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
    place the accumulation can be shown at full depth -- in the field each
    rung is 64x the last, so the third one in is already under a pixel.
    Brightness, not width: width already means "the announced block". */
+/* Sound on reads as lit, the same way everything else that is known does.
+   No icon: a word says what it is and a speaker glyph does not. */
+#controls button[aria-pressed="true"] {
+  color: var(--cream);
+}
 #railTrack i.been {
   background: rgba(150,186,228,.92);
 }
