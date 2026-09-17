@@ -511,6 +511,13 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 }
 #noteBody span { color: var(--cold-2); }
 #noteBody .foot { color: var(--cold-3); margin-top: 2.2em; }
+/* The places themselves. A list, because that is what a logbook is. */
+#noteBody ul.sites { list-style: none; margin: .5em 0 0; padding: 0; }
+#noteBody ul.sites li {
+  padding: .5em 0;
+  border-top: 1px solid rgba(92,127,168,.16);
+}
+#noteBody ul.sites li:first-child { border-top: 0; }
 
 #aboutInner, #noteInner {
   width: min(62ch, calc(100% - var(--gutter) * 2));

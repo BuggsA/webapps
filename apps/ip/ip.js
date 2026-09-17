@@ -2145,8 +2145,22 @@
   function noteSite(at, rec) {
     var n = noteLoad(), p = parseIp(at);
     var key = (rec && rec.status === 'ready' && rec.prefix) ? rec.prefix : at;
-    if (!n.sites[key]) {
-      n.sites[key] = 1;
+    if (!n.sites[key] || n.sites[key] === 1) {
+      /* The THING, not a tick against a count. No Man's Sky's answer to
+       * "wide as an ocean, shallow as a puddle" was the Discovery Page --
+       * what you found, in detail, worth coming back to. A logbook of
+       * numbers is a scoreboard; a logbook of places is a logbook.
+       * A `1` is an entry written by an older version and is upgraded in
+       * place rather than thrown away. */
+      var rr0 = p ? regAt(p.big, p.v) : null;
+      n.sites[key] = {
+        t: Date.now(),
+        asn: (rec && rec.status === 'ready' && rec.asn >= 0) ? rec.asn : -1,
+        who: (rec && rec.holder) || '',
+        cc: (rr0 && rr0.cc) || '',
+        year: (rr0 && rr0.year) || 0,
+        said: !!(rec && rec.status === 'ready')
+      };
       if (!n.firstSite) n.firstSite = key;
     }
     if (rec && rec.status === 'ready' && rec.asn >= 0) {
@@ -2164,8 +2178,15 @@
   }
   function noteHolder(asn, holder) {
     if (!(asn >= 0) || !holder) return;
-    var n = noteLoad();
-    if (n.nets[asn] !== undefined && !n.nets[asn]) { n.nets[asn] = holder; noteSave(); }
+    var n = noteLoad(), k, s, hit = false;
+    if (n.nets[asn] !== undefined && !n.nets[asn]) { n.nets[asn] = holder; hit = true; }
+    /* and on every site that network announced, so the logbook says who was
+     * there rather than only what number they are */
+    for (k in n.sites) {
+      s = n.sites[k];
+      if (s && s.asn === asn && !s.who) { s.who = holder; hit = true; }
+    }
+    if (hit) noteSave();
   }
   function noteDepth(axis) {
     var n = noteLoad();
@@ -2268,6 +2289,20 @@
     return out;
   }
 
+  /* The sites themselves, newest first. Bounded, because a logbook that has
+   * to be scrolled for a minute before it says anything is a database. */
+  function noteSites(limit) {
+    var n = noteLoad(), out = [], k, s;
+    for (k in n.sites) {
+      s = n.sites[k];
+      out.push({ p: k, t: (s && s.t) || 0, asn: (s && s.asn >= 0) ? s.asn : -1,
+                 who: (s && s.who) || '', cc: (s && s.cc) || '',
+                 year: (s && s.year) || 0, said: !!(s && s.said) });
+    }
+    out.sort(function (a, b) { return b.t - a.t; });
+    return { rows: out.slice(0, limit), more: Math.max(0, out.length - limit) };
+  }
+
   function buildNotebook() {
     if (!el.noteBody) return;
     var rows = notebookRows(), i, h2, p2, b, s;
@@ -2297,6 +2332,39 @@
         p2.appendChild(s);
       }
       el.noteBody.appendChild(p2);
+    }
+    var got = noteSites(30);
+    if (got.rows.length) {
+      h2 = document.createElement('h3');
+      h2.textContent = 'The places themselves';
+      el.noteBody.appendChild(h2);
+      var ul = document.createElement('ul');
+      ul.className = 'sites';
+      for (i = 0; i < got.rows.length; i++) {
+        var g = got.rows[i], liEl = document.createElement('li');
+        b = document.createElement('b');
+        b.textContent = g.p;
+        liEl.appendChild(b);
+        var bits = [];
+        if (g.asn >= 0) bits.push('AS' + g.asn + (g.who ? '  ·  ' + g.who : ''));
+        else if (!g.said) bits.push('nothing announced here');
+        if (g.cc) bits.push(g.cc);
+        if (g.year) bits.push(String(g.year));
+        if (bits.length) {
+          liEl.appendChild(document.createElement('br'));
+          s = document.createElement('span');
+          s.textContent = bits.join('  ·  ');
+          liEl.appendChild(s);
+        }
+        ul.appendChild(liEl);
+      }
+      el.noteBody.appendChild(ul);
+      if (got.more) {
+        p2 = document.createElement('p');
+        p2.className = 'foot';
+        p2.textContent = 'and ' + group(got.more) + ' more before these.';
+        el.noteBody.appendChild(p2);
+      }
     }
     p2 = document.createElement('p');
     p2.className = 'foot';
