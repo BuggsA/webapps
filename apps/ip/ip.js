@@ -1998,6 +1998,218 @@
     return { kind: '2d', upload: function () {}, frame: frame };
   }
 
+  /* ══ NOTEBOOK ═════════════════════════════════════════════
+   * What you found, kept between visits. `localStorage` and nothing else --
+   * the same store the RIPEstat cache already uses. Nothing leaves the
+   * device, so there is nothing to promise and later break.
+   *
+   * It is a brag sheet and it is meant to be one. It sits behind a control
+   * that can be ignored forever by anyone who does not care, and it is
+   * written in a naturalist's register -- sites recorded, a logbook -- which
+   * is a matter of wording and not of restraint. Life lists have always been
+   * a completionist's hobby.
+   *
+   * Every number here is sized against something the visitor has already
+   * seen. A bare count is inert.
+   *
+   * Forward compatible on purpose: a stale notebook from an older version is
+   * merged over a blank one rather than thrown away, and anything unknown in
+   * it is ignored. Losing somebody's logbook to a version bump would be the
+   * worst bug this file could have. */
+
+  var NOTE_KEY = 'ip.v1.note';
+  var note = null;
+
+  function noteBlank() {
+    return { v: 1, first: 0, last: 0, sites: {}, firstSite: '', nets: {},
+             ccs: {}, deepest: 0, oldest: 0, dist: 0 };
+  }
+  function noteLoad() {
+    if (note) return note;
+    note = noteBlank();
+    try {
+      var o = JSON.parse(localStorage.getItem(NOTE_KEY) || 'null');
+      if (o && typeof o === 'object') {
+        for (var k in note) if (o[k] !== undefined && o[k] !== null) note[k] = o[k];
+      }
+    } catch (_) { }
+    note.v = 1;
+    if (!note.first) note.first = Date.now();
+    return note;
+  }
+  function noteSave() {
+    if (!note) return;
+    note.last = Date.now();
+    try { localStorage.setItem(NOTE_KEY, JSON.stringify(note)); } catch (_) { }
+  }
+  function noteCount(o) { var n = 0, k; for (k in o) n++; return n; }
+
+  /* A place, the moment it answers. Recorded whether or not anybody
+   * announces it: "nothing is announced here" is a real answer and finding
+   * one is a real find. */
+  function noteSite(at, rec) {
+    var n = noteLoad(), p = parseIp(at);
+    var key = (rec && rec.status === 'ready' && rec.prefix) ? rec.prefix : at;
+    if (!n.sites[key]) {
+      n.sites[key] = 1;
+      if (!n.firstSite) n.firstSite = key;
+    }
+    if (rec && rec.status === 'ready' && rec.asn >= 0) {
+      if (!n.nets[rec.asn]) n.nets[rec.asn] = rec.holder || '';
+      else if (rec.holder && !n.nets[rec.asn]) n.nets[rec.asn] = rec.holder;
+    }
+    if (p) {
+      var r = regAt(p.big, p.v);
+      if (r) {
+        if (r.cc) n.ccs[r.cc] = 1;
+        if (r.year && (!n.oldest || r.year < n.oldest)) n.oldest = r.year;
+      }
+    }
+    noteSave();
+  }
+  function noteHolder(asn, holder) {
+    if (!(asn >= 0) || !holder) return;
+    var n = noteLoad();
+    if (n.nets[asn] !== undefined && !n.nets[asn]) { n.nets[asn] = holder; noteSave(); }
+  }
+  function noteDepth(axis) {
+    var n = noteLoad();
+    if (axis > n.deepest) { n.deepest = axis; noteSave(); }
+  }
+  function noteDist(fromBig, toBig) {
+    if (fromBig === null || toBig === null) return;
+    var n = noteLoad();
+    var d = fromBig > toBig ? fromBig - toBig : toBig - fromBig;
+    n.dist += Number(d);
+    noteSave();
+  }
+
+  /* How many countries hold any address space at all, so "eleven countries"
+   * has a denominator. Counted once from the registry already loaded. */
+  var regCCs = 0;
+  function allCountries() {
+    if (regCCs || !REG || !REG.cc) return regCCs;
+    var seen = {}, i;
+    for (i = 0; i < REG.cc.length; i++) if (REG.cc[i]) seen[REG.cc[i]] = 1;
+    regCCs = noteCount(seen);
+    return regCCs;
+  }
+
+  /* Rows, not markup. Holder names come from RIPEstat and prefixes come from
+   * the wire, so nothing here is pasted into HTML -- the panel builds the
+   * structure and sets textContent, the same way the companion already does.
+   * Third-party strings never become markup in this file. */
+  function notebookRows() {
+    var n = noteLoad(), out = [], sites = noteCount(n.sites),
+        nets = noteCount(n.nets), ccs = noteCount(n.ccs), all = allCountries();
+    if (!sites) return out;
+    out.push(['Sites recorded', group(sites) + (sites === 1 ? ' place' : ' places'),
+              n.firstSite ? 'the first was ' + n.firstSite +
+                            ', and it was dark until you asked' : '']);
+    if (nets) {
+      var first = '', k;
+      for (k in n.nets) {
+        first = 'AS' + k + (n.nets[k] ? '  ·  ' + n.nets[k] : '');
+        break;
+      }
+      out.push(['Networks entered', group(nets) + (nets === 1 ? ' network' : ' networks'),
+                first ? 'starting with ' + first : '']);
+    }
+    /* Both of these are sized from the registry, and the registry is
+     * deferred. Rather than print a bare count while it is still in flight --
+     * which is the one thing the copy rules forbid -- the row waits. openNote
+     * asks for the file and rebuilds when it lands, so the wait is short and
+     * self-healing. */
+    if (ccs && all) {
+      out.push(['Countries crossed', group(ccs) + (ccs === 1 ? ' country' : ' countries'),
+                'of the ' + group(all) + ' that hold any address space at all']);
+    }
+    if (n.deepest > 0.01) {
+      /* said in addresses, not in axis units. The axis is how the instrument
+       * is built, not a thing anybody pulled back to look at. One axis unit
+       * is STEP_BITS of address space, which is what makes this exact. */
+      var bits = Math.round(n.deepest * STEP_BITS);
+      var all = S.home ? S.home.bits : 32;
+      var span = bits <= 53 ? group(Math.pow(2, bits)) + ' addresses'
+                            : '2^' + bits + ' addresses';
+      if (bits >= all) {
+        /* at the top of the rail there is nothing left to be a fraction of,
+         * and saying "4,294,967,296 out of the 4,294,967,296 there are" is
+         * a sentence only a machine would write */
+        out.push(['Widest view held', all === 32 ? 'All of IPv4' : 'All of global unicast',
+                  bits <= 53 ? group(Math.pow(2, bits)) + ' addresses, end to end'
+                             : 'every address there is']);
+      } else {
+        out.push(['Widest view held', span,
+                  'out of the ' + (all === 32 ? '4,294,967,296' : '2^128') +
+                  ' your address lives in']);
+      }
+    }
+    if (n.oldest && REG && REG.older) {
+      var pc = Math.round(REG.older[Math.min(n.oldest, 2100)] * 100);
+      out.push(['Oldest block found', String(n.oldest),
+                'older than ' + pc + '% of the space anybody holds']);
+    }
+    if (n.dist > 0) {
+      var v4 = 4294967296;
+      if (n.dist >= 9007199254740992) {
+        /* past 2^53 the count is no longer an integer and group() turns
+         * exponential notation into confetti. An IPv6 hop is routinely 10^37
+         * addresses, so this is the normal case out there, not the edge:
+         * say it in powers of two, which is how the space is actually
+         * built, and admit that it is approximate. */
+        out.push(['Distance travelled',
+                  'about 2^' + Math.round(Math.log(n.dist) / Math.LN2) + ' addresses',
+                  'the whole of IPv4 is 2^32 of them']);
+      } else if (n.dist >= v4) {
+        out.push(['Distance travelled', group(Math.round(n.dist)) + ' addresses',
+                  (n.dist / v4).toFixed(n.dist / v4 < 10 ? 1 : 0) +
+                  ' times the whole of IPv4']);
+      } else {
+        out.push(['Distance travelled', group(Math.round(n.dist)) + ' addresses',
+                  (n.dist / v4 * 100).toFixed(2) + '% of the whole of IPv4']);
+      }
+    }
+    return out;
+  }
+
+  function buildNotebook() {
+    if (!el.noteBody) return;
+    var rows = notebookRows(), i, h2, p2, b, s;
+    el.noteBody.innerHTML = '';
+    h2 = document.createElement('h2');
+    h2.textContent = 'Your notebook';
+    el.noteBody.appendChild(h2);
+    if (!rows.length) {
+      p2 = document.createElement('p');
+      p2.textContent = 'Nothing recorded yet. Move the view, pick a block, and ' +
+        'what you find is written down here — on this device, and nowhere else.';
+      el.noteBody.appendChild(p2);
+      return;
+    }
+    for (i = 0; i < rows.length; i++) {
+      h2 = document.createElement('h3');
+      h2.textContent = rows[i][0];
+      el.noteBody.appendChild(h2);
+      p2 = document.createElement('p');
+      b = document.createElement('b');
+      b.textContent = rows[i][1];
+      p2.appendChild(b);
+      if (rows[i][2]) {
+        p2.appendChild(document.createElement('br'));
+        s = document.createElement('span');
+        s.textContent = rows[i][2];
+        p2.appendChild(s);
+      }
+      el.noteBody.appendChild(p2);
+    }
+    p2 = document.createElement('p');
+    p2.className = 'foot';
+    p2.textContent = 'Kept on this device only. Nothing is sent anywhere, and ' +
+      'clearing your browser data clears this too.';
+    el.noteBody.appendChild(p2);
+  }
+
   /* ══ SOUND ════════════════════════════════════════════════
    * The descent, sounded. Synthesised, never sampled: zero bytes shipped,
    * and it keeps the rule the whole app is built on -- a sampled chime is
@@ -2245,6 +2457,7 @@
      * can rebuild and return early, or a rung crossing would lose it. */
     S.been = S.been === null ? next : Math.min(S.been, next);
     S.gone = S.gone === null ? next : Math.max(S.gone, next);
+    noteDepth(next);
     if (cursor && layerAlpha[cursor.layer === undefined ? LY.BLOCK : cursor.layer] < 0.35) {
       cursor = null;
     }
@@ -2469,6 +2682,7 @@
     /* the zoom this choice was made at: the frame is container-centred here
      * and slides onto the choice from here inward */
     if (remember) S.pickAxis = S.s;
+    if (remember) noteDist(S.aim, addrBig);
     S.aim = addrBig;
     S.subject = (S.home && addrBig === S.home.big) ? S.net : { status: 'loading' };
     rebuild();
@@ -2528,6 +2742,10 @@
             var h = tidyHolder(o && o.holder);
             if (h && S.asked[at] && S.asked[at].asn === asn) {
               S.asked[at].holder = h;
+              /* the name lands on a later call than the number did, so the
+               * logbook gets it when it arrives rather than keeping a
+               * network it can only call by its AS number */
+              noteHolder(S.asked[at].asn, h);
               if (S.subject === S.asked[at]) { syncDom(); announce(); }
             }
           }).catch(function () {});
@@ -2541,6 +2759,10 @@
   function applySubject(at, rec) {
     if (!S.home || S.aim === null || ipToText(S.aim, S.home.v) !== at) return;
     S.subject = rec;
+    /* the notebook records the ANSWER, not the asking: a place becomes a
+     * place when it says what it is, including when what it says is that
+     * nobody announces it. */
+    if (rec && (rec.status === 'ready' || rec.status === 'empty')) noteSite(at, rec);
     rebuild();
     announce();
   }
@@ -2710,7 +2932,9 @@
         case 'Home': e.preventDefault(); S.yaw = 0; goHome(); break;
         case 'End': e.preventDefault(); setAxis(S.maxAxis); break;
         case 'Escape':
-          if (!el.aboutPanel.hidden) closeAbout(); else goHome();
+          if (!el.aboutPanel.hidden) closeAbout();
+          else if (el.notePanel && !el.notePanel.hidden) closeNote();
+          else goHome();
           break;
         default: return;
       }
@@ -3768,6 +3992,31 @@
     });
   }
 
+  /* Built on open, never kept warm: it is a page of numbers that only
+   * matter when somebody is looking at them. */
+  function openNote() {
+    /* the logbook sizes itself against the registry, so opening it is a
+     * reason to fetch one. Harmless if it is already here or already on its
+     * way -- loadRegistry guards itself. */
+    loadRegistry();
+    if (regState === 'loading') {
+      var wait = setInterval(function () {
+        if (regState === 'loading') return;
+        clearInterval(wait);
+        if (!el.notePanel.hidden) buildNotebook();
+      }, 120);
+    }
+    buildNotebook();
+    el.notePanel.hidden = false;
+    el.notebook.setAttribute('aria-expanded', 'true');
+    el.noteClose.focus();
+  }
+  function closeNote() {
+    el.notePanel.hidden = true;
+    el.notebook.setAttribute('aria-expanded', 'false');
+    el.notebook.focus();
+  }
+
   function aboutHTML() {
     return [
       '<h2>What this page does</h2>',
@@ -3882,7 +4131,8 @@
           'tipWrap', 'tipFixed', 'tipVary', 'tipMine', 'tipNote',
           'rail', 'railTrack', 'railMark', 'goHome', 'goBack', 'hint',
           'companionState', 'companionSummary', 'companionFacts',
-          'about', 'aboutPanel', 'aboutClose', 'aboutBody', 'sound']);
+          'about', 'aboutPanel', 'aboutClose', 'aboutBody', 'sound',
+          'notebook', 'notePanel', 'noteClose', 'noteBody']);
 
     var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     S.reduced = mq.matches;
@@ -3923,6 +4173,12 @@
      * anyway. prefers-reduced-motion starts silent even if it was on last
      * time: the people who ask for less movement usually want less noise,
      * and one press gets it back. */
+    if (el.notebook) {
+      el.notebook.addEventListener('click', function () {
+        if (el.notePanel.hidden) openNote(); else closeNote();
+      });
+      el.noteClose.addEventListener('click', closeNote);
+    }
     if (el.sound) {
       el.sound.addEventListener('click', function () { setSound(!S.sound); });
       if (soundRemembered() && !S.reduced) {

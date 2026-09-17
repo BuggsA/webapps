@@ -491,7 +491,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 
 /* ── ABOUT ───────────────────────────────────────────────────────────── */
 
-#aboutPanel {
+#aboutPanel, #notePanel {
   position: fixed;
   inset: 0;
   z-index: 6;
@@ -500,14 +500,24 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   display: grid;
   place-items: start center;
 }
-#aboutPanel[hidden] { display: none; }
+#aboutPanel[hidden], #notePanel[hidden] { display: none; }
 
-#aboutInner {
+/* The notebook reuses the About panel's frame: same width, same rhythm, same
+   way out. It is a second page of the same book, not a new kind of surface. */
+#noteBody b {
+  color: var(--cream);
+  font-weight: 320;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+#noteBody span { color: var(--cold-2); }
+#noteBody .foot { color: var(--cold-3); margin-top: 2.2em; }
+
+#aboutInner, #noteInner {
   width: min(62ch, calc(100% - var(--gutter) * 2));
   padding: clamp(40px, 9vh, 96px) 0;
   position: relative;
 }
-#aboutClose {
+#aboutClose, #noteClose {
   position: absolute;
   right: 0;
   top: clamp(16px, 4vh, 40px);
@@ -519,9 +529,9 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   min-height: 44px;
   min-width: 44px;
 }
-#aboutClose:hover { color: var(--cream); }
+#aboutClose:hover, #noteClose:hover { color: var(--cream); }
 
-#aboutBody h2 {
+#aboutBody h2, #noteBody h2 {
   color: var(--cream);
   font-size: clamp(22px, 3vw, 32px);
   font-weight: 260;
@@ -529,8 +539,8 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   margin: 1.8em 0 .5em;
   letter-spacing: -.004em;
 }
-#aboutBody h2:first-child { margin-top: 0; }
-#aboutBody h3 {
+#aboutBody h2:first-child, #noteBody h2:first-child { margin-top: 0; }
+#aboutBody h3, #noteBody h3 {
   color: var(--cold-1);
   font-size: var(--ui);
   font-weight: 500;
