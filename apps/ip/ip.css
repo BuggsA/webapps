@@ -400,6 +400,38 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 #controls button[aria-pressed="true"] {
   color: var(--cream);
 }
+/* From here you can see. Sits under the plate, quiet, and never in front of
+   the address -- it is an invitation, not an instruction. */
+#sight {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--gutter) + 92px);
+  z-index: 4;
+  margin: 0;
+  width: min(64ch, calc(100% - var(--gutter) * 2));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: .15em 1.1em;
+  font-size: var(--ui);
+  font-weight: 400;
+  color: var(--cold-2);
+  line-height: 1.7;
+}
+#sight[hidden] { display: none; }
+/* its own line, so the destinations wrap as a row of destinations and not as
+   a sentence that happens to contain them */
+#sight .lead {
+  flex: 0 0 100%;
+  color: var(--cold-3);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 500;
+}
+
 #railTrack i.been {
   background: rgba(150,186,228,.92);
 }
