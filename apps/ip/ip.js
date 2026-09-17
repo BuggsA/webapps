@@ -855,6 +855,13 @@
 
   var layerScale = new Float32Array(LAYERS);
   var layerAlpha = new Float32Array(LAYERS);
+  /* What each layer WEIGHS, and what each layer EMITS, are not the same
+   * number. layerAlpha is the weight: which state owns the plate, which
+   * field answers the pointer, which rung the sound is on. layerLight is
+   * what the shader gets, and it carries the concentration fade on top. The
+   * two were one array until a rung dimmed for being small also stopped
+   * being pickable and handed the plate to the block. */
+  var layerLight = new Float32Array(LAYERS);
   var layerPan = new Float32Array(LAYERS * 2);   /* x,z per layer */
 
   /* Each state fades in over its own window and is drawn at its own scale,
@@ -976,6 +983,34 @@
       layerAlpha[LY.HOME] /= sum;
       layerAlpha[LY.BLOCK] /= sum;
       for (i = 0; i < SLOTS; i++) layerAlpha[LY.SLOT0 + i] /= sum;
+    }
+
+    /* CONCENTRATION, for the rungs, and it has to be HERE -- after the
+     * normalisation, not before it.
+     *
+     * A rung draws 4,096 marks whatever size it is on screen. Pulled a
+     * fraction of a step past one, the same 4,096 marks go through a
+     * quarter of the pixels, additive accumulation piles them up, the bloom
+     * finishes the job, and the middle of the field becomes a solid white
+     * slab. It sits exactly where the container you came out of is drawn,
+     * so it was hiding the whole point of phase B.
+     *
+     * The block has had this fix since phase 3. Extending it to the rungs
+     * the obvious way does nothing at all, because the rung weights are
+     * NORMALISED straight afterwards and normalising divides the fade back
+     * out: measured, /12 at axis 1.85 went 0.8716 -> 0.8392, a four percent
+     * change against a slab that needed halving. A weight cannot express
+     * this, because it is not a question of which rung deserves the light --
+     * it is that the same geometry through fewer pixels should emit less
+     * light in total. So it is an absolute attenuation, applied last, and
+     * the frame is genuinely dimmer for it. That is the correct answer.
+     *
+     * Zoomed in past a rung it is 1 and nothing changes. */
+    layerLight.set(layerAlpha);
+    for (i = 0; i < SLOTS; i++) {
+      r = S.rungs[i];
+      if (!r) continue;
+      layerLight[LY.SLOT0 + i] *= Math.min(1, Math.pow(ZOOM, r.axis - S.s));
     }
   }
 
@@ -1758,7 +1793,7 @@
         gl.uniformMatrix4fv(p.u.uVP, false, VP);
         gl.uniform3fv(p.u.uEye, eye);
         gl.uniform1fv(p.u.uScale, layerScale);
-        gl.uniform1fv(p.u.uAlpha, layerAlpha);
+        gl.uniform1fv(p.u.uAlpha, layerLight);
         gl.uniform2fv(p.u.uPan, layerPan);
         gl.uniform1f(p.u.uFocal, FOCAL);
         gl.uniform1f(p.u.uFlip, flip);
@@ -1828,7 +1863,7 @@
         gl.uniformMatrix4fv(pPool.u.uVP, false, VP);
         gl.uniform3fv(pPool.u.uEye, eye);
         gl.uniform1fv(pPool.u.uScale, layerScale);
-        gl.uniform1fv(pPool.u.uAlpha, layerAlpha);
+        gl.uniform1fv(pPool.u.uAlpha, layerLight);
         gl.uniform2fv(pPool.u.uPan, layerPan);
         gl.uniform1f(pPool.u.uFogK, FOG);
         gl.bindVertexArray(vaos.pool);
@@ -1932,7 +1967,7 @@
 
       for (i = 0; i < lines.length; i++) {
         o = lines[i];
-        la = layerAlpha[o.layer];
+        la = layerLight[o.layer];
         if (la < 0.004) continue;
         ws = layerScale[o.layer];
         var qx = panX(o.layer), qz = panZ(o.layer);
@@ -1948,7 +1983,7 @@
 
       for (i = 0; i < points.length; i++) {
         o = points[i];
-        la = layerAlpha[o.layer];
+        la = layerLight[o.layer];
         if (la < 0.004) continue;
         ws = layerScale[o.layer];
         var px2 = panX(o.layer), pz2 = panZ(o.layer);

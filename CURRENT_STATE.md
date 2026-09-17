@@ -113,6 +113,21 @@ shrinks; passed containers leave nested outlines.
   phones do not have. Pinch is not implemented despite `apps/ip/README.md`
   claiming wheel/drag/pinch. Owner's decision: **not a first-class target
   yet.** Caveat recorded: the share path (phase G) is mobile.
+- **FIXED 2026-09-17, NOT DEPLOYED** — a rung rendering as a white slab. A
+  rung draws 4,096 marks whatever size it is on screen, so pulled a fraction
+  of a step past one, the same marks went through a quarter of the pixels and
+  merged into a solid slab over the middle of the field — exactly where phase
+  B draws the container you came out of. Fixed by an absolute concentration
+  fade applied AFTER the weights are normalised, and by splitting `layerLight`
+  (what a layer emits) from `layerAlpha` (what it weighs, for the plate, the
+  pointer and the sound). Two earlier attempts failed: a pre-normalisation
+  fade is divided back out, and fading `layerAlpha` itself drops a rung below
+  `LIVE` and hands the plate to the block.
+- **OPEN, cosmetic** — the whole-IPv4 view still renders hot at the top of the
+  rail. Untouched by the above: a rung sitting on its own axis has a fade of
+  exactly 1. This is density rather than shrinkage — the 4,096 marks are
+  genuinely bright — and is the `spread()` case, which `buildSpace` does not
+  yet use.
 - **OPEN, cosmetic** — the block renders hot at some scales. `spread()` and a
   shrink fade have reduced it; it is not fully solved.
 - **OPEN, unquantified** — cross-fade residual. Adjacent rungs agreed to 1px
