@@ -2077,3 +2077,26 @@ not have, and pinch is not implemented despite the README claiming it.
   dangling separator) with Detail closed the whole time, at mobile and
   desktop widths, console-clean.
 - **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+
+## 2026-09-18 -- tide: sea temp fixed for NOAA-covered coasts, not deployed
+
+- User asked "But what about wildwood or alantic city nj" after not
+  seeing sea temperature at their own real place. Real bug: sea temp
+  had been riding along inside the MODEL path's own marine-data call
+  (same request, no extra cost) -- meaning any NOAA-official coast
+  never got one, since NOAA's own station predictions carry no water-
+  temperature sensor reading. Wildwood and Atlantic City both resolve
+  to NOAA stations (dense NJ coverage), so both were silently missing
+  "Sea" the whole time, showing only "Air".
+- Fixed by giving sea temperature its own fetch (loadWaterTemp(),
+  mirroring loadAirTemp() exactly), called for every place regardless
+  of src -- confirmed live that Open-Meteo's marine model covers these
+  NOAA-official coasts fine, it just was never asked. state.seaTemp
+  (own 3h cache) replaces series.seaTemp; loadSeries()'s model-path
+  marine call dropped the now-redundant hourly=sea_surface_temperature
+  param.
+- Verified live: Wildwood -> "Air 28C - Sea 25C", Atlantic City ->
+  "Air 25C - Sea 25C" (both previously air-only), Chioggia (model
+  path) unaffected -> "Air 23C - Sea 26C". Detail toggle and Listen
+  control both still work, no console errors.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.

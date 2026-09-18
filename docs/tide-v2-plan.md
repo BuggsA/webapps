@@ -334,6 +334,19 @@ word control "This week" that expands them.
     directly under the state line, in the glance itself — visible
     without opening Detail at all, but still visually subordinate to
     the state line above it. The sun line went back to plain rise/set.
+  - **Bug found and fixed same day** ("But what about wildwood or
+    alantic city nj"): sea temperature had been riding along inside the
+    model path's own marine-data call, so any NOAA-official coast —
+    Wildwood, Atlantic City, anywhere NOAA covers well — never got one
+    at all, since NOAA's own station predictions carry no water-
+    temperature sensor reading. Fixed by making sea temperature its own
+    fetch (`loadWaterTemp()`, mirroring `loadAirTemp()`), called for
+    every place regardless of `src` — Open-Meteo's marine model covers
+    NOAA-official coasts too, it just was never asked to before.
+    `state.seaTemp` replaces `series.seaTemp`. Verified live: Wildwood
+    and Atlantic City (both NOAA) now show "Air 28°C · Sea 25°C" and
+    "Air 25°C · Sea 25°C" respectively, where before they silently
+    showed air temperature alone.
 - **Add to calendar.** A word control "Add to calendar" that builds an
   `.ics` (next 14 days of highs and lows for this place as 0-minute
   events, plus the daylight-low windows) and offers it via a `data:`

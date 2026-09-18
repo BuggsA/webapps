@@ -99,6 +99,9 @@ const state = {
   located: false, inlandKm: 0, coastLat: NaN, coastLon: NaN,
   series: null,           // { src, pts:[{t,v}], turns:[{t,v,type}], name, country, mllwOffset }
   airTemp: null,          // { t0, step, v[] } — hourly 2m air temp, independent of the tide source
+  seaTemp: null,          // { t0, step, v[] } — hourly sea surface temp, ALSO independent of the tide
+                          // source (Open-Meteo's marine model covers a NOAA-official coast too — a
+                          // NOAA station's own predictions carry no water-temperature sensor reading)
   units: (() => { try { const u = localStorage.getItem(LS_UNITS); if (u === 'ft' || u === 'm') return u; } catch (_) {} return /-US$/i.test(navigator.language || '') ? 'ft' : 'm'; })(),
   datum: (() => { try { return localStorage.getItem(LS_DATUM) === 'mllw' ? 'mllw' : 'msl'; } catch (_) { return 'msl'; } })(),
 };
@@ -940,9 +943,8 @@ async function loadSeries() {
   // ':v2' bumps past any cached NOAA series from before mllwOffset existed
   // (unlike the model path, NOAA has no async step to backfill it lazily —
   // mean isn't recoverable from turns alone once it's already subtracted).
-  // ':v2' on the model side likewise bumps past a series cached before
-  // seaTemp (phase 9) existed — there's no self-heal for it the way
-  // mllwOffset gets one, since it isn't a separate fetch to retry.
+  // Kept on the model side too even though nothing here currently depends
+  // on it — cheap insurance the next time this shape changes.
   const key = st ? 'tide.noaa:' + st.id + ':v2' : 'tide.om:' + lat.toFixed(2) + ',' + lon.toFixed(2) + ':v2';
   const cached = cacheGet(key, st ? 24 * 3600e3 : 6 * 3600e3);
   if (cached && !cached.stale) { state.series = cached; updateReadout(true); attachExtras(cached, lat, lon, key); return; }
@@ -967,22 +969,14 @@ async function loadSeries() {
       series = { src: 'noaa', name: titleCase(st.name), turns, pts: null, mllwOffset: -mean };
     } else {
       const url = 'https://marine-api.open-meteo.com/v1/marine?latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3)
-        + '&minutely_15=sea_level_height_msl&hourly=sea_surface_temperature&past_days=3&forecast_days=15&timeformat=unixtime&timezone=UTC';
+        + '&minutely_15=sea_level_height_msl&past_days=3&forecast_days=15&timeformat=unixtime&timezone=UTC';
       const j = await (await fetch(url)).json();
       const T = j.minutely_15.time, V = j.minutely_15.sea_level_height_msl;
       const vals = new Float64Array(V.length);
       for (let i = 0; i < V.length; i++) vals[i] = V[i] == null ? (i ? vals[i - 1] : 0) : V[i];
       const t0 = T[0] * 1000, step = (T[1] - T[0]) * 1000;
       const turns = H.extrema(vals, t0, step).map(x => ({ t: x.t, v: x.v, type: x.type }));
-      // sea temp: same call, no extra request (phase 9). Left with real
-      // nulls where the forecast horizon for this field runs out short of
-      // the height series' own 15 days — seaTempAt() skips those, not
-      // forward-filled, since a stale temp read as current would mislead.
-      let seaTemp = null;
-      if (j.hourly && j.hourly.sea_surface_temperature) {
-        seaTemp = { t0: j.hourly.time[0] * 1000, step: (j.hourly.time[1] - j.hourly.time[0]) * 1000, v: j.hourly.sea_surface_temperature };
-      }
-      series = { src: 'model', name: '', turns, pts: { t0, step, v: Array.from(vals) }, seaTemp };
+      series = { src: 'model', name: '', turns, pts: { t0, step, v: Array.from(vals) } };
     }
     state.series = series; cacheSet(key, series);
     attachExtras(series, lat, lon, key);
@@ -1021,21 +1015,19 @@ function fmtHeight(m) {
   return `<span class="n">${heightNum(m)}</span><span class="u">${state.units}</span>`;
 }
 function fmtHeightPlain(m) { return heightNum(m) + state.units; }   // for canvas text
-// phase 9 sea temperature: nearest-hour lookup, no interpolation (water
-// temperature drifts slowly enough that rounding to the hour is honest).
-function seaTempAt(t) {
-  const s = state.series; if (!s || !s.seaTemp) return null;
-  const { t0, step, v } = s.seaTemp;
-  const i = Math.round((t - t0) / step);
-  return (i < 0 || i >= v.length || v[i] == null) ? null : v[i];
-}
 function fmtTemp(c) {
   return state.units === 'ft' ? { n: Math.round(c * 9 / 5 + 32), u: '°F' } : { n: Math.round(c), u: '°C' };
 }
-// air temperature: a plain weather forecast, unlike sea temp not tied to
-// the tide source (NOAA stations don't carry it) — its own fetch, its
-// own short cache (weather goes stale faster than a tide prediction).
-// Same nearest-hour, no-forward-fill honesty as seaTempAt().
+// air + sea temperature: two plain forecasts, both independent of the
+// tide-height source. Originally sea temp rode along with the model
+// path's own marine-data call (it's the same API), which meant a NOAA-
+// official coast — Wildwood, Atlantic City, anywhere NOAA covers well —
+// never got one at all, since NOAA's own predictions carry no water-
+// temperature sensor reading. Open-Meteo's marine model covers those
+// coasts too, so both are now their own fetch, their own short cache
+// (3h — weather goes stale faster than a tide prediction), called for
+// every place regardless of src. Same nearest-hour, no-forward-fill
+// honesty in both lookups: a stale reading shown as current would mislead.
 async function loadAirTemp(lat, lon) {
   const key = 'tide.air:' + lat.toFixed(2) + ',' + lon.toFixed(2);
   const cached = cacheGet(key, 3 * 3600e3);
@@ -1051,10 +1043,27 @@ async function loadAirTemp(lat, lon) {
     return cached ? cached.stale : null;
   }
 }
-function airTempAt(t) {
-  const a = state.airTemp; if (!a) return null;
-  const i = Math.round((t - a.t0) / a.step);
-  return (i < 0 || i >= a.v.length || a.v[i] == null) ? null : a.v[i];
+async function loadWaterTemp(lat, lon) {
+  const key = 'tide.water:' + lat.toFixed(2) + ',' + lon.toFixed(2);
+  const cached = cacheGet(key, 3 * 3600e3);
+  if (cached && !cached.stale) return cached;
+  try {
+    const url = 'https://marine-api.open-meteo.com/v1/marine?latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3)
+      + '&hourly=sea_surface_temperature&past_days=2&forecast_days=7&timeformat=unixtime&timezone=UTC';
+    const j = await (await fetch(url)).json();
+    const data = { t0: j.hourly.time[0] * 1000, step: (j.hourly.time[1] - j.hourly.time[0]) * 1000, v: j.hourly.sea_surface_temperature };
+    cacheSet(key, data);
+    return data;
+  } catch (_) {
+    return cached ? cached.stale : null;
+  }
+}
+function airTempAt(t) { return tempAt(state.airTemp, t); }
+function seaTempAt(t) { return tempAt(state.seaTemp, t); }
+function tempAt(series, t) {
+  if (!series) return null;
+  const i = Math.round((t - series.t0) / series.step);
+  return (i < 0 || i >= series.v.length || series.v[i] == null) ? null : series.v[i];
 }
 // a difference (rate, range), not an absolute reading — unit conversion
 // only, never a datum shift (a constant offset cancels in a subtraction),
@@ -1667,8 +1676,9 @@ async function enter(item, how) {
   flyToPlace();
   loadSeries();
   const cLat = state.coastLat, cLon = state.coastLon;
-  state.airTemp = null;
+  state.airTemp = null; state.seaTemp = null;
   loadAirTemp(cLat, cLon).then(a => { if (state.coastLat === cLat && state.coastLon === cLon) { state.airTemp = a; updateReadout(true); } });
+  loadWaterTemp(cLat, cLon).then(a => { if (state.coastLat === cLat && state.coastLon === cLon) { state.seaTemp = a; updateReadout(true); } });
   track('enter', { how, inland: nc.km > INLAND_KM ? 1 : 0 });
 }
 
