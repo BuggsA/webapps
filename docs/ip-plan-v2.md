@@ -285,6 +285,34 @@ The inward turn:
 > Right. Enough of out there. Turn it around — I want to show you what you
 > handed over just by showing up.
 
+### Two readers, one set of words
+
+**`docs/ip-two-audiences.md`**, 2026-09-18. Someone who arrived knowing
+nothing, and someone who has spent thirty years in this -- and the second one
+must never feel like a teenager is explaining retirement to them. Governs
+every word in the product, not just the guide's.
+
+- **They are not opposite problems.** The newcomer is lost by a term never
+  cashed out, not by jargon. The veteran is lost by inaccuracy, approximation
+  and avoidance. **Precision serves both** -- specificity is the main cue
+  readers use to judge knowledgeability, including readers without the domain
+  knowledge.
+- **Use the real word.** Prefix, announce, allocation, autonomous system --
+  then point at the thing while it is lit. The screen does the defining,
+  which is the advantage this product has over every IP explainer ever
+  written. A soft substitute is a small betrayal the newcomer discovers later.
+- **Never simplify into something false.** If it cannot be said simply and
+  truthfully, show it instead. *"Your address says where you are"* is the
+  tempting one and it would destroy a main-line beat.
+- **Plant things only the veteran feels** -- 6to4 abandoned, TEST-NET-1,
+  AS7007 unexplained. They cost the newcomer nothing. **Never wink.**
+- **The tonal fix is stance, not calibration: he is not teaching, he is
+  pointing at his own work.** Never "did you know". Never "simply", "just",
+  "of course", "obviously". Never explain why a fact is interesting.
+- **Test:** ten consecutive lines should contain something a network engineer
+  did not know, and no term left uncashed. Read the plate to both. Neither
+  should ask who it was written for.
+
 ### The emotion, and who carries it
 
 **`docs/ip-emotional-design.md`**, written 2026-09-18. It governs phases D
