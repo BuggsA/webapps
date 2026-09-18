@@ -327,6 +327,13 @@ word control "This week" that expands them.
     half of the line disappears independently when its own data is
     missing, so a NOAA-path place correctly shows "Air 67°F" with no
     dangling separator where "Sea" would have gone.
+  - **Moved same day, second follow-up** ("any way to make it small
+    text with the big info... a bigger detail, not a minute thing to
+    search for"): out of the sun line inside Detail and into a new
+    always-visible caption line (`#ro-temp`, small, `--chrome-soft`)
+    directly under the state line, in the glance itself — visible
+    without opening Detail at all, but still visually subordinate to
+    the state line above it. The sun line went back to plain rise/set.
 - **Add to calendar.** A word control "Add to calendar" that builds an
   `.ics` (next 14 days of highs and lows for this place as 0-minute
   events, plus the daylight-low windows) and offers it via a `data:`

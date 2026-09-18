@@ -2062,3 +2062,18 @@ not have, and pinch is not implemented despite the README claiming it.
   scrubbing beyond the 7-day forecast window correctly drops the line
   rather than showing stale data.
 - **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
+
+## 2026-09-18 -- tide: temperature moved into the glance, not deployed
+
+- Same-day follow-up: "any way to make it small text with the big
+  info. I feel like that is a bigger detail not a minute thing to
+  search for." Moved air/water temperature (commit ad01afe) out of
+  the sun line inside Detail and into a new small caption line
+  (#ro-temp, 0.85rem, chrome-soft) directly under the state line --
+  visible immediately, no tap needed, but styled smaller than the
+  state line above it so the answer stays the answer. Sun line inside
+  Detail reverted to plain rise/set. Verified both data paths
+  (model shows "Air 23C - Sea 26C", NOAA shows "Air 19C" alone, no
+  dangling separator) with Detail closed the whole time, at mobile and
+  desktop widths, console-clean.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.
