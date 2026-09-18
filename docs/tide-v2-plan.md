@@ -314,6 +314,19 @@ word control "This week" that expands them.
     other number on the page already follows that setting — the plan's
     example didn't mention this, but leaving temperature the one number
     that ignores the toggle would be a worse, not better, reading of it.
+  - **Added 2026-09-18, user follow-up ("I forgot something important —
+    air temp and water temp"):** an **air temperature** line alongside
+    it — "Air 23°C · Sea 26°C" — from Open-Meteo's plain weather
+    forecast (`temperature_2m`), a *separate* fetch from the tide series
+    since NOAA stations don't carry it and it isn't a tide product at
+    all. Independent of `state.series` for that reason: its own
+    `state.airTemp` slot, its own short cache (3h — weather goes stale
+    faster than a tide prediction does), fetched once per place
+    alongside `loadSeries()`. Shows on *both* data paths (NOAA and
+    model), unlike sea temperature which only the model path has; each
+    half of the line disappears independently when its own data is
+    missing, so a NOAA-path place correctly shows "Air 67°F" with no
+    dangling separator where "Sea" would have gone.
 - **Add to calendar.** A word control "Add to calendar" that builds an
   `.ics` (next 14 days of highs and lows for this place as 0-minute
   events, plus the daylight-low windows) and offers it via a `data:`

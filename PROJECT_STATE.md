@@ -2043,3 +2043,22 @@ not a degraded desktop build.
 
 Still open on mobile: the exploration model assumes hover, which phones do
 not have, and pinch is not implemented despite the README claiming it.
+
+## 2026-09-18 -- tide: air temperature, not deployed
+
+- User follow-up after the v2 plan closed out: "I forgot something
+  important. Air temp and water temp." Water temp already existed
+  (phase 9); added air temperature alongside it on the sun line
+  ("Air 23C - Sea 26C") from Open-Meteo's plain weather forecast
+  (temperature_2m) -- a separate fetch from the tide series, since it
+  isn't a tide product and NOAA stations don't carry it. Own
+  state.airTemp slot (not tied to state.series), own 3h cache (weather
+  goes stale faster than tide predictions), fetched once per place
+  alongside loadSeries().
+- Shows on BOTH data paths (NOAA and model), unlike sea temp which is
+  model-only -- verified San Francisco (NOAA, no sea temp) correctly
+  shows "Air 67F" alone with no dangling " - " where Sea would go, and
+  Chioggia (model) shows both. Verified units toggle (C/F), and that
+  scrubbing beyond the 7-day forecast window correctly drops the line
+  rather than showing stale data.
+- **Not yet deployed** -- needs `.\scripts\deploy-app.ps1 -Name tide`.

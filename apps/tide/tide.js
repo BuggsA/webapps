@@ -98,6 +98,7 @@ const state = {
   lat: NaN, lon: NaN, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, place: '',
   located: false, inlandKm: 0, coastLat: NaN, coastLon: NaN,
   series: null,           // { src, pts:[{t,v}], turns:[{t,v,type}], name, country, mllwOffset }
+  airTemp: null,          // { t0, step, v[] } — hourly 2m air temp, independent of the tide source
   units: (() => { try { const u = localStorage.getItem(LS_UNITS); if (u === 'ft' || u === 'm') return u; } catch (_) {} return /-US$/i.test(navigator.language || '') ? 'ft' : 'm'; })(),
   datum: (() => { try { return localStorage.getItem(LS_DATUM) === 'mllw' ? 'mllw' : 'msl'; } catch (_) { return 'msl'; } })(),
 };
@@ -1031,6 +1032,30 @@ function seaTempAt(t) {
 function fmtTemp(c) {
   return state.units === 'ft' ? { n: Math.round(c * 9 / 5 + 32), u: '°F' } : { n: Math.round(c), u: '°C' };
 }
+// air temperature: a plain weather forecast, unlike sea temp not tied to
+// the tide source (NOAA stations don't carry it) — its own fetch, its
+// own short cache (weather goes stale faster than a tide prediction).
+// Same nearest-hour, no-forward-fill honesty as seaTempAt().
+async function loadAirTemp(lat, lon) {
+  const key = 'tide.air:' + lat.toFixed(2) + ',' + lon.toFixed(2);
+  const cached = cacheGet(key, 3 * 3600e3);
+  if (cached && !cached.stale) return cached;
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3)
+      + '&hourly=temperature_2m&past_days=2&forecast_days=7&timeformat=unixtime&timezone=UTC';
+    const j = await (await fetch(url)).json();
+    const data = { t0: j.hourly.time[0] * 1000, step: (j.hourly.time[1] - j.hourly.time[0]) * 1000, v: j.hourly.temperature_2m };
+    cacheSet(key, data);
+    return data;
+  } catch (_) {
+    return cached ? cached.stale : null;
+  }
+}
+function airTempAt(t) {
+  const a = state.airTemp; if (!a) return null;
+  const i = Math.round((t - a.t0) / a.step);
+  return (i < 0 || i >= a.v.length || a.v[i] == null) ? null : a.v[i];
+}
 // a difference (rate, range), not an absolute reading — unit conversion
 // only, never a datum shift (a constant offset cancels in a subtraction),
 // and no sign glyph since it's always paired with a rising/falling word.
@@ -1293,8 +1318,11 @@ function updateReadout(force) {
     const mr = riseSet(A.Body.Moon, state.lat, state.lon, dayStart), sr = riseSet(A.Body.Sun, state.lat, state.lon, dayStart);
     const tt = ms => ms == null ? '—' : `<span class="n">${tf.format(new Date(ms))}</span>`;
     el.roMoon.innerHTML = `Moon <span class="n">${Math.round(mi.frac * 100)}</span>% · rises ${tt(mr.rise)} · sets ${tt(mr.set)}`;
-    const temp = seaTempAt(t), ft = temp == null ? null : fmtTemp(temp);
-    el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}` + (ft == null ? '' : ` · Sea <span class="n">${ft.n}</span>${ft.u}`);
+    const airT = airTempAt(t), airFt = airT == null ? null : fmtTemp(airT);
+    const seaT = seaTempAt(t), seaFt = seaT == null ? null : fmtTemp(seaT);
+    el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}`
+      + (airFt == null ? '' : ` · Air <span class="n">${airFt.n}</span>${airFt.u}`)
+      + (seaFt == null ? '' : ` · Sea <span class="n">${seaFt.n}</span>${seaFt.u}`);
   } catch (_) { el.roMoon.textContent = ''; el.roSun.textContent = ''; }
   if (s) {
     el.roSrc.textContent = s.src === 'noaa' ? `Official NOAA prediction · ${s.name}` : 'Model estimate · Open-Meteo · heights about mean sea level';
@@ -1629,6 +1657,9 @@ async function enter(item, how) {
   updateReadout(true);
   flyToPlace();
   loadSeries();
+  const cLat = state.coastLat, cLon = state.coastLon;
+  state.airTemp = null;
+  loadAirTemp(cLat, cLon).then(a => { if (state.coastLat === cLat && state.coastLon === cLon) { state.airTemp = a; updateReadout(true); } });
   track('enter', { how, inland: nc.km > INLAND_KM ? 1 : 0 });
 }
 
