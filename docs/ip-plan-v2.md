@@ -285,6 +285,33 @@ The inward turn:
 > Right. Enough of out there. Turn it around — I want to show you what you
 > handed over just by showing up.
 
+### The emotion, and who carries it
+
+**`docs/ip-emotional-design.md`**, written 2026-09-18. It governs phases D
+through H and it outranks a good line. The parts that change what gets built:
+
+- **Eight beats, eight DIFFERENT feelings** -- recognition, curiosity,
+  vastness, loneliness, intimacy, unease, anger, earned beauty. The same
+  feeling twice reads as one long feeling. Beats 1-3 are built, 4 exists
+  unframed, **5-8 are the whole remaining product.**
+- **The bigger the moment, the fewer his words.** At the climax he gets four
+  words or none, and the flare, the ring and the descent tone stopping carry
+  it. They cannot be accused of telling anyone how to feel because they are
+  not saying anything. The best paragraph at the climax is the failure mode.
+- **No villains, and that is accuracy rather than softening.** 1997 was a
+  bug; 2008 was an order meant for one country that escaped; the forgotten
+  blocks were forgotten because people moved on or died. Write any of them as
+  an indictment and the ending becomes a lie.
+- **Beauty is earned by retroactive reframing, not by adding a good thing.**
+  The emptiness that read as loneliness at beat 4 is the room nobody needed
+  at beat 8. The ending reuses the earlier wording verbatim -- the one place
+  no-repetition is broken on purpose, and only once.
+- **He is not moved because the thing is moving. He is moved despite
+  himself.** Every dry line early is paying for the 15%. Warm at beat 2 and
+  there is nothing left to spend at beat 8.
+- **The test:** read the whole arc with the guide muted. If it still works he
+  is correctly weighted; if it collapses he is doing too much.
+
 ### The craft underneath it
 
 Researched 2026-09-18 and written up in **`docs/ip-guide-voice.md`**. It is
