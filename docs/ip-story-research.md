@@ -155,6 +155,43 @@ Good history that this app cannot tell, because it has no address:
 Recording these here so a later session does not rediscover them and try to
 force one in. **If it is not a place, it is not for us.**
 
+## 5b. Verified 2026-09-18 — results
+
+The section below asked for a second source before anything reached a shipped
+line. This is what that pass found. **Three things changed and one was
+wrong**, which is roughly the rate that justifies doing it.
+
+**Confirmed, and now in shipped content:**
+
+- `240.0.0.0/4` reserved since **RFC 791, 1981-09** — and our own registry
+  independently confirms it is unallocated, so both halves of that line stand
+  on our own data rather than on a source.
+- **6to4 deprecated by RFC 7526, 2015**, for uncontrolled anycast relays
+  causing unpredictable failures. "Built, used, and abandoned" holds.
+- Root server A `198.41.0.4` and E `192.203.230.10`, checked against our own
+  `ROOTS` table, whose provenance is the IANA root hints.
+- **Singapore 66.0% pre-1993** and **North Korea one range of 1,024
+  addresses**, both computed from `space.bin` rather than borrowed.
+
+**Wrong, and corrected:**
+
+- `1.1.1.1` — I had written *"years of cleaning"*. That is not what happened.
+  The address was an unusually strong attractor for stray traffic, **over 50
+  Gbps** of it, and nobody could announce it at all; Cloudflare got it by
+  being large enough to stand in front of the noise, in exchange for APNIC
+  being able to study it. **The true story is better than the one I wrote**,
+  which is worth remembering the next time a line feels good enough to skip
+  checking.
+- `8.8.8.8` — *"chosen so you could remember it"* claims a motive with no
+  source behind it. Now an observation instead.
+- The legacy-reclaim claim was scoped to ARIN's 1997 founding in the source
+  and stated generally in the reveal. Now says "before the registries began
+  charging" and names no year.
+
+**Caveat carried forward:** there is a live IETF effort to redesignate
+`240/4` as usable unicast space. If it lands, that line needs rewriting
+rather than deleting — it becomes a better fact, not a dead one.
+
 ## 5. Verify before writing
 
 Every fact above came from a search on 2026-09-18 and wants a second source

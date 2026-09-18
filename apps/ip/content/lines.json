@@ -2,6 +2,8 @@
   "version": 1,
   "_note": "Phase F content, written during D because the guide's later beats need something to hang on. Schema from docs/ip-plan-v2.md: { id, kind, title, beats[], needs[] }. kind is main | side | egg | depth. needs[] names line ids that must be complete first, and a gate only exists where the lesson genuinely depends on the earlier one.",
 
+  "_caveat": "240.0.0.0/4 has been reserved since RFC 791, 1981-09, and our own registry confirms it is unallocated - so the line about it is true today. There is a live IETF effort to redesignate it as usable unicast space. If that lands, the line needs rewriting rather than deleting: it becomes a better fact, not a dead one.",
+
   "_verified": "Every fixed address below was checked on 2026-09-18 against apps/ip/data/space.bin - the file this app actually ships - not against an external source. Two claims died in that check and are not in here: 18.0.0.0 is dated 1994 in our registry, not the 1977 the published /8 lists give, so no line claims 1977; and our data carries no holder names at all, so no line names an organisation. Holders arrive from the live lookup and the plate says them. Where a beat needs routing data we do not ship, it is a find[] rule the engine resolves rather than an address I asserted.",
 
   "_beats": "at = a fixed address, verified. find = a rule the sightline engine resolves at runtime, so the chain works without me knowing the answer. say = the guide. teaches = why the beat exists; it is never shown.",
@@ -32,7 +34,7 @@
       "needs": [],
       "_verified": "All three are landmarks already in MARKS and are RFC facts, not lookups.",
       "beats": [
-        { "at": "240.0.0.0", "teaches": "space can be reserved and then simply never arrive",
+        { "at": "240.0.0.0", "teaches": "space can be reserved and then never arrive",
           "say": "Set aside in 1981 for a future that never showed up. Forty-five years. Still empty." },
         { "at": "192.0.2.0", "teaches": "some addresses exist so that writing can be safe",
           "say": "This one exists so that documentation has somewhere harmless to point." },
@@ -103,7 +105,7 @@
         { "find": "the largest run of them nearby", "teaches": "the dark is not empty",
           "say": "All of this is held. None of it answers." }
       ],
-      "reveal": "Registered before 1997 and it cannot be taken back for unpaid bills, so these sit here indefinitely. Most of them are simply forgotten - and forgotten space is the cheapest thing there is to borrow, if you are the sort of person who needs an address nobody is watching."
+      "reveal": "Registered before the registries began charging for it, and so it cannot be taken back over an unpaid bill. These sit here indefinitely. Most of them are forgotten - and forgotten space is the cheapest thing there is to borrow, if you are the sort of person who needs an address nobody is watching."
     },
 
     {
