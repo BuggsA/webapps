@@ -50,12 +50,19 @@
 <!-- What he says. Never in front of the address, never where it can cover the
      plate, and it removes itself. The facts are on the plate and stay there
      whether he is muted or not. -->
-<p id="guide" hidden></p>
+
 
 <!-- Beat one of the loop: named, reachable things visible from wherever the
      instrument is pointed. Every one of them is a real cell of the field on
      screen, so touching one goes somewhere that exists. -->
-<p id="sight" hidden></p>
+<!-- Everything that speaks from below the picture, in one column, so none of
+     them has to guess where the others ended. Order is loudest first: what
+     was found, then what he says about it, then where you could go next. -->
+<div id="below">
+  <p id="found" hidden aria-live="polite"></p>
+  <p id="guide" hidden></p>
+  <p id="sight" hidden></p>
+</div>
 
 <!-- The annotation on the visitor's own mark, at the end of its leader. -->
 <div id="mark" aria-hidden="true">

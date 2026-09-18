@@ -400,36 +400,51 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 #controls button[aria-pressed="true"] {
   color: var(--cream);
 }
-/* The guide. Above the sightlines, below the plate, and out of the way of
-   both. Cream, because it is somebody telling you something - the one place
-   in the product where that is what is happening. */
-#guide {
+/* A hard bright line of type. It is the loudest text in the product and it
+   is allowed to be, because it happens rarely and it names a real find. */
+/* THE STACK. One fixed column, bottom-anchored, so nothing has to know how
+   tall anything else is. It also gives the whole lower half a ceiling: the
+   plate owns the top, this owns the bottom, and they stop fighting on a
+   short window - which is where they were colliding. */
+#below {
   position: fixed;
   left: 50%;
+  bottom: calc(var(--gutter) + 52px);
   transform: translateX(-50%);
-  bottom: calc(var(--gutter) + 150px);
   z-index: 4;
-  margin: 0;
-  width: min(54ch, calc(100% - var(--gutter) * 2));
+  width: min(64ch, calc(100% - var(--gutter) * 2));
+  max-height: 42vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .85em;
+  pointer-events: none;
+}
+#below > * { margin: 0; width: 100%; }
+#below button.ask { pointer-events: auto; }
+
+#found {
+  color: var(--cream);
+  font-size: clamp(18px, 2.6vw, 30px);
+  font-weight: 300;
+  font-stretch: 108%;
+  letter-spacing: -.008em;
+  text-align: center;
+  animation: found 2.6s ease-out forwards;
+}
+#found[hidden] { display: none; }
+
+#guide {
   text-align: center;
   color: var(--cream);
-  font-size: calc(var(--ui) * 1.08);
+  font-size: calc(var(--ui) * 1.06);
   font-weight: 300;
   line-height: 1.55;
   text-wrap: balance;
 }
 #guide[hidden] { display: none; }
 
-/* From here you can see. Sits under the plate, quiet, and never in front of
-   the address -- it is an invitation, not an instruction. */
 #sight {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(var(--gutter) + 92px);
-  z-index: 4;
-  margin: 0;
-  width: min(64ch, calc(100% - var(--gutter) * 2));
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -440,6 +455,22 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   color: var(--cold-2);
   line-height: 1.7;
 }
+@keyframes found {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #found { animation: none; }
+}
+
+/* The guide. Above the sightlines, below the plate, and out of the way of
+   both. Cream, because it is somebody telling you something - the one place
+   in the product where that is what is happening. */
+
+/* From here you can see. Sits under the plate, quiet, and never in front of
+   the address -- it is an invitation, not an instruction. */
 #sight[hidden] { display: none; }
 /* its own line, so the destinations wrap as a row of destinations and not as
    a sentence that happens to contain them */

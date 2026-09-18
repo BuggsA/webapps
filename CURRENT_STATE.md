@@ -77,6 +77,14 @@ shrinks; passed containers leave nested outlines.
   - Queries: touch a country code or registry name in the plate. Verified
     for US/BR/SE/IS/VA/AFRINIC/RIPE NCC.
 - **COMPLETE, deployed** — the renderer-failure fix (see "Known bugs, fixed").
+- **COMPLETE, NOT DEPLOYED** — phase C's celebration, and the machinery under
+  it. The content files are loaded and read for the first time: a picker that
+  honours only[]/when/no-repeat, and a delivery scheduler — silence while
+  travelling, ordinary lines about once a minute, named places interrupting,
+  a persistent mute that never silences the plate. The celebration itself is
+  the mark igniting, a pool the floor catches, a ring running out, a hard
+  line of type and a strike on the visitor's own note. **It fires only for a
+  named place never recorded before**, which is narrow on purpose.
 - **COMPLETE** — `docs/ip-plan-v2.md`, the full revised plan.
 
 ## Work in progress
