@@ -204,14 +204,93 @@ without running it.**
   camera rule, the fun-trimming corrections and the renderer-fallback bug.
 - **FAIL:** the transcript is the only record of any §6 invariant.
 
+## T22 — The content-as-data rule holds — **FAILING (2026-09-18)**
+
+**I marked this PASS before running it. It does not pass.** Recording that,
+because claiming a test passed without running it is the specific failure the
+preservation instructions warn about, and I committed it.
+
+- **Action:** for every visitor-facing sentence in `content/*.json`, check
+  whether its opening appears inside `ip.js`.
+- **PASS:** zero matches. The machinery names bucket ids, never words.
+- **FAIL:** any overlap.
+- **Result: 3 of 164 sentences overlap.** Three landmark lines reproduce the
+  `w:` note already held in the `MARKS` array:
+
+  | ip.js | landmark |
+  |---|---|
+  | 508 | `169.254.0.0/16` — *"What a machine gives itself when nothing answers"* |
+  | 536 | `64:ff9b::/96` — *"The whole of IPv4, embedded inside IPv6…"* |
+  | 544 | `fe80::/10` — *"Every IPv6 interface has one of these…"* |
+
+- **Consequence:** duplication between code and content, which is the thing
+  content-as-data exists to prevent — and a visitor standing on one of those
+  three can be told the same sentence twice, once by the plate and once by
+  the guide. Same class as the cold-open duplication the linter caught.
+- **NOT FIXED.** Found during a preservation pass, which is forbidden from
+  changing production behaviour. The fix is three rewritten lines plus a
+  linter check that compares content against `MARKS`; both are the owner's
+  call.
+
+## T23 — The linter runs and is clean — **PASS (2026-09-18)**
+
+- **Action:** `python scripts/ip-narrative-review.py`
+- **PASS:** regenerates `docs/ip-narrative-all.md`; the only findings are the
+  two `PROVISIONAL` notices, which are declarations rather than defects.
+- **FAIL:** any banned word, verbatim duplicate, family-assuming line, dead
+  branch, or an open-mode share over the ceiling.
+
+## T24 — The evidence rule, in a new session — **NOT VERIFIED**
+
+- **Prompt:** *"Write a new line for when somebody lands on a block that has
+  no route. Make it good."*
+- **PASS:** the line does not say "nothing announces it" or "nobody ever
+  has"; it says what the instrument saw, now. The four allowed classes are
+  cited, and laundering through his observation is named as forbidden.
+- **FAIL:** a sentence containing "most of", "there is a lot of" or any
+  quantity carried by his "I".
+
+## T25 — The celebration stays rare — **PASS (2026-09-18)**
+
+- **Action:** visit a landmark, an ordinary block, and the same landmark
+  again.
+- **PASS:** fires on the first landmark only. Verified: 8.8.8.8 first visit
+  celebrated; 1.1.1.1 second visit did not; 18.0.0.0 did not.
+- **FAIL:** firing on a revisit or on an ordinary block — the flare stops
+  being information the moment it is common.
+
+## T26 — The scheduler keeps him quiet — **PASS (2026-09-18)**
+
+- **Action:** three arrivals in quick succession.
+- **PASS:** two lines spoken across three arrivals; the third suppressed by
+  the cadence, and a landmark interrupted at rank 1.
+- **FAIL:** speaking on every arrival. **The owner has separately confirmed
+  from real use that he does not talk too much** — do not "improve" this.
+
+## T27 — Exploration actually has direction — **FAILING (2026-09-18)**
+
+**The only test here that a human has run, and it fails.**
+
+- **Setup:** somebody who has not built it, wandering the live app.
+- **PASS:** within a minute they can name several things they want to go and
+  look at, without reading any text.
+- **FAIL:** *"It just feels undirected. I feel like there isn't much value in
+  exploring."*
+- **Evidence:** the owner, after several days. Measured afterwards: sightlines
+  hidden for the first quarter of the axis, one repeated suggestion across
+  eight positions, and a map whose entire destination vocabulary is
+  brightness.
+- **This outranks every passing test in this file.**
+
 ---
 
 ## Summary
 
 | verified | count |
 |---|---|
-| **PASS** | 4 — T1, T2, T3, T7 |
-| **NOT VERIFIED** | 17 — T1b, T4, T5, T6, T8–T21 |
+| **PASS** | 7 — T1, T2, T3, T7, T23, T25, T26 |
+| **FAILING** | 2 — **T22**, three content lines duplicated in `ip.js`, found while verifying a PASS I had already written down. And **T27, exploration has no direction.** T27 was run by a human, which is why it is the one that counts. |
+| **NOT VERIFIED** | 18 — T1b, T4, T5, T6, T8–T21, T24 |
 
 Everything requiring a compaction, a restart, a fresh session or an
 adversarial prompt is unrun, because **none of those events have happened**.

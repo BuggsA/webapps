@@ -1,8 +1,58 @@
 # PRESERVATION_BASELINE.md
 
-Recovery point for `apps/ip`, established 2026-09-17 before compaction.
+Recovery point for `apps/ip`. **Second pass, 2026-09-18.** The first pass is
+below and its facts still hold where they are not contradicted here.
 
 ---
+
+## 0. The current recovery point — 2026-09-18
+
+| | |
+|---|---|
+| **Branch** | `master` |
+| **HEAD** | `4cd70ce` — *"ip: groundwork for earned lenses - INERT, half a feature"* |
+| **Working tree** | **clean.** Nothing uncommitted, nothing untracked. |
+| **Pushed?** | **No.** `master` has no upstream. Nothing has ever been pushed. |
+| **Snapshot** | `C:\Users\you\Downloads\scratch-repo\ip-preservation-snapshot-20260918.tar.gz` |
+| **Size** | 2,784,300 bytes |
+| **sha256** | `9f9ad0511d017999ac4280ccb2cf85f160871e37e2b7dc63b5ff4012e978828e` |
+| **Excludes** | `.git/`, `scripts/.nro-cache`, `hosting/.venv/`, `hosting/cdk.out/` |
+| **Verified to contain** | `ip.js`, `ip.css`, `index.html`, `data/space.bin`, **`content/guide.json`**, **`content/lines.json`**, `docs/ip-build-plan-v3.md`, `PRODUCT_SOUL.md` |
+
+**30 commits since the first preservation pass** (`3d35fca..HEAD`).
+
+### The one judgement call inside this commit
+
+`4cd70ce` contains **half a feature, committed deliberately and marked as
+such**. Three chains gained a `grants` field and `queryHit` learned a
+`before` kind. **Neither is reachable** — `grants` is read in zero places and
+nothing calls `setQuery` with `kind: 'before'`. It was committed so it sits
+inside the recovery point rather than being lost, not because it is finished,
+and evidence gathered immediately afterwards suggests it may not be the right
+fix at all. A future session should treat it as a sketch, not a direction.
+
+### Verify and restore
+
+```bash
+sha256sum ip-preservation-snapshot-20260918.tar.gz
+# expect 9f9ad0511d017999ac4280ccb2cf85f160871e37e2b7dc63b5ff4012e978828e
+
+mkdir restored && cd restored
+tar -xzf ../ip-preservation-snapshot-20260918.tar.gz
+cd webapps && node --check apps/ip/ip.js
+python scripts/ip-narrative-review.py    # regenerates the narrative doc and lints it
+```
+
+### What is live
+
+All of `apps/ip` is deployed and byte-identical to the working tree, verified
+by sha256 on 2026-09-18 — **including `content/`, which shipped for the first
+time in this stretch**. The hosting stack carries the slash-less URL redirect.
+
+---
+
+## The first pass — 2026-09-17
+
 
 ## 1. Golden recovery identifier
 

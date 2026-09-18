@@ -14,7 +14,9 @@ Approval boundaries live in `APPROVAL_STATE.md` and that file wins.
 |---|---|
 | **Repo** | `C:\Users\you\Downloads\scratch-repo\webapps` |
 | **Branch** | `master` |
-| **HEAD at preservation time** | `222f56e0c140130fa469304d8bfcad771519abe0` — *"ip: a self-contained handoff — the pieces, for whoever tells the story"* (2026-09-15) |
+| **HEAD, pass two** | `4cd70ce` — *"ip: groundwork for earned lenses - INERT, half a feature"*, 2026-09-18. Tree clean. |
+| **Snapshot, pass two** | `ip-preservation-snapshot-20260918.tar.gz`, sha256 `9f9ad051…` |
+| **HEAD at pass one** | `222f56e0c140130fa469304d8bfcad771519abe0` — *"ip: a self-contained handoff — the pieces, for whoever tells the story"* (2026-09-15) |
 | **Golden recovery identifier** | `ip-preservation-snapshot-20260917.tar.gz`, sha256 `986fd788f3c75600e13b4022fdc14942b873b59bc1da2d1f24d4857e5de485cf`, in `scratch-repo/` (the repo's parent) |
 | **Working tree committed?** | **YES** — `3d35fca`, *"ip: preserve the working state before compaction"*, 2026-09-16. **Not pushed.** |
 
@@ -23,7 +25,55 @@ point; the snapshot above is no longer the only one. Nothing has been pushed.
 
 ---
 
-## Current objective
+## Current objective — 2026-09-18
+
+**BLOCKED, awaiting the owner.** Preservation pass two is running; no product
+work until they respond.
+
+The objective before it stopped: **make exploring feel directed.** The owner,
+after several days of actually wandering the live app, reported that it feels
+undirected and that arriving produces nothing. Of four offered diagnoses they
+confirmed three - *I don't know where to go*, *I go and then nothing
+happens*, *it's beautiful but it isn't a game* - and the fourth was false
+only because the first is true.
+
+### The evidence gathered, which is better than the theory
+
+Measured against the live site, 2026-09-18:
+
+```
+axis 0.00 - 0.50   sightlines HIDDEN          <- home and the block view
+axis 0.75 - 2.00   "Root server K · the oldest here, 1993"
+axis 2.25 - 2.50   "Root server E · the oldest here, 1983 · 512 in a row..."
+```
+
+- There is **no direction at all for the first quarter of the axis**, which
+  is the first minute of every visit.
+- Across eight axis positions the sightlines produce **essentially one
+  repeated suggestion.**
+- The owner could name two destinations: *private IP space* and *the brighter
+  orbs*. **That is the complete visual vocabulary the map has** - every cell
+  is the same dot and only brightness varies.
+
+### PROPOSED, NOT APPROVED — the direction out
+
+**The map should show territories.** Adjacent cells differing in registry or
+country are a border; the border is in the data; hairlines are already a
+permitted material. It would turn a uniform dot field into a map with shapes
+at every scale. Two smaller fixes follow it: sightlines present from the
+first frame, and sightlines that vary.
+
+The owner was asked whether they wanted a sketch before it lands in the app.
+**They have not answered. It is not approved.**
+
+### Acceptance criteria
+
+Someone who has never seen it can say what they want to go and look at,
+within the first minute, without reading any text.
+
+---
+
+## Superseded objective
 
 **COMPLETE — phase B of `docs/ip-plan-v2.md`**, "the descent becomes
 sublime". All five items built and deployed except the sound, which is built
@@ -61,7 +111,37 @@ shrinks; passed containers leave nested outlines.
 
 ---
 
-## Completed work
+## Completed work since preservation pass one — all COMPLETE and DEPLOYED
+
+- **Phase B finished** — the container you came out of stays outlined
+  (verified ratio 1.000000 across 61 samples, both families); the descent
+  accumulates **on the rail**, because each rung is 64x the last and the
+  field can never show more than about two levels; the descent tone, which
+  plays `layerAlpha` — the same array the picture is drawn from.
+- **Phase C except the tracker** — the notebook, its metrics, the places
+  themselves, and **the celebration**: the mark ignites, a pool catches it,
+  a ring runs out, a hard line of type, a strike on the visitor's own note.
+  It fires **only for a named place never recorded before**.
+- **Phase D, the writing** — 126 guide lines across 42 buckets, plus 9
+  chains and 29 beats. Loaded, picked and spoken by code that names none of
+  them.
+- **The guide machinery** — content loader, line picker honouring
+  `only[]`/`when`/no-repeat, and the delivery scheduler: silence while
+  travelling, ordinary lines about once a minute, named places interrupting,
+  a mute that persists and never silences the plate.
+- **The sightline engine** — "from here you can see", offering named
+  reachable things computed from shipped data, never offering somewhere
+  already visited. **Built to fix beat one; measured afterwards and it does
+  not.**
+- **Landmarks as territory** — pools for single cells, hairline rims for
+  regions, asserted rectangular rather than trusted.
+- **Bugs fixed:** the highlight orb sitting half a cell from the pointer
+  (third half-cell error in this file); a rung that has shrunk now emits less
+  light, via a separate `layerLight` array because weight and emission are
+  different numbers; the slash-less URL redirect in hosting, which broke all
+  four apps.
+
+## Completed work (pass one)
 
 - **COMPLETE** — phases 1, 2, 3, 3b, 4 (travel), 4.5 step 1 (the ladder).
   **Deployed.**
@@ -107,6 +187,19 @@ shrinks; passed containers leave nested outlines.
 ## Known bugs
 
 ### Open
+
+- **OPEN, found 2026-09-18 during preservation, NOT FIXED** — three landmark
+  guide lines reproduce the `w:` note already in the `MARKS` array in
+  `ip.js`: `169.254.0.0/16`, `64:ff9b::/96`, `fe80::/10`. Duplication between
+  code and content, and a visitor on one of those three can be told the same
+  sentence twice — once by the plate, once by the guide. Deliberately left
+  alone: a preservation pass must not change production behaviour. The fix is
+  three rewritten lines plus a linter check comparing content against MARKS.
+  See `PRODUCT_SOUL_EVALS.md` T22, which is **failing**.
+- **OPEN, the largest one** — exploration has no direction. Measured, not
+  guessed: sightlines hidden for the first quarter of the axis, one repeated
+  suggestion across eight positions, and a map whose whole destination
+  vocabulary is brightness. See T27.
 
 - **FIXED 2026-09-17, NOT DEPLOYED** — the highlight orb sat near the pointer
   but never under it. `cursorAt` subtracted half a cell when inverting the

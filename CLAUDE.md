@@ -36,6 +36,15 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
 - **Deploy is human-run, always.** Prepare the commands; never run `aws`,
   `cdk`, or the deploy scripts.
 - **Phase-gated building: one phase, then stop and show it.**
+- **Content is data.** The guide's lines and the quest chains live in
+  `apps/ip/content/*.json`. Adding a line, a quest or a story means adding
+  rows. **If you open `ip.js` to add a side line, it was built wrong.**
+- **The guide obeys the same evidence rule as the instrument.** *Lit = known,
+  dark = unasked.* Four classes of claim are allowed and laundering a fact
+  through his observation is not one of them - see `PRODUCT_SOUL.md` §8.9.
+- **A feature passing its own tests is not evidence it works.** The owner
+  wandering for a day found what none of the checks here could. See
+  `PRODUCT_SOUL_EVALS.md` T27, which is failing and outranks the rest.
 - **Do not remove something enjoyable for reasons of taste.** This was
   corrected four separate times. See `PRODUCT_SOUL.md` §7.6.
 
@@ -43,6 +52,7 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
 
 ```bash
 node --check apps/ip/ip.js                  # the only JS check in this repo
+python scripts/ip-narrative-review.py       # regenerate the narrative doc AND lint it
 python scripts/ip-build-space-field.py      # rebuild apps/ip/data/space.bin
 ```
 

@@ -11,7 +11,65 @@ and **outranks any inference from conversation or plans**.
 
 ---
 
-## Current operating mode
+## Current operating mode — pass two, 2026-09-18
+
+**WAITING_FOR_USER.**
+
+Preservation pass two. The owner asked for it mid-sentence, while a proposal
+was on the table and unanswered:
+
+> *"this is the most visible change to the art direction since the renderer.
+> If you'd rather see a sketch before it lands in the app, say so now."*
+
+**They did not answer. Territories are NOT APPROVED.** No product work until
+they respond.
+
+### Approved in this stretch, by direct instruction
+
+| work | how | status |
+|---|---|---|
+| Finish phase B | *"Onwards to B"* / *"okay lets go"* | COMPLETE, deployed |
+| Research before building | *"Can you do some research?"*, several times | COMPLETE |
+| Phase C's celebration | *"Okay lets do the celebration"* | COMPLETE, deployed |
+| Phase D, the writing | *"Okay lets go!"* then *"Now write the rest of the buckets"* | COMPLETE |
+| The side-line chains | *"Now do the side-line chains"* | COMPLETE |
+| The main line | *"Okay lets do the main line"* | COMPLETE |
+| Act on the two outside reviews | pasted with intent to act | COMPLETE |
+| Rebuild the plan | *"Can you remake the build plan from here?"* | COMPLETE, `ip-build-plan-v3.md` |
+| Fix the guide's factual errors | *"Can you double check these things"* | COMPLETE |
+
+### Discussed and NOT approved
+
+- **Territories** — drawing registry/country borders in the field. Proposed,
+  a sketch was offered, no answer given. **The largest open question.**
+- **Sightlines from the first frame**, and sightlines that vary. Proposed in
+  the same message.
+- **Earned lenses.** Half-built and committed INERT in `4cd70ce`. It was
+  started against a diagnosis the owner then corrected, so **it may be the
+  wrong fix entirely.** Treat as a sketch.
+- The chain engine, the doors, the card, the inward half, the ghost tier —
+  all in `ip-build-plan-v3.md`, none instructed.
+- Any mobile work beyond the crash fix.
+- Pushing. Still never authorized. `master` has no upstream.
+
+### Explicitly rejected in this stretch
+
+- **Laundering an empirical claim through the narrator.** A rule I wrote and
+  then had to withdraw.
+- **Lines that tell the visitor their find is boring.**
+- **Naming an organisation from registry data** — our data carries no holder
+  names, so no line does.
+- **"There is no law here"** — indefensible; there are policies, contracts,
+  laws and origin validation.
+- **A fog overlay, procedural terrain, invented landmarks** — the withholding
+  must stay honest.
+- **Quoting a number for origin-validation deployment** — wrong within a year.
+- **Shipping `The boundary` or `Sold, and given back`** — both `provisional`
+  in the data.
+
+---
+
+## The first pass — 2026-09-17
 
 **WAITING_FOR_USER.**
 

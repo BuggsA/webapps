@@ -174,6 +174,64 @@ your address from its own edge, and it will not ask anyone else for it."*
 **Intentional:** the refusal is the product. **Regression if:** it ever falls
 back to a third-party lookup.
 
+### R11 — The guide speaking *(new, 2026-09-18)*
+
+```
+?ip=193.0.6.139   then __ip.axis(1.75)   then wait
+```
+
+One line of cream text in the bottom stack, above the sightlines, centred and
+balanced. It removes itself after about five seconds.
+
+**Intentional:** he is the only cream text below the address. The plate stays
+cold blue because it states facts and he says what they mean.
+**Regression if:** he covers the plate, holds the floor, or speaks on every
+arrival. **The owner has confirmed from real use that the cadence is right.**
+
+### R12 — The celebration *(new, signature interaction)*
+
+```
+?ip=193.0.6.139  →  __ip.axis(1.75)  →  travel to a landmark never recorded
+```
+
+or force it: `__ip.celebrate('Root server K')`.
+
+Over about 1.15s: the mark ignites, a pool swells and fades as the floor
+catches it, a ring of 28 segments runs outward and dims, a hard bright line
+of type names the find at the top of the bottom stack, and a strike sounds on
+the visitor's own note two octaves up.
+
+**Intentional:** it fires **only for a named place never recorded before.**
+**Regression if:** it fires on a revisit or an ordinary block, or if the
+arrays do not return to exactly their pre-celebration length — check with
+`__ip.cel()` before and after.
+
+### R13 — The bottom stack, three things at once
+
+```
+travel to a landmark never recorded, and look at the lower third
+```
+
+Found line, then the guide, then `FROM HERE YOU CAN SEE`, in that order, in
+one column.
+
+**Intentional:** one bottom-anchored stack, so nothing has to know how tall
+anything else is. **Regression if:** any of them overlaps the plate — that
+was a real bug caused by three fixed elements each guessing where the others
+ended. Measure it: `#plate` bottom must be above `#below` top.
+
+### R14 — No direction *(the state that is currently WRONG)*
+
+```
+?ip=193.0.6.139   at axis 0 to 0.5
+```
+
+No sightlines at all — hidden for the first quarter of the axis, which is the
+first minute of every visit. Then from 0.75 to 2.0, one repeated suggestion.
+
+**This is recorded as a reference so the fix can be seen against it.** It is
+not a golden state. It is the evidence behind `PRODUCT_SOUL_EVALS.md` T27.
+
 ---
 
 ## Procedure for capturing goldens by hand
