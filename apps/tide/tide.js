@@ -121,7 +121,7 @@ let lastFrame = 0, dirty = true;
 const $ = id => document.getElementById(id);
 const el = {
   canvas: $('globe'), moon: $('moon'), readout: $('readout'), rule: $('ro-rule'),
-  roPlace: $('ro-place'), roState: $('ro-state'), roTurns: $('ro-turns'), roRange: $('ro-range'),
+  roPlace: $('ro-place'), roState: $('ro-state'), roTemp: $('ro-temp'), roTurns: $('ro-turns'), roRange: $('ro-range'),
   roMoon: $('ro-moon'), roSun: $('ro-sun'), roSrc: $('ro-src'), roError: $('ro-error'),
   roCompare: $('ro-compare'), roHand: $('ro-handoff'),
   locate: $('locate'), input: $('place-input'), results: $('place-results'), msg: $('locate-msg'),
@@ -1284,6 +1284,19 @@ function updateReadout(force) {
   const tf = fmt('time', tz), df = fmt('day', tz);
   const mi = moonInfo(t);                       // at t, not at the last painted frame
   syncPlaceControl();
+  // small text beside the big info: air/water temperature, in the glance
+  // itself (user feedback: this reads as a real detail worth seeing at a
+  // glance, not a minor fact worth burying behind Detail) — independent
+  // of the moon/sun rise-set try/catch below and of whether a tide series
+  // has loaded yet, since neither has any bearing on temperature.
+  {
+    const airT = airTempAt(t), airFt = airT == null ? null : fmtTemp(airT);
+    const seaT = seaTempAt(t), seaFt = seaT == null ? null : fmtTemp(seaT);
+    el.roTemp.innerHTML = [
+      airFt == null ? '' : `Air <span class="n">${airFt.n}</span>${airFt.u}`,
+      seaFt == null ? '' : `Sea <span class="n">${seaFt.n}</span>${seaFt.u}`,
+    ].filter(Boolean).join(' · ');
+  }
   const inland = state.inlandKm > INLAND_KM
     ? `You are about <span class="n">${Math.round(state.inlandKm)}</span> km from the sea. The nearest coast: ` : '';
   el.curve.hidden = !s || !s.turns.length;
@@ -1318,11 +1331,7 @@ function updateReadout(force) {
     const mr = riseSet(A.Body.Moon, state.lat, state.lon, dayStart), sr = riseSet(A.Body.Sun, state.lat, state.lon, dayStart);
     const tt = ms => ms == null ? '—' : `<span class="n">${tf.format(new Date(ms))}</span>`;
     el.roMoon.innerHTML = `Moon <span class="n">${Math.round(mi.frac * 100)}</span>% · rises ${tt(mr.rise)} · sets ${tt(mr.set)}`;
-    const airT = airTempAt(t), airFt = airT == null ? null : fmtTemp(airT);
-    const seaT = seaTempAt(t), seaFt = seaT == null ? null : fmtTemp(seaT);
-    el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}`
-      + (airFt == null ? '' : ` · Air <span class="n">${airFt.n}</span>${airFt.u}`)
-      + (seaFt == null ? '' : ` · Sea <span class="n">${seaFt.n}</span>${seaFt.u}`);
+    el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}`;
   } catch (_) { el.roMoon.textContent = ''; el.roSun.textContent = ''; }
   if (s) {
     el.roSrc.textContent = s.src === 'noaa' ? `Official NOAA prediction · ${s.name}` : 'Model estimate · Open-Meteo · heights about mean sea level';

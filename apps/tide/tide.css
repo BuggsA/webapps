@@ -222,6 +222,17 @@ body {
   margin-top: 0.2em;
 }
 .ro-state .n { font-family: var(--num); font-variant-numeric: tabular-nums; font-weight: 500; }
+/* small text beside the big info: air/water temperature, always in the
+   glance (not a minor fact worth hiding behind Detail) but visually
+   subordinate to the state line above it — the answer stays the answer. */
+.ro-temp {
+  font-size: 0.85rem;
+  color: var(--chrome-soft);
+  margin-top: 0.15em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ro-temp .n { font-family: var(--num); }
+.ro-temp:empty { display: none; }
 
 /* today's curve — a hairline, not a chart: no axes, no gridlines, no fill.
    Pointer-draggable (a shortcut into the nearby hours); the <input
