@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "_note": "Phase D. Written against docs/ip-guide-voice.md (character and craft), docs/ip-emotional-design.md (the arc), docs/ip-two-audiences.md (who it is for). The frequent buckets are written first and hardest because they are where the character is actually made - these are the lines anyone hears enough of to form an opinion from. 'mode' is not read by the app; it is there so the 60/25/15 ratio can be counted rather than felt.",
+  "_modes": { "dry": "the default. factual, a little weary, notices the odd detail", "wry": "aimed at the internet, never at the visitor", "open": "no joke, no undercut. he means it. rare on purpose" },
+
+  "lines": [
+
+    {
+      "id": "arrive.ordinary",
+      "on": "arrived at a block that is announced and unremarkable",
+      "fires": "constantly",
+      "text": [
+        { "mode": "dry", "t": "Announced, routed, quiet. Most of the internet looks exactly like this." },
+        { "mode": "dry", "t": "Somebody's job, this. Probably still is." },
+        { "mode": "dry", "t": "Someone asked for this, filled in a form, and got it. That is the whole ceremony." },
+        { "mode": "dry", "t": "Nobody has ever had to think about this one. It is the best thing you can say about a network." },
+        { "mode": "dry", "t": "A network that has never been in the news. Enviable." },
+        { "mode": "dry", "t": "Held, announced, reachable. Three things that had to be arranged separately." },
+        { "mode": "dry", "t": "Working, and unremarkable. The two usually travel together." },
+        { "mode": "wry", "t": "Thrilling. Look at it." },
+        { "mode": "wry", "t": "I have stood here before. I remember nothing about it, and neither will you." },
+        { "mode": "wry", "t": "You have found a block. There are a great many blocks." },
+        { "mode": "open", "t": "Ordinary, and it has carried somebody's whole working life without once being asked about." },
+        { "mode": "open", "t": "Someone keeps this running, and you will never learn their name." }
+      ]
+    },
+
+    {
+      "id": "arrive.unannounced",
+      "on": "asked, and nothing announces this block",
+      "fires": "constantly",
+      "text": [
+        { "mode": "dry", "t": "Allocated to somebody. Announced by nobody. That gap is most of this map." },
+        { "mode": "dry", "t": "Somebody holds this and has never once said so out loud." },
+        { "mode": "dry", "t": "The registry knows who has this. The routing table has never heard of them." },
+        { "mode": "dry", "t": "Registered, and silent. There is a great deal of that about." },
+        { "mode": "dry", "t": "Nothing announces you here. It happens more than you would think." },
+        { "mode": "dry", "t": "Quiet. Not empty - quiet. The difference matters." },
+        { "mode": "dry", "t": "On paper this has an owner. On the wire it has no voice." },
+        { "mode": "wry", "t": "There is a bill for this somewhere. Or there was." },
+        { "mode": "wry", "t": "Held, unadvertised, going nowhere in particular." },
+        { "mode": "wry", "t": "An asset. That is genuinely all you can call it." },
+        { "mode": "open", "t": "Every one of these was somebody's plan, once." },
+        { "mode": "open", "t": "Nobody switched this off. They stopped." }
+      ]
+    },
+
+    {
+      "id": "arrive.unallocated",
+      "on": "space no registry has ever handed out",
+      "fires": "constantly",
+      "text": [
+        { "mode": "dry", "t": "Nobody holds this. Not withheld, not reserved - never asked for." },
+        { "mode": "dry", "t": "No registry has ever handed this out." },
+        { "mode": "dry", "t": "Unclaimed. There was enough, in the end, for this to be left over." },
+        { "mode": "dry", "t": "Empty. Actually empty, rather than quietly-held empty." },
+        { "mode": "dry", "t": "The registries have not got this far." },
+        { "mode": "dry", "t": "Free space, in a space everyone agrees ran out." },
+        { "mode": "dry", "t": "Never given. Not lost - never given." },
+        { "mode": "wry", "t": "Congratulations. You found nothing. There is a great deal of it." },
+        { "mode": "wry", "t": "All yours, in the sense that it is nobody's." },
+        { "mode": "wry", "t": "Nothing. Next." },
+        { "mode": "open", "t": "Nobody ever needed it. I find that steadying, most days." },
+        { "mode": "open", "t": "Room that was never wanted. It is still here." }
+      ]
+    },
+
+    {
+      "id": "open.cold",
+      "on": "the first thing said, once the address is on screen",
+      "fires": "once per visit",
+      "_note": "The highest-leverage writing in the product. Interesting, not moving - the emotional design forbids front-loading. only[] picks the branch; the last entry is the fallback.",
+      "text": [
+        { "mode": "dry", "only": ["v6"], "t": "An IPv6 address. You arrived in the larger of the two internets, and by some distance the emptier one." },
+        { "mode": "dry", "only": ["cgnat"], "t": "That address is not exactly yours. Your carrier is lending it to you, and to a few hundred other people, at the same time." },
+        { "mode": "dry", "only": ["no-prefix"], "t": "Nothing announces you. Your address is still your address, and the space around it is still there." },
+        { "mode": "dry", "only": ["era<1995"], "t": "You are sitting in old space. Older than almost everything running on it." },
+        { "mode": "dry", "only": ["rir=afrinic"], "t": "AFRINIC. The youngest of the five registries." },
+        { "mode": "dry", "t": "That is you. All four of those numbers had to be agreed on by somebody. Let us go and find out who." }
+      ]
+    }
+
+  ]
+}
