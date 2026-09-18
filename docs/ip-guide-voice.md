@@ -84,6 +84,40 @@ A useful ratio to write against, and to check afterwards by counting:
 
 ---
 
+## 2b. Evidence discipline — added 2026-09-18 after review
+
+The first draft of the lines was reviewed and the sharpest criticism was that
+it **loved its sentences more than it respected its evidence.** It was right,
+and this is the rule that came out of it.
+
+The instrument's founding promise is **lit = known, dark = unasked** — it
+never claims to see what it has not asked about. **The guide has to hold the
+same line, or he undoes the whole thing in words.** A renderer that refuses
+to guess, narrated by someone who guesses freely, is one product lying to
+itself.
+
+So:
+
+- **No line states a motive, a history, or a total that we cannot show.**
+  *"Nobody switched this off. They stopped"* claims to know what happened.
+  *"That gap is most of this map"* claims a measurement nobody made.
+- **Registered and observed are different and are never conflated.** The
+  registry has a record; the routing table does not. **Absence of a route
+  means not seen, not not-there.** We asked once, now.
+- **Where a thought is worth keeping but cannot be evidenced, move it into
+  HIS observation** rather than into a fact about the world. *"Most of what I
+  have looked at looks like this"* is a claim he is entitled to make, and it
+  is more in character than the assertion was.
+- **Hedges that are honest are in voice, not against it.** *"It looks more
+  like somebody stopped"* is both more accurate and more like a person who
+  has learned what he cannot know.
+
+Second finding from the same review, and it fights the loop rather than the
+truth: **several lines told the visitor that what they had just found was
+boring.** *"Thrilling. Look at it."* — the wry mode may point at the internet
+and at him. **It may never point at the thing the visitor just chose to go
+and look at.** That is the whole reason they are out here.
+
 ## 3. Repetition: the numbers
 
 Game audio teams build **8, 12, sometimes 20+ variations** of a callout that
