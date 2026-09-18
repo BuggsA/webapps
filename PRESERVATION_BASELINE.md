@@ -43,11 +43,26 @@ cd webapps && node --check apps/ip/ip.js
 python scripts/ip-narrative-review.py    # regenerates the narrative doc and lints it
 ```
 
-### What is live
+### What is live — and the two files that are not
 
-All of `apps/ip` is deployed and byte-identical to the working tree, verified
-by sha256 on 2026-09-18 — **including `content/`, which shipped for the first
-time in this stretch**. The hosting stack carries the slash-less URL redirect.
+Checked by sha256 on 2026-09-18, after the commit above:
+
+| file | |
+|---|---|
+| `index.html`, `ip.css`, `content/guide.json` | **same as live** |
+| `ip.js`, `content/lines.json` | **ahead of live** |
+
+The two ahead are ahead **only** by the inert lens groundwork in `4cd70ce` —
+a `grants` field read in zero places and a `before` query kind nothing calls.
+**Production is therefore behind by nothing that does anything**, and a
+deploy is not required to make the live site correct.
+
+`content/` shipped for the first time in this stretch. The hosting stack
+carries the slash-less URL redirect.
+
+*(An earlier draft of this file said all of `apps/ip` was byte-identical to
+live. That was written before the commit and was wrong by the time it was
+saved; corrected during final verification.)*
 
 ---
 
