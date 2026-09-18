@@ -11,7 +11,7 @@
       "title": "Where you actually are",
       "needs": [],
       "_note": "Reconciles two lists that were never the same list: the seven beats in ip-plan-v2.md say what each step TEACHES, and the eight in ip-emotional-design.md say what each step FEELS. Teaching without a feeling is a curriculum; a feeling without a fact is a caption. Each beat below carries one of each, and the emotional beat is named so a later session cannot quietly drop it.",
-      "_reframe": "Beats 6 and 8 share one sentence, VERBATIM, and it is the only deliberate repetition in the product. At 6 it is a threat. At 8, after the hijack, it is the setup for the last four words. Nothing new is added at the end - the floor tilts. If anybody edits one of the two, they must edit both or the ending stops working.",
+      "_reframe": "Beats 6 and 8 share one sentence VERBATIM - 'Every network decides for itself what to believe' - and it is the only deliberate repetition in the product. At 6 it is the reason nothing is guaranteed. At 8, after the hijack, it is the reason anything works. Nothing new is added; the floor tilts. Edit one and you must edit the other or the ending stops working.",
       "_ending": "Four words. The emotional design says the bigger the moment the fewer his words, and that the best paragraph at the climax is the failure mode. The flare, the ring and the descent tone stopping carry the rest.",
       "beats": [
         {
@@ -34,37 +34,49 @@
         },
         {
           "find": "the whole of the visitor's address family",
+          "feels": "vastness, then finitude",
+          "only": [
+            "v4"
+          ],
+          "teaches": "the size, and how little of it is left",
+          "say": "All of it. Every number there will ever be in this family, and nearly all of them are taken. It still carried everything you did today."
+        },
+        {
+          "find": "the whole of the visitor's address family",
           "feels": "vastness, then loneliness",
-          "teaches": "the size, and how much of it is nothing",
-          "say": "All of it. Most of this is nothing - nobody has ever asked for it."
+          "only": [
+            "v6"
+          ],
+          "teaches": "the size, and how little of it has been needed",
+          "say": "All of it. Vastly more than has ever been handed out, and the part in use is a rounding error against the rest."
         },
         {
           "find": "the nearest root server",
           "feels": "intimacy",
           "teaches": "a handful of named things hold the rest up, and people looked after them by hand",
-          "say": "Thirteen names hold up every name there is. For years one man kept the list of what went where, and he kept it by hand."
+          "say": "Thirteen names hold up every name there is. And for years the register of which numbers had been given to whom was published, and largely kept, by one man."
         },
         {
           "find": "the origin network of any announced prefix",
           "feels": "unease",
-          "teaches": "announcing is a claim, and claims are mostly taken on trust",
-          "say": "Anybody can say these addresses are theirs. Some of it is checked now. Not all of it, and none of it was then."
+          "teaches": "announcing is a claim, and every listener decides what to do with it",
+          "say": "A network can announce anything it likes. Every network decides for itself what to believe. Some of that is checked now - not all of it, and none of it was then."
         },
         {
           "at": "208.65.153.0",
           "feels": "anger, or something near it",
           "teaches": "a claim meant for one country escaped",
-          "say": "In 2008 a country ordered this range blocked, and the block was announced to everybody by mistake. For two hours nobody anywhere could reach what was behind it. No one meant that to happen, which is the part worth sitting with."
+          "say": "In 2008 a route meant to block one site inside one country escaped. For about two hours it pulled that site's traffic across the internet to somewhere it was never going. No one meant that to happen, which is the part worth sitting with."
         },
         {
           "find": "the whole of the visitor's address family, again",
           "feels": "earned beauty",
           "teaches": "the same fact, read the other way",
-          "say": "Anybody can say these addresses are theirs. And mostly, they don't."
+          "say": "Every network decides for itself what to believe. And mostly, they agree."
         }
       ],
-      "reveal": "There is no law here and there never was. It is claims, taken on trust, by strangers who have mostly never spoken - and it carried everything you did today.",
-      "_verified": "208.65.153.0 is present in space.bin as ARIN / US / 2006, so the beat is reachable. The 2008 incident is sourced in docs/ip-story-research.md and wants a second source before shipping. 'Some of it is checked now' is deliberately unquantified: origin validation is real and widely deployed and nowhere near universal, and any number quoted here would be wrong within a year."
+      "reveal": "No single authority tells any network which route to trust. Each one accepts, rejects or checks what it hears, and most of the time those decisions agree well enough to have carried everything you did today.",
+      "_verified": "208.65.153.0 is present in space.bin as ARIN / US / 2006. The 2008 incident is sourced in docs/ip-story-research.md; RIPE's own analysis states it could not determine how many sites were affected, so the beat says traffic was pulled across the internet and does NOT claim universal failure. 'Some of that is checked now' is deliberately unquantified - origin validation is real, widely deployed and nowhere near universal, and any number would be wrong within a year."
     },
     {
       "id": "the-boundary",
@@ -119,7 +131,7 @@
     {
       "id": "never-usable",
       "kind": "side",
-      "title": "The addresses that can never be used",
+      "title": "Set aside",
       "needs": [],
       "_verified": "All three are landmarks already in MARKS and are RFC facts, not lookups. On the date, which is contested: RFC 791 (1981-09) defined the class E range as reserved, while the IANA special-purpose registry records 1989-08 for its own entry. Those are two different events. The landmark line names 1981, which is the reservation rather than the registry record, and this chain names no date at all. Our own space.bin independently shows the range unallocated.",
       "beats": [
@@ -131,15 +143,15 @@
         {
           "at": "192.0.2.0",
           "teaches": "some addresses exist so that writing can be safe",
-          "say": "This one exists so that documentation has somewhere harmless to point."
+          "say": "This one exists so that writing about addresses cannot accidentally name a real one."
         },
         {
           "at": "2001:db8::",
           "teaches": "the same idea, made much larger the second time",
-          "say": "And the same again in IPv6, with room for every example anyone will ever write."
+          "say": "And the same again in IPv6, with room for every example anyone will ever need."
         }
       ],
-      "reveal": "Some of this space was never meant for machines. It was set aside for ideas about machines, and it is still reserved for them."
+      "reveal": "Some of this space was never meant for the public internet. Kept back for an addressing idea, or handed to writing so examples cannot collide with anything real. Different reasons, same result: a place on the map that nobody is going to."
     },
     {
       "id": "the-thirteen",
@@ -155,8 +167,8 @@
         },
         {
           "at": "192.203.230.10",
-          "teaches": "they are scattered, not stacked",
-          "say": "E. Not next to the last one. They were never meant to fail together."
+          "teaches": "they are separated by operator and site, not by address",
+          "say": "E. Different people, different buildings, different networks from the last one. That is the part that matters, not where they sit on this map."
         },
         {
           "find": "the same letter in the other family",
@@ -183,10 +195,11 @@
         {
           "at": "36.0.0.0",
           "teaches": "the opposite decision, and the register records the consequence",
-          "say": "This one was handed back. Handed in, to be handed out again - and it was, on the other side of the world."
+          "say": "This one is registered on the other side of the world now, to a registry that did not exist when it was first handed out."
         }
       ],
-      "reveal": "Once there was no more of it, address space became something you could transfer. Two places given the same kind of gift went different ways with it, and the register still shows where each one ended up."
+      "reveal": "Once there was no more of it, address space became something you could transfer. Where a block is registered today and where it started are two different questions, and this map only answers the first.",
+      "provisional": "The RETURN is not verified. space.bin shows 36.0.0.0 registered to CN under APNIC in 2011, which is consistent with a block having been given back and reissued and is not evidence that it was. Either a real historical source arrives or this chain does not ship. The beats are written so it can be decided rather than forgotten."
     },
     {
       "id": "small-countries",
@@ -198,7 +211,7 @@
         {
           "find": "everything registered to Singapore",
           "teaches": "share of old space has nothing to do with size",
-          "say": "Two thirds of this was handed out before 1993. No country of that size has a claim like it."
+          "say": "Two thirds of this was handed out before 1993. Of every country holding more than a million addresses, none has a larger share that old."
         },
         {
           "find": "everything registered to North Korea",
@@ -218,7 +231,7 @@
         {
           "find": "allocated before 2000, and nothing announces it",
           "teaches": "old and silent is a real and common state",
-          "say": "Somebody was given this before the century turned, and nothing has spoken for it since."
+          "say": "Somebody was given this before the century turned. There is no route to it that I can see today."
         },
         {
           "find": "another, further away",
@@ -228,7 +241,7 @@
         {
           "find": "the largest run of them nearby",
           "teaches": "the dark is not empty",
-          "say": "All of this is held. None of it answers."
+          "say": "All of this is registered to somebody. None of it answers right now."
         }
       ],
       "reveal": "Allocated a long time ago, and no route to any of it that anyone here can see today. That is all this shows, and it is enough: the dark on this map is not empty space. It is held space that has gone quiet, and there is far more of it than anybody expects."
@@ -253,7 +266,7 @@
           "say": "Again, and nothing is wrong. This is what the two records are for."
         }
       ],
-      "reveal": "One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two registries disagreeing, not a measurement of anywhere."
+      "reveal": "One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two records disagreeing, not a measurement of anywhere."
     }
   ]
 }

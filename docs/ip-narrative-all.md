@@ -24,8 +24,8 @@ Full reasoning: `ip-guide-voice.md`, `ip-emotional-design.md`, `ip-two-audiences
 |---|---|
 | lines the guide can say | **126** across 41 buckets |
 | modes | dry 72 (57%) · wry 30 (24%) · open 24 (19%) |
-| chains | **9**, 28 beats |
-| beats the engine resolves at runtime | 16 of 28 |
+| chains | **9**, 29 beats |
+| beats the engine resolves at runtime | 17 of 29 |
 
 Per tier, which is where the ratio actually matters:
 
@@ -45,11 +45,11 @@ Per tier, which is where the ratio actually matters:
 
 *fires constantly · 17 lines*
 
-- dry — Announced, routed, quiet. There is a great deal of this shape about.
+- dry — Announced, routed, quiet. Nothing here is arguing with anything.
 - dry — Somebody's job, this. Probably still is.
 - dry — Someone asked for this, filled in a form, and got it. That is the whole ceremony.
 - dry — Nothing unusual here. That took several organisations agreeing, and none of them will be thanked for it.
-- dry — Reachable right now. A smaller claim than it sounds, and a harder one to keep.
+- dry — A route to it is visible right now. A smaller claim than it sounds, and a harder one to keep.
 - dry — Held, announced, reachable. Three things that had to be arranged separately.
 - dry — Working, and quiet about it. The two usually travel together.
 - WRY — The internet's largest department is the one where nothing happens.
@@ -69,18 +69,18 @@ Per tier, which is where the ratio actually matters:
 
 > Never say nothing announces it, ever, or that nobody ever has. We asked once, now. Absence of a route is not absence of a history.
 
-- dry — Allocated to somebody. No route to it that I can see. There is a lot of that out here.
-- dry — Registered to somebody who is not announcing it anywhere I can see.
+- dry — Allocated to somebody. No route to it that I can see. The two records do not have to agree.
+- dry — Registered to somebody. Nobody is announcing it anywhere I can see.
 - dry — The registry has a record for this. The routing table does not.
-- dry — Registered, and silent. There is a great deal of that about.
+- dry — Registered, and silent. Two records, neither of them obliged to match the other.
 - dry — Nothing I can see announces this. It happens more than you would think.
 - dry — Quiet. Not empty - quiet. The difference matters.
-- dry — On paper this has an owner. On the wire it has no voice.
-- WRY — There is a bill for this somewhere. Or there was.
-- WRY — Kept, not used. The difference between owning a network and running one.
+- dry — One record says who it is registered to. The other has nothing to say about it at all.
+- WRY — Somebody filled in a form for this. That is the whole of what I can tell you.
+- WRY — Registered, and not announced. Those are two different systems and they are allowed to differ.
 - WRY — Held, unadvertised, in no hurry.
-- **OPEN** — Somebody wanted this once. That much is on the record.
-- **OPEN** — Nothing here was switched off. It looks more like somebody stopped.
+- **OPEN** — Somebody asked for this once. That much is on the record.
+- **OPEN** — No route today. Whether there was one last year is not something I can see from here.
 - dry *revisit only* — Still no route I can find. I did look again.
 - **OPEN** *revisit only* — You came back to a place with no route. I like that about you.
 - dry *familiar only* — Nothing again. Whatever you are waiting for has not happened.
@@ -91,7 +91,7 @@ Per tier, which is where the ratio actually matters:
 
 - dry — Nobody holds this. Not withheld, not reserved. Unassigned.
 - dry — No registry has this on its books.
-- dry — Unclaimed. Coordinates that exist and refer to nobody.
+- dry — Unassigned. Coordinates that exist and currently refer to nobody.
 - dry — Empty. Actually empty, rather than quietly-held empty.
 - dry — The registries have not got this far.
 - dry *only v4* — Free space, in the space that famously ran out.
@@ -99,8 +99,8 @@ Per tier, which is where the ratio actually matters:
 - WRY — Congratulations. You found nothing. It is one of the more honest things out here.
 - WRY — All yours, in the sense that it is nobody's.
 - WRY — No holder, no route, and almost no paperwork.
-- **OPEN** — Nobody has needed it. I find that steadying, most days.
-- **OPEN** — Room nobody has asked for. It is still here.
+- **OPEN** — No registry has it on their books today. I find that steadying, most days.
+- **OPEN** — Unassigned, and still here. Whatever it was being saved for has not come.
 - dry *revisit only* — Nothing, again. It is reliable, at least.
 - WRY *revisit only* — You have brought me back to the empty part. Again.
 - WRY *familiar only* — Of all the places on this map, you have chosen the one with nothing in it. Repeatedly.
@@ -116,7 +116,7 @@ Per tier, which is where the ratio actually matters:
 - dry *only era<1995* — You are sitting in old space. Older than almost everything running on it.
 - dry *only rir=afrinic* — AFRINIC. The youngest of the five registries.
 - dry *only v6* — An IPv6 address. You arrived in the larger of the two internets, and by some distance the emptier one.
-- dry — That is you. Every one of those numbers had to be agreed on by somebody. Let us go and find out who.
+- dry — That is the address this visit arrived on. Somebody is speaking for it. Let us go and find them.
 
 ### `network.first` — entered an autonomous system not yet in the notebook
 
@@ -127,7 +127,7 @@ Per tier, which is where the ratio actually matters:
 - dry — New one. Whoever runs this has never heard of you and never will.
 - WRY — Another network. There are tens of thousands of these and you have now seen a few.
 - WRY — Someone here has opinions about routing. Everyone here has opinions about routing.
-- **OPEN** — Somebody applied for this number, and got it, and now the rest of the internet takes their word for it.
+- **OPEN** — Somebody applied for this number and got it. Every other network then decides, on its own, whether to accept what it says.
 
 ### `country.first` — the registry files this range under a country not yet in the notebook
 
@@ -167,7 +167,7 @@ Per tier, which is where the ratio actually matters:
 - dry — A large one. Whoever runs this has a map of their own, and it is better than mine.
 - WRY — This is a network that owns a spreadsheet.
 - WRY — Somewhere there is a team, and a rota, and somebody carrying a phone tonight.
-- dry — All of this is one organisation saying mine, and the rest of the internet believing them.
+- dry — All of this is announced by one network. Whether that is one organisation is a different record, and a different question.
 
 ### `query.on` — the visitor touched a country or registry and the field answered
 
@@ -184,7 +184,7 @@ Per tier, which is where the ratio actually matters:
 
 - dry — Back where you started. It has not changed.
 - dry — Your own address again. Smaller than it was, probably.
-- **OPEN** — Home. The least remarkable place you have been today, and the only one that is yours.
+- **OPEN** — Home. The least remarkable place you have been today, and the one this visit arrived on.
 
 ### `rail.top` — the whole of the visitor's address family is on screen
 
@@ -202,7 +202,7 @@ Per tier, which is where the ratio actually matters:
 
 - dry — As close as the ladder goes. Below this it is individual addresses.
 - WRY — The bottom. There is nothing smaller to show you.
-- **OPEN** — This is the size of the thing that is actually yours.
+- **OPEN** — This is the size of the thing your address sits inside.
 
 ### `landmark.0.0.0.0/8` — standing in 0.0.0.0/8
 
@@ -405,29 +405,33 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: a network is not one range</sub>
 4. ***find:* the whole of the visitor's address family**
-   > All of it. Most of this is nothing - nobody has ever asked for it.
+   > All of it. Every number there will ever be in this family, and nearly all of them are taken. It still carried everything you did today.
    
-   <sub>teaches: the size, and how much of it is nothing</sub>
-5. ***find:* the nearest root server**
-   > Thirteen names hold up every name there is. For years one man kept the list of what went where, and he kept it by hand.
+   <sub>teaches: the size, and how little of it is left</sub>
+5. ***find:* the whole of the visitor's address family**
+   > All of it. Vastly more than has ever been handed out, and the part in use is a rounding error against the rest.
+   
+   <sub>teaches: the size, and how little of it has been needed</sub>
+6. ***find:* the nearest root server**
+   > Thirteen names hold up every name there is. And for years the register of which numbers had been given to whom was published, and largely kept, by one man.
    
    <sub>teaches: a handful of named things hold the rest up, and people looked after them by hand</sub>
-6. ***find:* the origin network of any announced prefix**
-   > Anybody can say these addresses are theirs. Some of it is checked now. Not all of it, and none of it was then.
+7. ***find:* the origin network of any announced prefix**
+   > A network can announce anything it likes. Every network decides for itself what to believe. Some of that is checked now - not all of it, and none of it was then.
    
-   <sub>teaches: announcing is a claim, and claims are mostly taken on trust</sub>
-7. **`208.65.153.0`**
-   > In 2008 a country ordered this range blocked, and the block was announced to everybody by mistake. For two hours nobody anywhere could reach what was behind it. No one meant that to happen, which is the part worth sitting with.
+   <sub>teaches: announcing is a claim, and every listener decides what to do with it</sub>
+8. **`208.65.153.0`**
+   > In 2008 a route meant to block one site inside one country escaped. For about two hours it pulled that site's traffic across the internet to somewhere it was never going. No one meant that to happen, which is the part worth sitting with.
    
    <sub>teaches: a claim meant for one country escaped</sub>
-8. ***find:* the whole of the visitor's address family, again**
-   > Anybody can say these addresses are theirs. And mostly, they don't.
+9. ***find:* the whole of the visitor's address family, again**
+   > Every network decides for itself what to believe. And mostly, they agree.
    
    <sub>teaches: the same fact, read the other way</sub>
 
-**Reveal —** There is no law here and there never was. It is claims, taken on trust, by strangers who have mostly never spoken - and it carried everything you did today.
+**Reveal —** No single authority tells any network which route to trust. Each one accepts, rejects or checks what it hears, and most of the time those decisions agree well enough to have carried everything you did today.
 
-<sub>verified: 208.65.153.0 is present in space.bin as ARIN / US / 2006, so the beat is reachable. The 2008 incident is sourced in docs/ip-story-research.md and wants a second source before shipping. 'Some of it is checked now' is deliberately unquantified: origin validation is real and widely deployed and nowhere near universal, and any number quoted here would be wrong within a year.</sub>
+<sub>verified: 208.65.153.0 is present in space.bin as ARIN / US / 2006. The 2008 incident is sourced in docs/ip-story-research.md; RIPE's own analysis states it could not determine how many sites were affected, so the beat says traffic was pulled across the internet and does NOT claim universal failure. 'Some of that is checked now' is deliberately unquantified - origin validation is real, widely deployed and nowhere near universal, and any number would be wrong within a year.</sub>
 
 ## The boundary
 
@@ -467,7 +471,7 @@ Per tier, which is where the ratio actually matters:
 
 <sub>verified: 1982 is the earliest year present in space.bin. 12.0.0.0/8 is dated 1983 and is a whole /8. 9.0.0.0/8 is dated 1988.</sub>
 
-## The addresses that can never be used
+## Set aside
 
 *`never-usable` · side*
 
@@ -476,15 +480,15 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: space can be reserved and then never arrive</sub>
 2. **`192.0.2.0`**
-   > This one exists so that documentation has somewhere harmless to point.
+   > This one exists so that writing about addresses cannot accidentally name a real one.
    
    <sub>teaches: some addresses exist so that writing can be safe</sub>
 3. **`2001:db8::`**
-   > And the same again in IPv6, with room for every example anyone will ever write.
+   > And the same again in IPv6, with room for every example anyone will ever need.
    
    <sub>teaches: the same idea, made much larger the second time</sub>
 
-**Reveal —** Some of this space was never meant for machines. It was set aside for ideas about machines, and it is still reserved for them.
+**Reveal —** Some of this space was never meant for the public internet. Kept back for an addressing idea, or handed to writing so examples cannot collide with anything real. Different reasons, same result: a place on the map that nobody is going to.
 
 <sub>verified: All three are landmarks already in MARKS and are RFC facts, not lookups. On the date, which is contested: RFC 791 (1981-09) defined the class E range as reserved, while the IANA special-purpose registry records 1989-08 for its own entry. Those are two different events. The landmark line names 1981, which is the reservation rather than the registry record, and this chain names no date at all. Our own space.bin independently shows the range unallocated.</sub>
 
@@ -497,9 +501,9 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: there is a first one and it is an ordinary-looking address</sub>
 2. **`192.203.230.10`**
-   > E. Not next to the last one. They were never meant to fail together.
+   > E. Different people, different buildings, different networks from the last one. That is the part that matters, not where they sit on this map.
    
-   <sub>teaches: they are scattered, not stacked</sub>
+   <sub>teaches: they are separated by operator and site, not by address</sub>
 3. ***find:* the same letter in the other family**
    > And the same letter again, in the other internet. Thirteen is not thirteen machines.
    
@@ -518,11 +522,11 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: a founding-era /8, and what happened to it is visible rather than asserted</sub>
 2. **`36.0.0.0`**
-   > This one was handed back. Handed in, to be handed out again - and it was, on the other side of the world.
+   > This one is registered on the other side of the world now, to a registry that did not exist when it was first handed out.
    
    <sub>teaches: the opposite decision, and the register records the consequence</sub>
 
-**Reveal —** Once there was no more of it, address space became something you could transfer. Two places given the same kind of gift went different ways with it, and the register still shows where each one ended up.
+**Reveal —** Once there was no more of it, address space became something you could transfer. Where a block is registered today and where it started are two different questions, and this map only answers the first.
 
 <sub>verified: 36.0.0.0 reads APNIC / CN / 2011 in space.bin, which is consistent with the block having been returned and reissued. 18.0.0.0 reads ARIN / US / 1994. No holder is named by any line here; the plate names them from the live lookup.</sub>
 
@@ -531,7 +535,7 @@ Per tier, which is where the ratio actually matters:
 *`small-countries` · side*
 
 1. ***find:* everything registered to Singapore**
-   > Two thirds of this was handed out before 1993. No country of that size has a claim like it.
+   > Two thirds of this was handed out before 1993. Of every country holding more than a million addresses, none has a larger share that old.
    
    <sub>teaches: share of old space has nothing to do with size</sub>
 2. ***find:* everything registered to North Korea**
@@ -550,7 +554,7 @@ Per tier, which is where the ratio actually matters:
 > Half authored, half computed - the template from docs/ip-story-research.md. The engine supplies the addresses because we cannot know them in advance; only the meaning is written.
 
 1. ***find:* allocated before 2000, and nothing announces it**
-   > Somebody was given this before the century turned, and nothing has spoken for it since.
+   > Somebody was given this before the century turned. There is no route to it that I can see today.
    
    <sub>teaches: old and silent is a real and common state</sub>
 2. ***find:* another, further away**
@@ -558,7 +562,7 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: it is not a one-off</sub>
 3. ***find:* the largest run of them nearby**
-   > All of this is held. None of it answers.
+   > All of this is registered to somebody. None of it answers right now.
    
    <sub>teaches: the dark is not empty</sub>
 
@@ -579,24 +583,25 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: it is structural, not an error</sub>
 
-**Reveal —** One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two registries disagreeing, not a measurement of anywhere.
+**Reveal —** One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two records disagreeing, not a measurement of anywhere.
 
 ---
 
-# Deliberately not written yet
+# State of the writing
 
-A reviewer should not read these as omissions.
+Derived from the content files on every regeneration, because the hand-written version of this section went stale the moment the main line was written and a reviewer found it before I did.
 
-- **The main line's seven beats.** The spine exists in `ip-plan-v2.md`; the lines do not.
-- **Emotional beats 5 to 8** - Postel, trust, the hijack, and the ending. They attach to chains that were only written today, and the last line is four words that have not been earned yet.
-- **The celebration lines.** Phase C machinery does not exist, and the rule for them is already written down: he describes the play, like an announcer, and never congratulates the viewer.
+- **The spine exists.** *Where you actually are* and *The boundary*, 11 beats total.
+- **9 chains, 29 beats**, of which **17 are `find` rules** the engine resolves at runtime rather than addresses anybody chose.
+- **2 chains cannot ship yet:**
+  - *The boundary* — Needs the inward half - phase H - which does not exist. The beats are written so the spine is settled and the side chains have something to point at, but nothing here can be built or locked yet.
+  - *Sold, and given back* — The RETURN is not verified. space.bin shows 36.0.0.0 registered to CN under APNIC in 2011, which is consistent with a block having been given back and reissued and is not evidence that it was. Either a real historical source arrives or this chain does not ship. The beats are written so it can be decided rather than forgotten.
+- **Still unwritten:** the celebration lines. Phase C machinery does not exist, and the rule for them is already set - he describes the play, like an announcer, and never congratulates the viewer.
 
-# The known soft spots
+# Known soft spots
 
-Worth a reviewer's attention more than the rest.
-
-- The unallocated bucket is **mostly about absence**, so its vocabulary clusters - *nothing*, *nobody*, *empty*. Inherent to the subject, but it is the bucket most likely to read as bleak rather than dry.
-- The **revisit lines are new and thin** - two or three per bucket against twelve for a first visit. The pool still shallows out for somebody who returns often.
-- **Nothing varies by time, by session length, or by how much of the notebook is filled.** Revisit is the only axis of memory there is.
-- Several chains **end on a reveal that no beat has earned yet**, because the beat that earns it is in the main line, which is unwritten.
+- The unallocated bucket is **mostly about absence**, so its vocabulary clusters. Inherent to the subject, and the bucket most likely to read as bleak rather than dry.
+- **The mode ratio counts lines, not hearings.** A tier that fires rarely contributes fewer heard lines than its share suggests, so these percentages are a proxy and a weighted one would be better.
+- **Nothing varies by time, session length, or how full the notebook is.** Memory runs on one axis: unvisited, revisited, familiar.
+- **A delivery scheduler is a hard requirement, not a nicety.** See `_delivery` in `guide.json`. There are 47 constantly-firing lines; speaking on every arrival would make this a talkative game.
 

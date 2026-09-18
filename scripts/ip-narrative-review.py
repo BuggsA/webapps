@@ -271,34 +271,49 @@ def main():
 
     p("---")
     p("")
-    p("# Deliberately not written yet")
+    # Derived, not asserted. The hand-written version of this section went stale
+    # the moment the main line was written, and a reviewer caught it before I did.
+    p("# State of the writing")
     p("")
-    p("A reviewer should not read these as omissions.")
+    has_main = [c for c in chains["lines"] if c["kind"] == "main"]
+    prov = [c for c in chains["lines"] if c.get("provisional")]
+    p("Derived from the content files on every regeneration, because the "
+      "hand-written version of this section went stale the moment the main "
+      "line was written and a reviewer found it before I did.")
     p("")
-    p("- **The main line's seven beats.** The spine exists in "
-      "`ip-plan-v2.md`; the lines do not.")
-    p("- **Emotional beats 5 to 8** - Postel, trust, the hijack, and the "
-      "ending. They attach to chains that were only written today, and the "
-      "last line is four words that have not been earned yet.")
-    p("- **The celebration lines.** Phase C machinery does not exist, and the "
-      "rule for them is already written down: he describes the play, like an "
-      "announcer, and never congratulates the viewer.")
+    if has_main:
+        p("- **The spine exists.** %s, %d beats total." % (
+            " and ".join("*%s*" % c["title"] for c in has_main),
+            sum(len(c["beats"]) for c in has_main)))
+    else:
+        p("- **No main line yet.** The side chains are pointing at nothing.")
+    p("- **%d chains, %d beats**, of which **%d are `find` rules** the engine "
+      "resolves at runtime rather than addresses anybody chose." % (
+          len(chains["lines"]),
+          sum(len(c["beats"]) for c in chains["lines"]),
+          sum(1 for c in chains["lines"] for b in c["beats"] if "find" in b)))
+    if prov:
+        p("- **%d chain%s cannot ship yet:**" % (len(prov), "" if len(prov) == 1 else "s"))
+        for c in prov:
+            p("  - *%s* — %s" % (c["title"], c["provisional"]))
+    p("- **Still unwritten:** the celebration lines. Phase C machinery does "
+      "not exist, and the rule for them is already set - he describes the "
+      "play, like an announcer, and never congratulates the viewer.")
     p("")
-    p("# The known soft spots")
-    p("")
-    p("Worth a reviewer's attention more than the rest.")
+    p("# Known soft spots")
     p("")
     p("- The unallocated bucket is **mostly about absence**, so its "
-      "vocabulary clusters - *nothing*, *nobody*, *empty*. Inherent to the "
-      "subject, but it is the bucket most likely to read as bleak rather than "
-      "dry.")
-    p("- The **revisit lines are new and thin** - two or three per bucket "
-      "against twelve for a first visit. The pool still shallows out for "
-      "somebody who returns often.")
-    p("- **Nothing varies by time, by session length, or by how much of the "
-      "notebook is filled.** Revisit is the only axis of memory there is.")
-    p("- Several chains **end on a reveal that no beat has earned yet**, "
-      "because the beat that earns it is in the main line, which is unwritten.")
+      "vocabulary clusters. Inherent to the subject, and the bucket most "
+      "likely to read as bleak rather than dry.")
+    p("- **The mode ratio counts lines, not hearings.** A tier that fires "
+      "rarely contributes fewer heard lines than its share suggests, so these "
+      "percentages are a proxy and a weighted one would be better.")
+    p("- **Nothing varies by time, session length, or how full the notebook "
+      "is.** Memory runs on one axis: unvisited, revisited, familiar.")
+    p("- **A delivery scheduler is a hard requirement, not a nicety.** See "
+      "`_delivery` in `guide.json`. There are %d constantly-firing lines; "
+      "speaking on every arrival would make this a talkative game." % (
+          sum(len(b["text"]) for b in guide["lines"] if b.get("fires") == "constantly")))
     p("")
 
     with io.open(OUT, "w", encoding="utf-8", newline="") as f:

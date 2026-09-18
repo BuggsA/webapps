@@ -7,7 +7,7 @@
     "wry": "aimed at the internet, never at the visitor, and never at what they just found",
     "open": "no joke, no undercut. he means it. rare on purpose"
   },
-  "_when": "Absent means any visit. 'revisit' fires where the notebook already has this place. 'familiar' fires once it has been recorded several times over. Two tiers made the memory binary - visit two and visit forty sounded identical - which shallows the pool one visit later rather than fixing it.",
+  "_when": "Absent means any visit. 'revisit' fires where the notebook already holds this place. 'familiar' fires from the THIRD separate visit to it onward. Two tiers made the memory binary - visit two sounded like visit forty - and the threshold is stated here because a number that lives only in code is a number nobody can review.",
   "_only": "only[] means two different things depending on the bucket, and conflating them was a real bug. Where a bucket fires ONCE PER VISIT the first match wins, branches are ordered most specific first, and the entry with no only[] is the fallback and must be last. Where a bucket is a random pool - every arrive.* bucket - only[] is an eligibility filter and array order carries no meaning: a v4-only line is simply never drawn for a v6 visitor.",
   "lines": [
     {
@@ -17,7 +17,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Announced, routed, quiet. There is a great deal of this shape about."
+          "t": "Announced, routed, quiet. Nothing here is arguing with anything."
         },
         {
           "mode": "dry",
@@ -33,7 +33,7 @@
         },
         {
           "mode": "dry",
-          "t": "Reachable right now. A smaller claim than it sounds, and a harder one to keep."
+          "t": "A route to it is visible right now. A smaller claim than it sounds, and a harder one to keep."
         },
         {
           "mode": "dry",
@@ -98,11 +98,11 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Allocated to somebody. No route to it that I can see. There is a lot of that out here."
+          "t": "Allocated to somebody. No route to it that I can see. The two records do not have to agree."
         },
         {
           "mode": "dry",
-          "t": "Registered to somebody who is not announcing it anywhere I can see."
+          "t": "Registered to somebody. Nobody is announcing it anywhere I can see."
         },
         {
           "mode": "dry",
@@ -110,7 +110,7 @@
         },
         {
           "mode": "dry",
-          "t": "Registered, and silent. There is a great deal of that about."
+          "t": "Registered, and silent. Two records, neither of them obliged to match the other."
         },
         {
           "mode": "dry",
@@ -122,15 +122,15 @@
         },
         {
           "mode": "dry",
-          "t": "On paper this has an owner. On the wire it has no voice."
+          "t": "One record says who it is registered to. The other has nothing to say about it at all."
         },
         {
           "mode": "wry",
-          "t": "There is a bill for this somewhere. Or there was."
+          "t": "Somebody filled in a form for this. That is the whole of what I can tell you."
         },
         {
           "mode": "wry",
-          "t": "Kept, not used. The difference between owning a network and running one."
+          "t": "Registered, and not announced. Those are two different systems and they are allowed to differ."
         },
         {
           "mode": "wry",
@@ -138,11 +138,11 @@
         },
         {
           "mode": "open",
-          "t": "Somebody wanted this once. That much is on the record."
+          "t": "Somebody asked for this once. That much is on the record."
         },
         {
           "mode": "open",
-          "t": "Nothing here was switched off. It looks more like somebody stopped."
+          "t": "No route today. Whether there was one last year is not something I can see from here."
         },
         {
           "mode": "dry",
@@ -176,7 +176,7 @@
         },
         {
           "mode": "dry",
-          "t": "Unclaimed. Coordinates that exist and refer to nobody."
+          "t": "Unassigned. Coordinates that exist and currently refer to nobody."
         },
         {
           "mode": "dry",
@@ -214,11 +214,11 @@
         },
         {
           "mode": "open",
-          "t": "Nobody has needed it. I find that steadying, most days."
+          "t": "No registry has it on their books today. I find that steadying, most days."
         },
         {
           "mode": "open",
-          "t": "Room nobody has asked for. It is still here."
+          "t": "Unassigned, and still here. Whatever it was being saved for has not come."
         },
         {
           "mode": "dry",
@@ -280,7 +280,7 @@
         },
         {
           "mode": "dry",
-          "t": "That is you. Every one of those numbers had to be agreed on by somebody. Let us go and find out who."
+          "t": "That is the address this visit arrived on. Somebody is speaking for it. Let us go and find them."
         }
       ]
     },
@@ -311,7 +311,7 @@
         },
         {
           "mode": "open",
-          "t": "Somebody applied for this number, and got it, and now the rest of the internet takes their word for it."
+          "t": "Somebody applied for this number and got it. Every other network then decides, on its own, whether to accept what it says."
         }
       ]
     },
@@ -419,7 +419,7 @@
         },
         {
           "mode": "dry",
-          "t": "All of this is one organisation saying mine, and the rest of the internet believing them."
+          "t": "All of this is announced by one network. Whether that is one organisation is a different record, and a different question."
         }
       ]
     },
@@ -461,7 +461,7 @@
         },
         {
           "mode": "open",
-          "t": "Home. The least remarkable place you have been today, and the only one that is yours."
+          "t": "Home. The least remarkable place you have been today, and the one this visit arrived on."
         }
       ]
     },
@@ -519,7 +519,7 @@
         },
         {
           "mode": "open",
-          "t": "This is the size of the thing that is actually yours."
+          "t": "This is the size of the thing your address sits inside."
         }
       ]
     },
@@ -849,5 +849,6 @@
         }
       ]
     }
-  ]
+  ],
+  "_delivery": "A CONSTRAINT ON THE MACHINERY, not on the writing, and phase E does not ship without it. There are now enough constantly-firing lines that speaking on every arrival would turn a contemplative instrument into a talkative game. Required: silence while somebody is moving quickly; generic lines no more than about once a minute; chain and landmark lines outrank generic ones and interrupt them; no line repeats within a session; and the guide mutes independently of the plate, which never goes quiet. Silence is a resource - see docs/ip-guide-voice.md - and the 15% unguarded only works if there is quiet around it."
 }
