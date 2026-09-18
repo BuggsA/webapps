@@ -36,6 +36,91 @@ def load(name):
         return json.load(f)
 
 
+BANNED = ["did you know", "simply", "just ", "of course", "obviously",
+          "basically", "a kind of", "think of it like", "amazing",
+          "incredible", "wonderful"]
+
+# Phrases that assume which family the visitor arrived on. Every one of these
+# has been wrong at least once, in both directions.
+FAMILY_ASSUMING = ["your address is", "your own address is", "all four of",
+                   "your address already", "four of those numbers"]
+
+
+def lint(guide, chains):
+    """The rules are written precisely enough to check. So check them.
+
+    Every finding here is one that was found by hand first, by a reviewer,
+    after it had already shipped into a file. That is the argument for this
+    function existing.
+    """
+    bad = []
+
+    # Prose only, named explicitly. Walking every string in the file swept up
+    # mode names and ids and reported forty identical "dry"s as duplicates,
+    # which is how a linter teaches you to stop trusting it.
+    said = [t["t"] for b in guide["lines"] for t in b["text"]]
+    said += [b["say"] for c in chains["lines"] for b in c["beats"]]
+    said += [c["reveal"] for c in chains["lines"]]
+    said += [c["title"] for c in chains["lines"]]
+
+    for s in said:
+        for w in BANNED:
+            if w in s.lower():
+                bad.append("banned word %r: %s" % (w.strip(), s[:64]))
+
+    # a line heard twice, flat, is worse than a line cut
+    seen = {}
+    for s in said:
+        key = s.strip().lower()
+        if key in seen:
+            bad.append("duplicated verbatim: %s" % s[:64])
+        seen[key] = 1
+
+    # assumes a family unless the branch says which one
+    for b in guide["lines"]:
+        for t in b["text"]:
+            only = " ".join(t.get("only", []))
+            if "v4" in only or "v6" in only:
+                continue
+            for w in FAMILY_ASSUMING:
+                if w in t["t"].lower():
+                    bad.append("assumes a family, ungated: %s" % t["t"][:64])
+
+    # only[] means two different things and conflating them was a real bug in
+    # the content notes. Where a bucket fires ONCE, the first match wins and a
+    # fallback above a branch kills it. Where a bucket is a random pool, only[]
+    # is an eligibility filter and order carries no meaning at all.
+    for b in guide["lines"]:
+        if b.get("fires") != "once per visit":
+            continue
+        plain = [i for i, t in enumerate(b["text"]) if not t.get("only")]
+        if plain and any(t.get("only") for t in b["text"]):
+            if plain[0] != len(b["text"]) - 1:
+                bad.append("%s fires once, so first match wins - but a line with no "
+                           "only[] sits at index %d and every branch below it is dead"
+                           % (b["id"], plain[0]))
+        if not plain:
+            bad.append("%s fires once and has no fallback - some visitor gets silence"
+                       % b["id"])
+
+    # the unguarded mode has to stay rare where lines are heard often
+    for tier, ceiling in (("constantly", 0.17), ("often", 0.20)):
+        sel = [t for b in guide["lines"] if b.get("fires") == tier for t in b["text"]]
+        if not sel:
+            continue
+        share = sum(1 for t in sel if t["mode"] == "open") / float(len(sel))
+        if share > ceiling:
+            bad.append("%s tier is %.0f%% open, over the %.0f%% ceiling"
+                       % (tier, 100 * share, 100 * ceiling))
+
+    # a reveal nothing has earned yet
+    for c in chains["lines"]:
+        if c.get("provisional"):
+            bad.append("PROVISIONAL, not a defect: %s - %s" % (c["id"], c["provisional"]))
+
+    return bad
+
+
 def main():
     guide = load("guide.json")
     chains = load("lines.json")
@@ -63,13 +148,17 @@ def main():
       "because several of these are counter-intuitive and were arrived at "
       "deliberately.")
     p("")
-    p("- **Evidence discipline.** The instrument never claims to see what it "
-      "has not asked about, so neither does he. No line states a motive, a "
-      "history or a total we cannot show. Where a thought could not be "
-      "evidenced it moved into *his* observation - \"most of what I have "
-      "looked at\" - rather than a fact about the world. Registered and "
-      "observed are never conflated: absence of a route means not seen, not "
-      "not-there.")
+    p("- **Evidence discipline, and four allowed classes of claim.** The "
+      "instrument never claims to see what it has not asked about, so neither "
+      "does he. Allowed: (1) what the instrument looked for and found or did "
+      "not find, because it really did look; (2) disposition - what he likes, "
+      "what steadies him; (3) the overwhelmingly likely reading of a record "
+      "already on screen, phrased as inference; (4) hyperbole nobody could "
+      "mistake for data. **Not allowed, and this was corrected after review: "
+      "laundering an empirical claim through him.** \"Most of what I have "
+      "looked at\" is not safe, because nothing records what he has looked "
+      "at. Registered and observed are never conflated - absence of a route "
+      "means not seen, not not-there.")
     p("- **The plate already states the fact.** A line that restates a number "
       "on screen is the wrong line. He is the only part of the product "
       "allowed to say what something *means*.")
@@ -214,7 +303,13 @@ def main():
 
     with io.open(OUT, "w", encoding="utf-8", newline="") as f:
         f.write("\n".join(w) + "\n")
+    findings = lint(guide, chains)
     print("wrote %s" % os.path.relpath(OUT, REPO))
+    if findings:
+        print("")
+        print("LINT")
+        for f in findings:
+            print("  - %s" % f)
     print("  %d guide lines, %d buckets, %d chains, %d beats" % (
         len(rows), len(guide["lines"]), len(chains["lines"]),
         sum(len(c["beats"]) for c in chains["lines"])))

@@ -104,10 +104,26 @@ So:
 - **Registered and observed are different and are never conflated.** The
   registry has a record; the routing table does not. **Absence of a route
   means not seen, not not-there.** We asked once, now.
-- **Where a thought is worth keeping but cannot be evidenced, move it into
-  HIS observation** rather than into a fact about the world. *"Most of what I
-  have looked at looks like this"* is a claim he is entitled to make, and it
-  is more in character than the assertion was.
+- **Four classes of claim are allowed. Everything else is not.** This
+  replaces an earlier and wrong version of this rule, which said that moving
+  a thought into his observation made it safe. **It does not.** *"Most of
+  what I have looked at looks like this"* is only factual if something
+  records what he has looked at, and nothing does — it is an empirical claim
+  wearing a narrator's coat, and that is laundering.
+
+  1. **What the instrument looked for**, and found or did not find. *"No
+     route to it that I can see."* It really did look.
+  2. **Disposition** — what he likes, what steadies him, what he finds
+     absurd. Fiction is fine for how he feels.
+  3. **The overwhelmingly likely reading of a record already on screen.** An
+     eighties /8 handed out whole really was casual by any later standard.
+     Phrase it so it reads as inference: *"They were not being careless.
+     There was no reason yet to be careful."*
+  4. **Hyperbole no reader could mistake for data.** *"Nobody was happy about
+     it."*
+
+  The earlier rule condemned some of the best lines in the file while letting
+  the laundering through, which is how you know it was the wrong rule.
 - **Hedges that are honest are in voice, not against it.** *"It looks more
   like somebody stopped"* is both more accurate and more like a person who
   has learned what he cannot know.

@@ -8,7 +8,7 @@ This is the whole of the writing: every line the guide can say and every chain h
 
 A reviewer should know the rules before deciding a line is wrong, because several of these are counter-intuitive and were arrived at deliberately.
 
-- **Evidence discipline.** The instrument never claims to see what it has not asked about, so neither does he. No line states a motive, a history or a total we cannot show. Where a thought could not be evidenced it moved into *his* observation - "most of what I have looked at" - rather than a fact about the world. Registered and observed are never conflated: absence of a route means not seen, not not-there.
+- **Evidence discipline, and four allowed classes of claim.** The instrument never claims to see what it has not asked about, so neither does he. Allowed: (1) what the instrument looked for and found or did not find, because it really did look; (2) disposition - what he likes, what steadies him; (3) the overwhelmingly likely reading of a record already on screen, phrased as inference; (4) hyperbole nobody could mistake for data. **Not allowed, and this was corrected after review: laundering an empirical claim through him.** "Most of what I have looked at" is not safe, because nothing records what he has looked at. Registered and observed are never conflated - absence of a route means not seen, not not-there.
 - **The plate already states the fact.** A line that restates a number on screen is the wrong line. He is the only part of the product allowed to say what something *means*.
 - **Three modes**, target 60 / 25 / 15 in the frequent tiers. `dry` is the default. `WRY` points at the internet and at him, **never at the thing the visitor just chose to go and look at**. `OPEN` has no joke and no undercut - if it relents into a joke it is not open, it is wry.
 - **The unguarded mode must stay rare.** If he means it every time, meaning it is the formula and cannot be sincere. One-off lines are allowed to skew open: a line heard once can afford to mean something, a line heard forty times cannot.
@@ -22,8 +22,8 @@ Full reasoning: `ip-guide-voice.md`, `ip-emotional-design.md`, `ip-two-audiences
 
 | | |
 |---|---|
-| lines the guide can say | **122** across 41 buckets |
-| modes | dry 71 (58%) · wry 28 (23%) · open 23 (19%) |
+| lines the guide can say | **126** across 41 buckets |
+| modes | dry 72 (57%) · wry 30 (24%) · open 24 (19%) |
 | chains | **7**, 18 beats |
 | beats the engine resolves at runtime | 8 of 18 |
 
@@ -31,7 +31,7 @@ Per tier, which is where the ratio actually matters:
 
 | fires | lines | dry | wry | open |
 |---|---|---|---|---|
-| constantly | 43 | 60% | 26% | 14% |
+| constantly | 47 | 57% | 28% | 15% |
 | often | 26 | 54% | 31% | 15% |
 | occasionally | 19 | 53% | 16% | 32% |
 | once per visit | 6 | 100% | 0% | 0% |
@@ -43,35 +43,37 @@ Per tier, which is where the ratio actually matters:
 
 ### `arrive.ordinary` — arrived at a prefix that is announced and unremarkable
 
-*fires constantly · 15 lines*
+*fires constantly · 17 lines*
 
-- dry — Announced, routed, quiet. Most of what I have looked at looks like this.
+- dry — Announced, routed, quiet. There is a great deal of this shape about.
 - dry — Somebody's job, this. Probably still is.
 - dry — Someone asked for this, filled in a form, and got it. That is the whole ceremony.
-- dry — The best thing you can say about a network is that you have never heard of it.
+- dry — Nothing unusual here. That took several organisations agreeing, and none of them will be thanked for it.
 - dry — Reachable right now. A smaller claim than it sounds, and a harder one to keep.
 - dry — Held, announced, reachable. Three things that had to be arranged separately.
-- dry — Working, and unremarkable. The two usually travel together.
+- dry — Working, and quiet about it. The two usually travel together.
 - WRY — The internet's largest department is the one where nothing happens.
 - WRY — Millions of these. The surprising part is how few of them you ever notice.
-- WRY — I have stood here before and I remember nothing about it.
-- dry — Something is going through here right now. That is what announced means.
+- WRY — I have stood here before. It gave me nothing and I came back anyway.
+- dry — Announced means a route to it is being advertised. It says nothing about whether anything is travelling on it.
 - **OPEN** — Someone keeps this running, and you will never learn their name.
 - dry *revisit only* — Back again. It has not moved.
 - WRY *revisit only* — You have been here. I remember, because writing it down is the job.
 - dry *revisit only* — Second time. Places get better on the second look, mostly.
+- WRY *familiar only* — You keep coming back to this one. I have stopped asking why.
+- **OPEN** *familiar only* — You have made this somewhere. It was a number when we started.
 
 ### `arrive.unannounced` — asked, and the routing data shows no route for this prefix
 
-*fires constantly · 14 lines*
+*fires constantly · 15 lines*
 
 > Never say nothing announces it, ever, or that nobody ever has. We asked once, now. Absence of a route is not absence of a history.
 
-- dry — Allocated to somebody. Announced by nobody. There is a lot of that out here.
-- dry — Somebody holds this and is not saying so out loud.
+- dry — Allocated to somebody. No route to it that I can see. There is a lot of that out here.
+- dry — Registered to somebody who is not announcing it anywhere I can see.
 - dry — The registry has a record for this. The routing table does not.
 - dry — Registered, and silent. There is a great deal of that about.
-- dry — Nothing announces you here. It happens more than you would think.
+- dry — Nothing I can see announces this. It happens more than you would think.
 - dry — Quiet. Not empty - quiet. The difference matters.
 - dry — On paper this has an owner. On the wire it has no voice.
 - WRY — There is a bill for this somewhere. Or there was.
@@ -79,12 +81,13 @@ Per tier, which is where the ratio actually matters:
 - WRY — Held, unadvertised, in no hurry.
 - **OPEN** — Somebody wanted this once. That much is on the record.
 - **OPEN** — Nothing here was switched off. It looks more like somebody stopped.
-- dry *revisit only* — Still nothing on the wire. I did check.
+- dry *revisit only* — Still no route I can find. I did look again.
 - **OPEN** *revisit only* — You came back to a place with no route. I like that about you.
+- dry *familiar only* — Nothing again. Whatever you are waiting for has not happened.
 
 ### `arrive.unallocated` — the registry marks this range unallocated
 
-*fires constantly · 14 lines*
+*fires constantly · 15 lines*
 
 - dry — Nobody holds this. Not withheld, not reserved. Unassigned.
 - dry — No registry has this on its books.
@@ -99,7 +102,8 @@ Per tier, which is where the ratio actually matters:
 - **OPEN** — Nobody has needed it. I find that steadying, most days.
 - **OPEN** — Room nobody has asked for. It is still here.
 - dry *revisit only* — Nothing, again. It is reliable, at least.
-- WRY *revisit only* — You have brought me back to the empty part. Twice.
+- WRY *revisit only* — You have brought me back to the empty part. Again.
+- WRY *familiar only* — Of all the places on this map, you have chosen the one with nothing in it. Repeatedly.
 
 ### `open.cold` — the first thing said, once the address is on screen
 
@@ -107,8 +111,8 @@ Per tier, which is where the ratio actually matters:
 
 > Highest-leverage writing in the product. Interesting, not moving - the emotional design forbids front-loading. FIRST MATCH WINS, most specific first, last entry is the fallback and must work for BOTH families.
 
-- dry *only cgnat* — That address is not exactly yours. Your carrier is lending it to you, and not only to you.
-- dry *only no-prefix* — Nothing announces you. Your address is still your address, and the space around it is still there.
+- dry *only addr-in-100.64/10* — You arrived on an address out of the carriers' own shared range. That is not supposed to reach this far.
+- dry *only no-prefix* — Nothing I can see announces this exact range. Something larger around it is carrying you, which is ordinary and worth a look.
 - dry *only era<1995* — You are sitting in old space. Older than almost everything running on it.
 - dry *only rir=afrinic* — AFRINIC. The youngest of the five registries.
 - dry *only v6* — An IPv6 address. You arrived in the larger of the two internets, and by some distance the emptier one.
@@ -153,13 +157,13 @@ Per tier, which is where the ratio actually matters:
 - dry — Allocated before most of what uses it existed.
 - WRY — Old money.
 - WRY — They were handing these out by the million back then. Nobody thought it would matter.
-- **OPEN** — Still doing its job, decades later. Nothing was renewed. It kept going.
+- **OPEN** — Still doing its job, decades later. It kept going.
 
 ### `network.large` — this network announces a great many prefixes
 
 *fires often · 5 lines*
 
-- dry — Big. Not one range but many, arranged by somebody who thinks about it full time.
+- dry — Big. Not one range but many, and probably arranged by somebody who thinks about it full time.
 - dry — A large one. Whoever runs this has a map of their own, and it is better than mine.
 - WRY — This is a network that owns a spreadsheet.
 - WRY — Somewhere there is a team, and a rota, and somebody carrying a phone tonight.
@@ -187,7 +191,7 @@ Per tier, which is where the ratio actually matters:
 *fires occasionally · 5 lines*
 
 - dry *only v4* — All of it. Four billion addresses, and you can see the edges.
-- **OPEN** *only v4* — Everything anybody has ever been given, at once. It is not as big as you were told.
+- **OPEN** *only v4* — Everything there is, at once. It is not as big as you were told.
 - dry *only v6* — All of it. Most of it has never been anything at all.
 - **OPEN** *only v6* — You are looking at almost nothing, because almost none of it has been used.
 - dry — The whole family, end to end.
@@ -204,7 +208,7 @@ Per tier, which is where the ratio actually matters:
 
 *fires once ever · 1 lines*
 
-- dry — The address a machine uses before it has one. Sixteen million ways of saying: not yet.
+- dry — This network, meaning the one you are on, without naming it. The single address at the bottom of it is the one a machine uses before it has one.
 
 ### `landmark.10.0.0.0/8` — standing in 10.0.0.0/8
 
@@ -216,13 +220,13 @@ Per tier, which is where the ratio actually matters:
 
 *fires once ever · 1 lines*
 
-- dry — Millions of people are behind this right now and not one of them can be reached at it.
+- dry — Shared space, set aside so carriers can put customers behind it. Nobody out here can reach anybody at it.
 
 ### `landmark.127.0.0.0/8` — standing in 127.0.0.0/8
 
 *fires once ever · 1 lines*
 
-- **OPEN** — Sixteen million addresses that all mean here, and nobody has ever needed more than the first one. Absurd. I adore it.
+- **OPEN** — Sixteen million addresses, every one of them meaning here. Almost everybody uses the first and stops. Absurd. I adore it.
 
 ### `landmark.169.254.0.0/16` — standing in 169.254.0.0/16
 
@@ -240,7 +244,7 @@ Per tier, which is where the ratio actually matters:
 
 *fires once ever · 1 lines*
 
-- dry — Reserved so documentation has somewhere safe to point. You have read this address a hundred times without noticing it.
+- dry — Reserved so documentation has somewhere safe to point. You have probably read it a hundred times without noticing.
 
 ### `landmark.192.168.0.0/16` — standing in 192.168.0.0/16
 
@@ -300,7 +304,7 @@ Per tier, which is where the ratio actually matters:
 
 *fires once ever · 1 lines*
 
-- dry — Quad9. The third of the three you might have typed into a settings screen.
+- dry — Quad9. Another address short enough to type from memory, which is most of the point.
 
 ### `landmark.::/128` — standing in ::/128
 
@@ -318,7 +322,7 @@ Per tier, which is where the ratio actually matters:
 
 *fires once ever · 1 lines*
 
-- **OPEN** — The whole of IPv4, embedded inside IPv6 so the two internets can speak. Your own address is in here somewhere.
+- **OPEN** — The whole of IPv4, embedded inside IPv6 so the two internets can speak. Every IPv4 address there is has a place in here.
 
 ### `landmark.2001::/32` — standing in 2001::/32
 
@@ -342,19 +346,19 @@ Per tier, which is where the ratio actually matters:
 
 *fires once ever · 1 lines*
 
-- dry — IPv6's private space. Larger than all of IPv4, and it is the part you are not meant to route.
+- dry — Unique local addresses - IPv6's rough counterpart to private space. Larger than all of IPv4, and not meant to be routed globally.
 
 ### `landmark.fe80::/10` — standing in fe80::/10
 
 *fires once ever · 1 lines*
 
-- dry — Every IPv6 machine has one of these whether it wanted one or not.
+- dry — Every IPv6 interface has one of these whether anybody asked for it or not.
 
 ### `landmark.ff00::/8` — standing in ff00::/8
 
 *fires once ever · 1 lines*
 
-- WRY — Multicast again, with more room. Same result.
+- WRY — Multicast again - and this time load-bearing. IPv6 cannot find its neighbours without it.
 
 ### `landmark.root` — standing on any of the thirteen root servers, either family
 
@@ -362,10 +366,10 @@ Per tier, which is where the ratio actually matters:
 
 > Thirteen letters x two families share one pool; the plate already names which letter.
 
-- dry — One of thirteen. Everything that turns a name into a number starts, eventually, here.
-- dry — Thirteen letters, and rather more than thirteen machines. The address is a place, not a box.
+- dry — One of thirteen named authorities. Everything that turns a name into a number starts, eventually, at one of them.
+- dry — Thirteen letters. Twenty-six addresses, counting both families. Hundreds of machines answering to them.
 - WRY — A root server. It has been doing this since before most of the internet was a going concern.
-- **OPEN** — Thirteen addresses hold the whole naming system up. It is a smaller number than it ought to be.
+- **OPEN** — Thirteen names hold the whole thing up, and thirteen is a smaller number than it sounds until you learn how many machines hide behind each one.
 
 ### `egg.doors` — found one of the four ways from IPv4 into IPv6
 
@@ -373,7 +377,7 @@ Per tier, which is where the ratio actually matters:
 
 > The best egg available: entirely true, and pure arithmetic on the number the visitor arrived with.
 
-- **OPEN** — Your address is already in here. It always was. Nobody had to put it anywhere.
+- **OPEN** — Every IPv4 address already has a position in here. Nobody had to put them anywhere.
 - dry — A door. The arithmetic is the whole mechanism - there is nothing else to it.
 
 ---
@@ -408,7 +412,7 @@ Per tier, which is where the ratio actually matters:
 *`never-usable` · side*
 
 1. **`240.0.0.0`**
-   > Set aside in 1981 for a future that never showed up. Forty-five years. Still empty.
+   > A sixteenth of the whole space, kept back for an addressing idea that never arrived. Nobody has ever been given any of it.
    
    <sub>teaches: space can be reserved and then never arrive</sub>
 2. **`192.0.2.0`**
@@ -422,7 +426,7 @@ Per tier, which is where the ratio actually matters:
 
 **Reveal —** Some of this space was never meant for machines. It was set aside for ideas about machines, and it is still reserved for them.
 
-<sub>verified: All three are landmarks already in MARKS and are RFC facts, not lookups.</sub>
+<sub>verified: All three are landmarks already in MARKS and are RFC facts, not lookups. On the date, which is contested: RFC 791 (1981-09) defined the class E range as reserved, while the IANA special-purpose registry records 1989-08 for its own entry. Those are two different events. The landmark line names 1981, which is the reservation rather than the registry record, and this chain names no date at all. Our own space.bin independently shows the range unallocated.</sub>
 
 ## The thirteen
 
@@ -458,7 +462,7 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: the opposite decision, and the register records the consequence</sub>
 
-**Reveal —** Once there was no more of it, address space became property. Two places that had been given the same kind of gift did opposite things with it, and the register remembers both.
+**Reveal —** Once there was no more of it, address space became something you could transfer. Two places given the same kind of gift went different ways with it, and the register still shows where each one ended up.
 
 <sub>verified: 36.0.0.0 reads APNIC / CN / 2011 in space.bin, which is consistent with the block having been returned and reissued. 18.0.0.0 reads ARIN / US / 1994. No holder is named by any line here; the plate names them from the live lookup.</sub>
 
@@ -475,7 +479,7 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: the other end of the same scale</sub>
 
-**Reveal —** How much of this a country holds says almost nothing about how large it is, and quite a lot about when it arrived.
+**Reveal —** How much of this is registered to a country says almost nothing about how large the country is, and a great deal about how early the people asking for it got there.
 
 <sub>verified: Computed from space.bin 2026-09-18: Singapore holds 27,894,080 v4 addresses of which 66.0% were allocated before 1993, the highest share of any country holding over a million. North Korea holds one range of 1,024 addresses.</sub>
 
@@ -498,7 +502,7 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: the dark is not empty</sub>
 
-**Reveal —** Registered before the registries began charging for it, and so it cannot be taken back over an unpaid bill. These sit here indefinitely. Most of them are forgotten - and forgotten space is the cheapest thing there is to borrow, if you are the sort of person who needs an address nobody is watching.
+**Reveal —** Allocated a long time ago, and no route to any of it that anyone here can see today. That is all this shows, and it is enough: the dark on this map is not empty space. It is held space that has gone quiet, and there is far more of it than anybody expects.
 
 ## Where the map is wrong
 
@@ -506,8 +510,8 @@ Per tier, which is where the ratio actually matters:
 
 > Gated for a real reason, not an arbitrary one: a block announced from the wrong continent is not STRANGE until you have watched an ordinary network's footprint stay where it was put. Entirely computed - it needs live routing data we do not ship.
 
-1. ***find:* a prefix whose registered country is not where it is announced from**
-   > Registered in one place. Announced from another. Neither of them is lying.
+1. ***find:* a prefix whose registered country differs from the country its origin network is registered under**
+   > Registered under one country. Announced by a network registered under another. Neither of them is lying.
    
    <sub>teaches: the register records paperwork, not geography</sub>
 2. ***find:* a second one, in a different registry**
@@ -515,7 +519,7 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: it is structural, not an error</sub>
 
-**Reveal —** The registry says who was given it. The routing table says where it is being announced from today. People read the first as a map and it was never that.
+**Reveal —** One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two registries disagreeing, not a measurement of anywhere.
 
 ---
 

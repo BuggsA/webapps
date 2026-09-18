@@ -32,10 +32,10 @@
       "kind": "side",
       "title": "The addresses that can never be used",
       "needs": [],
-      "_verified": "All three are landmarks already in MARKS and are RFC facts, not lookups.",
+      "_verified": "All three are landmarks already in MARKS and are RFC facts, not lookups. On the date, which is contested: RFC 791 (1981-09) defined the class E range as reserved, while the IANA special-purpose registry records 1989-08 for its own entry. Those are two different events. The landmark line names 1981, which is the reservation rather than the registry record, and this chain names no date at all. Our own space.bin independently shows the range unallocated.",
       "beats": [
         { "at": "240.0.0.0", "teaches": "space can be reserved and then never arrive",
-          "say": "Set aside in 1981 for a future that never showed up. Forty-five years. Still empty." },
+          "say": "A sixteenth of the whole space, kept back for an addressing idea that never arrived. Nobody has ever been given any of it." },
         { "at": "192.0.2.0", "teaches": "some addresses exist so that writing can be safe",
           "say": "This one exists so that documentation has somewhere harmless to point." },
         { "at": "2001:db8::", "teaches": "the same idea, made much larger the second time",
@@ -73,7 +73,7 @@
         { "at": "36.0.0.0", "teaches": "the opposite decision, and the register records the consequence",
           "say": "This one was handed back. Handed in, to be handed out again - and it was, on the other side of the world." }
       ],
-      "reveal": "Once there was no more of it, address space became property. Two places that had been given the same kind of gift did opposite things with it, and the register remembers both."
+      "reveal": "Once there was no more of it, address space became something you could transfer. Two places given the same kind of gift went different ways with it, and the register still shows where each one ended up."
     },
 
     {
@@ -88,7 +88,7 @@
         { "find": "everything registered to North Korea", "teaches": "the other end of the same scale",
           "say": "One range. A thousand addresses, for a country." }
       ],
-      "reveal": "How much of this a country holds says almost nothing about how large it is, and quite a lot about when it arrived."
+      "reveal": "How much of this is registered to a country says almost nothing about how large the country is, and a great deal about how early the people asking for it got there."
     },
 
     {
@@ -105,7 +105,7 @@
         { "find": "the largest run of them nearby", "teaches": "the dark is not empty",
           "say": "All of this is held. None of it answers." }
       ],
-      "reveal": "Registered before the registries began charging for it, and so it cannot be taken back over an unpaid bill. These sit here indefinitely. Most of them are forgotten - and forgotten space is the cheapest thing there is to borrow, if you are the sort of person who needs an address nobody is watching."
+      "reveal": "Allocated a long time ago, and no route to any of it that anyone here can see today. That is all this shows, and it is enough: the dark on this map is not empty space. It is held space that has gone quiet, and there is far more of it than anybody expects."
     },
 
     {
@@ -115,12 +115,12 @@
       "needs": ["the-quiet-ones"],
       "_note": "Gated for a real reason, not an arbitrary one: a block announced from the wrong continent is not STRANGE until you have watched an ordinary network's footprint stay where it was put. Entirely computed - it needs live routing data we do not ship.",
       "beats": [
-        { "find": "a prefix whose registered country is not where it is announced from", "teaches": "the register records paperwork, not geography",
-          "say": "Registered in one place. Announced from another. Neither of them is lying." },
+        { "find": "a prefix whose registered country differs from the country its origin network is registered under", "teaches": "the register records paperwork, not geography",
+          "say": "Registered under one country. Announced by a network registered under another. Neither of them is lying." },
         { "find": "a second one, in a different registry", "teaches": "it is structural, not an error",
           "say": "Again, and nothing is wrong. This is what the two records are for." }
       ],
-      "reveal": "The registry says who was given it. The routing table says where it is being announced from today. People read the first as a map and it was never that."
+      "reveal": "One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two registries disagreeing, not a measurement of anywhere."
     }
 
   ]

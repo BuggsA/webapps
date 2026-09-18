@@ -1,14 +1,14 @@
 {
   "version": 2,
   "_note": "Phase D. Written against docs/ip-guide-voice.md, docs/ip-emotional-design.md, docs/ip-two-audiences.md. v2 after an evidence audit: see _evidence below. 'mode' and 'when' are not read by the renderer; they are there so the ratios stay countable.",
-  "_evidence": "THE RULE THIS FILE NEARLY BROKE. The instrument's founding promise is lit = known, dark = unasked - it never claims to see what it has not asked about. The guide must hold the same line or he undoes it in words. So: no line states a motive, a history or a total we cannot show. Where a thought is worth keeping but cannot be evidenced, it moves into HIS observation ('most of what I have looked at') rather than a fact about the world, because a narrator reporting his own experience is making a claim he is entitled to make. Registered and observed are different things and are never conflated: the registry has a record, the routing table does not, and absence of a route means not seen rather than not there.",
+  "_evidence": "The instrument never claims to see what it has not asked about, and the guide holds the same line or he undoes it in words. FOUR CLASSES ARE ALLOWED and everything else is not. (1) What the instrument itself looked for and found or did not find - 'no route to it that I can see' - because it really did look. (2) Disposition: what he likes, what steadies him, what he finds absurd. Fiction is fine for how he feels. (3) The overwhelmingly likely reading of a record on screen - an eighties /8 handed out whole really was casual by any later standard - phrased so it reads as inference. (4) Hyperbole no reader could mistake for data. NOT ALLOWED, and this is the one that had to be corrected: laundering an empirical claim through him. 'Most of what I have looked at' is not evidence-safe, because nothing records what he has looked at - it is a claim about the world wearing a narrator's coat. Registered and observed are never conflated: absence of a route means not seen, not not-there.",
   "_modes": {
     "dry": "the default. factual, a little weary, notices the odd detail",
     "wry": "aimed at the internet, never at the visitor, and never at what they just found",
     "open": "no joke, no undercut. he means it. rare on purpose"
   },
-  "_when": "Absent means any visit. 'revisit' fires only where the notebook already has this place, so the pool deepens instead of repeating. The notebook already knows; the guide had no way to ask.",
-  "_only": "Precedence is FIRST MATCH IN ARRAY ORDER, and the last entry with no only[] is the fallback. Branches are ordered most specific first. A v6 visitor behind CGNAT gets the CGNAT line, by design - it is the stranger fact.",
+  "_when": "Absent means any visit. 'revisit' fires where the notebook already has this place. 'familiar' fires once it has been recorded several times over. Two tiers made the memory binary - visit two and visit forty sounded identical - which shallows the pool one visit later rather than fixing it.",
+  "_only": "only[] means two different things depending on the bucket, and conflating them was a real bug. Where a bucket fires ONCE PER VISIT the first match wins, branches are ordered most specific first, and the entry with no only[] is the fallback and must be last. Where a bucket is a random pool - every arrive.* bucket - only[] is an eligibility filter and array order carries no meaning: a v4-only line is simply never drawn for a v6 visitor.",
   "lines": [
     {
       "id": "arrive.ordinary",
@@ -17,7 +17,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Announced, routed, quiet. Most of what I have looked at looks like this."
+          "t": "Announced, routed, quiet. There is a great deal of this shape about."
         },
         {
           "mode": "dry",
@@ -29,7 +29,7 @@
         },
         {
           "mode": "dry",
-          "t": "The best thing you can say about a network is that you have never heard of it."
+          "t": "Nothing unusual here. That took several organisations agreeing, and none of them will be thanked for it."
         },
         {
           "mode": "dry",
@@ -41,7 +41,7 @@
         },
         {
           "mode": "dry",
-          "t": "Working, and unremarkable. The two usually travel together."
+          "t": "Working, and quiet about it. The two usually travel together."
         },
         {
           "mode": "wry",
@@ -53,11 +53,11 @@
         },
         {
           "mode": "wry",
-          "t": "I have stood here before and I remember nothing about it."
+          "t": "I have stood here before. It gave me nothing and I came back anyway."
         },
         {
           "mode": "dry",
-          "t": "Something is going through here right now. That is what announced means."
+          "t": "Announced means a route to it is being advertised. It says nothing about whether anything is travelling on it."
         },
         {
           "mode": "open",
@@ -77,6 +77,16 @@
           "mode": "dry",
           "when": "revisit",
           "t": "Second time. Places get better on the second look, mostly."
+        },
+        {
+          "mode": "wry",
+          "when": "familiar",
+          "t": "You keep coming back to this one. I have stopped asking why."
+        },
+        {
+          "mode": "open",
+          "when": "familiar",
+          "t": "You have made this somewhere. It was a number when we started."
         }
       ]
     },
@@ -88,11 +98,11 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Allocated to somebody. Announced by nobody. There is a lot of that out here."
+          "t": "Allocated to somebody. No route to it that I can see. There is a lot of that out here."
         },
         {
           "mode": "dry",
-          "t": "Somebody holds this and is not saying so out loud."
+          "t": "Registered to somebody who is not announcing it anywhere I can see."
         },
         {
           "mode": "dry",
@@ -104,7 +114,7 @@
         },
         {
           "mode": "dry",
-          "t": "Nothing announces you here. It happens more than you would think."
+          "t": "Nothing I can see announces this. It happens more than you would think."
         },
         {
           "mode": "dry",
@@ -137,12 +147,17 @@
         {
           "mode": "dry",
           "when": "revisit",
-          "t": "Still nothing on the wire. I did check."
+          "t": "Still no route I can find. I did look again."
         },
         {
           "mode": "open",
           "when": "revisit",
           "t": "You came back to a place with no route. I like that about you."
+        },
+        {
+          "mode": "dry",
+          "when": "familiar",
+          "t": "Nothing again. Whatever you are waiting for has not happened."
         }
       ]
     },
@@ -213,7 +228,12 @@
         {
           "mode": "wry",
           "when": "revisit",
-          "t": "You have brought me back to the empty part. Twice."
+          "t": "You have brought me back to the empty part. Again."
+        },
+        {
+          "mode": "wry",
+          "when": "familiar",
+          "t": "Of all the places on this map, you have chosen the one with nothing in it. Repeatedly."
         }
       ]
     },
@@ -226,16 +246,16 @@
         {
           "mode": "dry",
           "only": [
-            "cgnat"
+            "addr-in-100.64/10"
           ],
-          "t": "That address is not exactly yours. Your carrier is lending it to you, and not only to you."
+          "t": "You arrived on an address out of the carriers' own shared range. That is not supposed to reach this far."
         },
         {
           "mode": "dry",
           "only": [
             "no-prefix"
           ],
-          "t": "Nothing announces you. Your address is still your address, and the space around it is still there."
+          "t": "Nothing I can see announces this exact range. Something larger around it is carrying you, which is ordinary and worth a look."
         },
         {
           "mode": "dry",
@@ -372,7 +392,7 @@
         },
         {
           "mode": "open",
-          "t": "Still doing its job, decades later. Nothing was renewed. It kept going."
+          "t": "Still doing its job, decades later. It kept going."
         }
       ]
     },
@@ -383,7 +403,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Big. Not one range but many, arranged by somebody who thinks about it full time."
+          "t": "Big. Not one range but many, and probably arranged by somebody who thinks about it full time."
         },
         {
           "mode": "dry",
@@ -462,7 +482,7 @@
           "only": [
             "v4"
           ],
-          "t": "Everything anybody has ever been given, at once. It is not as big as you were told."
+          "t": "Everything there is, at once. It is not as big as you were told."
         },
         {
           "mode": "dry",
@@ -510,7 +530,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "The address a machine uses before it has one. Sixteen million ways of saying: not yet."
+          "t": "This network, meaning the one you are on, without naming it. The single address at the bottom of it is the one a machine uses before it has one."
         }
       ]
     },
@@ -532,7 +552,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Millions of people are behind this right now and not one of them can be reached at it."
+          "t": "Shared space, set aside so carriers can put customers behind it. Nobody out here can reach anybody at it."
         }
       ]
     },
@@ -543,7 +563,7 @@
       "text": [
         {
           "mode": "open",
-          "t": "Sixteen million addresses that all mean here, and nobody has ever needed more than the first one. Absurd. I adore it."
+          "t": "Sixteen million addresses, every one of them meaning here. Almost everybody uses the first and stops. Absurd. I adore it."
         }
       ]
     },
@@ -576,7 +596,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Reserved so documentation has somewhere safe to point. You have read this address a hundred times without noticing it."
+          "t": "Reserved so documentation has somewhere safe to point. You have probably read it a hundred times without noticing."
         }
       ]
     },
@@ -686,7 +706,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Quad9. The third of the three you might have typed into a settings screen."
+          "t": "Quad9. Another address short enough to type from memory, which is most of the point."
         }
       ]
     },
@@ -719,7 +739,7 @@
       "text": [
         {
           "mode": "open",
-          "t": "The whole of IPv4, embedded inside IPv6 so the two internets can speak. Your own address is in here somewhere."
+          "t": "The whole of IPv4, embedded inside IPv6 so the two internets can speak. Every IPv4 address there is has a place in here."
         }
       ]
     },
@@ -763,7 +783,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "IPv6's private space. Larger than all of IPv4, and it is the part you are not meant to route."
+          "t": "Unique local addresses - IPv6's rough counterpart to private space. Larger than all of IPv4, and not meant to be routed globally."
         }
       ]
     },
@@ -774,7 +794,7 @@
       "text": [
         {
           "mode": "dry",
-          "t": "Every IPv6 machine has one of these whether it wanted one or not."
+          "t": "Every IPv6 interface has one of these whether anybody asked for it or not."
         }
       ]
     },
@@ -785,7 +805,7 @@
       "text": [
         {
           "mode": "wry",
-          "t": "Multicast again, with more room. Same result."
+          "t": "Multicast again - and this time load-bearing. IPv6 cannot find its neighbours without it."
         }
       ]
     },
@@ -797,11 +817,11 @@
       "text": [
         {
           "mode": "dry",
-          "t": "One of thirteen. Everything that turns a name into a number starts, eventually, here."
+          "t": "One of thirteen named authorities. Everything that turns a name into a number starts, eventually, at one of them."
         },
         {
           "mode": "dry",
-          "t": "Thirteen letters, and rather more than thirteen machines. The address is a place, not a box."
+          "t": "Thirteen letters. Twenty-six addresses, counting both families. Hundreds of machines answering to them."
         },
         {
           "mode": "wry",
@@ -809,7 +829,7 @@
         },
         {
           "mode": "open",
-          "t": "Thirteen addresses hold the whole naming system up. It is a smaller number than it ought to be."
+          "t": "Thirteen names hold the whole thing up, and thirteen is a smaller number than it sounds until you learn how many machines hide behind each one."
         }
       ]
     },
@@ -821,7 +841,7 @@
       "text": [
         {
           "mode": "open",
-          "t": "Your address is already in here. It always was. Nobody had to put it anywhere."
+          "t": "Every IPv4 address already has a position in here. Nobody had to put them anywhere."
         },
         {
           "mode": "dry",
