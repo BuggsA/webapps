@@ -285,6 +285,30 @@ The inward turn:
 > Right. Enough of out there. Turn it around — I want to show you what you
 > handed over just by showing up.
 
+### The craft underneath it
+
+Researched 2026-09-18 and written up in **`docs/ip-guide-voice.md`**. It is
+the spec phase D gets written against. The short version:
+
+- **The plate already states the fact, so he says what it MEANS.** A line
+  that restates a number on screen is the wrong line. Subtext is his whole
+  job.
+- **Announcer, not host.** Kasavin's rule for Bastion was to reward the
+  player "like an announcer in a sports game" -- and an announcer describes
+  the play, never congratulates the viewer. That is the exact line between
+  the celebration we want and the "Great job!" we do not.
+- **Sarcasm needs a reason or it is just a tone**, and a tone gets old in ten
+  lines. His reason is true about the subject: he has spent years here and
+  most of it is empty.
+- **The unguarded moments must be rare and unhedged.** If he relents every
+  time, the relenting is the formula and cannot be sincere. Rough ratio to
+  write against: 60% dry, 25% sarcastic, 15% he simply means it.
+- **Variation counts are a real constraint.** 10-14 genuinely different
+  alternatives for lines that fire constantly, 1 for a one-off. Synonyms are
+  not variations. Write the frequent ones first and hardest -- they are where
+  the character is actually made.
+- **Silence is a resource.** The 15% only works if there is quiet around it.
+
 ### What makes it good
 
 - **Delight is the point.** When something is wonderful the guide says so.
