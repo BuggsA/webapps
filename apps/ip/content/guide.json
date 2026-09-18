@@ -1,99 +1,833 @@
 {
   "version": 2,
   "_note": "Phase D. Written against docs/ip-guide-voice.md, docs/ip-emotional-design.md, docs/ip-two-audiences.md. v2 after an evidence audit: see _evidence below. 'mode' and 'when' are not read by the renderer; they are there so the ratios stay countable.",
-
   "_evidence": "THE RULE THIS FILE NEARLY BROKE. The instrument's founding promise is lit = known, dark = unasked - it never claims to see what it has not asked about. The guide must hold the same line or he undoes it in words. So: no line states a motive, a history or a total we cannot show. Where a thought is worth keeping but cannot be evidenced, it moves into HIS observation ('most of what I have looked at') rather than a fact about the world, because a narrator reporting his own experience is making a claim he is entitled to make. Registered and observed are different things and are never conflated: the registry has a record, the routing table does not, and absence of a route means not seen rather than not there.",
-
-  "_modes": { "dry": "the default. factual, a little weary, notices the odd detail", "wry": "aimed at the internet, never at the visitor, and never at what they just found", "open": "no joke, no undercut. he means it. rare on purpose" },
-
+  "_modes": {
+    "dry": "the default. factual, a little weary, notices the odd detail",
+    "wry": "aimed at the internet, never at the visitor, and never at what they just found",
+    "open": "no joke, no undercut. he means it. rare on purpose"
+  },
   "_when": "Absent means any visit. 'revisit' fires only where the notebook already has this place, so the pool deepens instead of repeating. The notebook already knows; the guide had no way to ask.",
-
   "_only": "Precedence is FIRST MATCH IN ARRAY ORDER, and the last entry with no only[] is the fallback. Branches are ordered most specific first. A v6 visitor behind CGNAT gets the CGNAT line, by design - it is the stranger fact.",
-
   "lines": [
-
     {
       "id": "arrive.ordinary",
       "on": "arrived at a prefix that is announced and unremarkable",
       "fires": "constantly",
       "text": [
-        { "mode": "dry", "t": "Announced, routed, quiet. Most of what I have looked at looks like this." },
-        { "mode": "dry", "t": "Somebody's job, this. Probably still is." },
-        { "mode": "dry", "t": "Someone asked for this, filled in a form, and got it. That is the whole ceremony." },
-        { "mode": "dry", "t": "The best thing you can say about a network is that you have never heard of it." },
-        { "mode": "dry", "t": "Reachable right now. A smaller claim than it sounds, and a harder one to keep." },
-        { "mode": "dry", "t": "Held, announced, reachable. Three things that had to be arranged separately." },
-        { "mode": "dry", "t": "Working, and unremarkable. The two usually travel together." },
-        { "mode": "wry", "t": "The internet's largest department is the one where nothing happens." },
-        { "mode": "wry", "t": "Millions of these. The surprising part is how few of them you ever notice." },
-        { "mode": "wry", "t": "I have stood here before and I remember nothing about it." },
-        { "mode": "open", "t": "Something is going through here right now. That is what announced means." },
-        { "mode": "open", "t": "Someone keeps this running, and you will never learn their name." },
-        { "mode": "dry", "when": "revisit", "t": "Back again. It has not moved." },
-        { "mode": "wry", "when": "revisit", "t": "You have been here. I remember, because writing it down is the job." },
-        { "mode": "open", "when": "revisit", "t": "Second time. Places get better on the second look, mostly." }
+        {
+          "mode": "dry",
+          "t": "Announced, routed, quiet. Most of what I have looked at looks like this."
+        },
+        {
+          "mode": "dry",
+          "t": "Somebody's job, this. Probably still is."
+        },
+        {
+          "mode": "dry",
+          "t": "Someone asked for this, filled in a form, and got it. That is the whole ceremony."
+        },
+        {
+          "mode": "dry",
+          "t": "The best thing you can say about a network is that you have never heard of it."
+        },
+        {
+          "mode": "dry",
+          "t": "Reachable right now. A smaller claim than it sounds, and a harder one to keep."
+        },
+        {
+          "mode": "dry",
+          "t": "Held, announced, reachable. Three things that had to be arranged separately."
+        },
+        {
+          "mode": "dry",
+          "t": "Working, and unremarkable. The two usually travel together."
+        },
+        {
+          "mode": "wry",
+          "t": "The internet's largest department is the one where nothing happens."
+        },
+        {
+          "mode": "wry",
+          "t": "Millions of these. The surprising part is how few of them you ever notice."
+        },
+        {
+          "mode": "wry",
+          "t": "I have stood here before and I remember nothing about it."
+        },
+        {
+          "mode": "dry",
+          "t": "Something is going through here right now. That is what announced means."
+        },
+        {
+          "mode": "open",
+          "t": "Someone keeps this running, and you will never learn their name."
+        },
+        {
+          "mode": "dry",
+          "when": "revisit",
+          "t": "Back again. It has not moved."
+        },
+        {
+          "mode": "wry",
+          "when": "revisit",
+          "t": "You have been here. I remember, because writing it down is the job."
+        },
+        {
+          "mode": "dry",
+          "when": "revisit",
+          "t": "Second time. Places get better on the second look, mostly."
+        }
       ]
     },
-
     {
       "id": "arrive.unannounced",
       "on": "asked, and the routing data shows no route for this prefix",
       "fires": "constantly",
       "_note": "Never say nothing announces it, ever, or that nobody ever has. We asked once, now. Absence of a route is not absence of a history.",
       "text": [
-        { "mode": "dry", "t": "Allocated to somebody. Announced by nobody. There is a lot of that out here." },
-        { "mode": "dry", "t": "Somebody holds this and is not saying so out loud." },
-        { "mode": "dry", "t": "The registry has a record for this. The routing table does not." },
-        { "mode": "dry", "t": "Registered, and silent. There is a great deal of that about." },
-        { "mode": "dry", "t": "Nothing announces you here. It happens more than you would think." },
-        { "mode": "dry", "t": "Quiet. Not empty - quiet. The difference matters." },
-        { "mode": "dry", "t": "On paper this has an owner. On the wire it has no voice." },
-        { "mode": "wry", "t": "There is a bill for this somewhere. Or there was." },
-        { "mode": "wry", "t": "Kept, not used. The difference between owning a network and running one." },
-        { "mode": "wry", "t": "Held, unadvertised, in no hurry." },
-        { "mode": "open", "t": "Somebody wanted this once. That much is on the record." },
-        { "mode": "open", "t": "Nothing here was switched off. It looks more like somebody stopped." },
-        { "mode": "dry", "when": "revisit", "t": "Still nothing on the wire. I did check." },
-        { "mode": "open", "when": "revisit", "t": "You came back to a place with no route. I like that about you." }
+        {
+          "mode": "dry",
+          "t": "Allocated to somebody. Announced by nobody. There is a lot of that out here."
+        },
+        {
+          "mode": "dry",
+          "t": "Somebody holds this and is not saying so out loud."
+        },
+        {
+          "mode": "dry",
+          "t": "The registry has a record for this. The routing table does not."
+        },
+        {
+          "mode": "dry",
+          "t": "Registered, and silent. There is a great deal of that about."
+        },
+        {
+          "mode": "dry",
+          "t": "Nothing announces you here. It happens more than you would think."
+        },
+        {
+          "mode": "dry",
+          "t": "Quiet. Not empty - quiet. The difference matters."
+        },
+        {
+          "mode": "dry",
+          "t": "On paper this has an owner. On the wire it has no voice."
+        },
+        {
+          "mode": "wry",
+          "t": "There is a bill for this somewhere. Or there was."
+        },
+        {
+          "mode": "wry",
+          "t": "Kept, not used. The difference between owning a network and running one."
+        },
+        {
+          "mode": "wry",
+          "t": "Held, unadvertised, in no hurry."
+        },
+        {
+          "mode": "open",
+          "t": "Somebody wanted this once. That much is on the record."
+        },
+        {
+          "mode": "open",
+          "t": "Nothing here was switched off. It looks more like somebody stopped."
+        },
+        {
+          "mode": "dry",
+          "when": "revisit",
+          "t": "Still nothing on the wire. I did check."
+        },
+        {
+          "mode": "open",
+          "when": "revisit",
+          "t": "You came back to a place with no route. I like that about you."
+        }
       ]
     },
-
     {
       "id": "arrive.unallocated",
       "on": "the registry marks this range unallocated",
       "fires": "constantly",
       "text": [
-        { "mode": "dry", "t": "Nobody holds this. Not withheld, not reserved. Unassigned." },
-        { "mode": "dry", "t": "No registry has this on its books." },
-        { "mode": "dry", "t": "Unclaimed. Coordinates that exist and refer to nobody." },
-        { "mode": "dry", "t": "Empty. Actually empty, rather than quietly-held empty." },
-        { "mode": "dry", "t": "The registries have not got this far." },
-        { "mode": "dry", "only": ["v4"], "t": "Free space, in the space that famously ran out." },
-        { "mode": "dry", "only": ["v6"], "t": "Empty, and there is more of this than there is of everything else." },
-        { "mode": "wry", "t": "Congratulations. You found nothing. It is one of the more honest things out here." },
-        { "mode": "wry", "t": "All yours, in the sense that it is nobody's." },
-        { "mode": "wry", "t": "No holder, no route, and almost no paperwork." },
-        { "mode": "open", "t": "Nobody has needed it. I find that steadying, most days." },
-        { "mode": "open", "t": "Room nobody has asked for. It is still here." },
-        { "mode": "dry", "when": "revisit", "t": "Nothing, again. It is reliable, at least." },
-        { "mode": "wry", "when": "revisit", "t": "You have brought me back to the empty part. Twice." }
+        {
+          "mode": "dry",
+          "t": "Nobody holds this. Not withheld, not reserved. Unassigned."
+        },
+        {
+          "mode": "dry",
+          "t": "No registry has this on its books."
+        },
+        {
+          "mode": "dry",
+          "t": "Unclaimed. Coordinates that exist and refer to nobody."
+        },
+        {
+          "mode": "dry",
+          "t": "Empty. Actually empty, rather than quietly-held empty."
+        },
+        {
+          "mode": "dry",
+          "t": "The registries have not got this far."
+        },
+        {
+          "mode": "dry",
+          "only": [
+            "v4"
+          ],
+          "t": "Free space, in the space that famously ran out."
+        },
+        {
+          "mode": "dry",
+          "only": [
+            "v6"
+          ],
+          "t": "Empty, and there is more of this than there is of everything else."
+        },
+        {
+          "mode": "wry",
+          "t": "Congratulations. You found nothing. It is one of the more honest things out here."
+        },
+        {
+          "mode": "wry",
+          "t": "All yours, in the sense that it is nobody's."
+        },
+        {
+          "mode": "wry",
+          "t": "No holder, no route, and almost no paperwork."
+        },
+        {
+          "mode": "open",
+          "t": "Nobody has needed it. I find that steadying, most days."
+        },
+        {
+          "mode": "open",
+          "t": "Room nobody has asked for. It is still here."
+        },
+        {
+          "mode": "dry",
+          "when": "revisit",
+          "t": "Nothing, again. It is reliable, at least."
+        },
+        {
+          "mode": "wry",
+          "when": "revisit",
+          "t": "You have brought me back to the empty part. Twice."
+        }
       ]
     },
-
     {
       "id": "open.cold",
       "on": "the first thing said, once the address is on screen",
       "fires": "once per visit",
       "_note": "Highest-leverage writing in the product. Interesting, not moving - the emotional design forbids front-loading. FIRST MATCH WINS, most specific first, last entry is the fallback and must work for BOTH families.",
       "text": [
-        { "mode": "dry", "only": ["cgnat"], "t": "That address is not exactly yours. Your carrier is lending it to you, and not only to you." },
-        { "mode": "dry", "only": ["no-prefix"], "t": "Nothing announces you. Your address is still your address, and the space around it is still there." },
-        { "mode": "dry", "only": ["era<1995"], "t": "You are sitting in old space. Older than almost everything running on it." },
-        { "mode": "dry", "only": ["rir=afrinic"], "t": "AFRINIC. The youngest of the five registries." },
-        { "mode": "dry", "only": ["v6"], "t": "An IPv6 address. You arrived in the larger of the two internets, and by some distance the emptier one." },
-        { "mode": "dry", "t": "That is you. Every one of those numbers had to be agreed on by somebody. Let us go and find out who." }
+        {
+          "mode": "dry",
+          "only": [
+            "cgnat"
+          ],
+          "t": "That address is not exactly yours. Your carrier is lending it to you, and not only to you."
+        },
+        {
+          "mode": "dry",
+          "only": [
+            "no-prefix"
+          ],
+          "t": "Nothing announces you. Your address is still your address, and the space around it is still there."
+        },
+        {
+          "mode": "dry",
+          "only": [
+            "era<1995"
+          ],
+          "t": "You are sitting in old space. Older than almost everything running on it."
+        },
+        {
+          "mode": "dry",
+          "only": [
+            "rir=afrinic"
+          ],
+          "t": "AFRINIC. The youngest of the five registries."
+        },
+        {
+          "mode": "dry",
+          "only": [
+            "v6"
+          ],
+          "t": "An IPv6 address. You arrived in the larger of the two internets, and by some distance the emptier one."
+        },
+        {
+          "mode": "dry",
+          "t": "That is you. Every one of those numbers had to be agreed on by somebody. Let us go and find out who."
+        }
+      ]
+    },
+    {
+      "id": "network.first",
+      "on": "entered an autonomous system not yet in the notebook",
+      "fires": "often",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "A different network. Somebody else's rules from here on."
+        },
+        {
+          "mode": "dry",
+          "t": "You have crossed into somebody else's network. There was no border to cross."
+        },
+        {
+          "mode": "dry",
+          "t": "New one. Whoever runs this has never heard of you and never will."
+        },
+        {
+          "mode": "wry",
+          "t": "Another network. There are tens of thousands of these and you have now seen a few."
+        },
+        {
+          "mode": "wry",
+          "t": "Someone here has opinions about routing. Everyone here has opinions about routing."
+        },
+        {
+          "mode": "open",
+          "t": "Somebody applied for this number, and got it, and now the rest of the internet takes their word for it."
+        }
+      ]
+    },
+    {
+      "id": "country.first",
+      "on": "the registry files this range under a country not yet in the notebook",
+      "fires": "often",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "A new country in the register. Which tells you where the paperwork was filed, not where the machines are."
+        },
+        {
+          "mode": "dry",
+          "t": "First time in this country's space. On the register, at least."
+        },
+        {
+          "mode": "dry",
+          "t": "The registry files this under a country. The packets have never been told."
+        },
+        {
+          "mode": "wry",
+          "t": "A country, on paper. Whether anything here is in that country is a separate question."
+        },
+        {
+          "mode": "open",
+          "t": "Different country, same five registries. That is most of what holds this together."
+        }
+      ]
+    },
+    {
+      "id": "rung.out",
+      "on": "the axis crossed a rung outward",
+      "fires": "often",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Wider. Everything you were looking at is one cell of this."
+        },
+        {
+          "mode": "dry",
+          "t": "One step out. The last place is in here somewhere."
+        },
+        {
+          "mode": "dry",
+          "t": "Further back. The detail did not go anywhere."
+        },
+        {
+          "mode": "wry",
+          "t": "Out again. It keeps going, in case you were wondering."
+        },
+        {
+          "mode": "open",
+          "t": "All of that was one square of this. That is the part I have never got used to."
+        }
+      ]
+    },
+    {
+      "id": "block.old",
+      "on": "the registry year for this range is before 1995",
+      "fires": "often",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Early. Whoever asked for this did not have to explain themselves the way they would now."
+        },
+        {
+          "mode": "dry",
+          "t": "Allocated before most of what uses it existed."
+        },
+        {
+          "mode": "wry",
+          "t": "Old money."
+        },
+        {
+          "mode": "wry",
+          "t": "They were handing these out by the million back then. Nobody thought it would matter."
+        },
+        {
+          "mode": "open",
+          "t": "Still doing its job, decades later. Nothing was renewed. It kept going."
+        }
+      ]
+    },
+    {
+      "id": "network.large",
+      "on": "this network announces a great many prefixes",
+      "fires": "often",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Big. Not one range but many, arranged by somebody who thinks about it full time."
+        },
+        {
+          "mode": "dry",
+          "t": "A large one. Whoever runs this has a map of their own, and it is better than mine."
+        },
+        {
+          "mode": "wry",
+          "t": "This is a network that owns a spreadsheet."
+        },
+        {
+          "mode": "wry",
+          "t": "Somewhere there is a team, and a rota, and somebody carrying a phone tonight."
+        },
+        {
+          "mode": "dry",
+          "t": "All of this is one organisation saying mine, and the rest of the internet believing them."
+        }
+      ]
+    },
+    {
+      "id": "query.on",
+      "on": "the visitor touched a country or registry and the field answered",
+      "fires": "occasionally",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "There it is. Everything that name holds, in one shape."
+        },
+        {
+          "mode": "dry",
+          "t": "That is the shape of a country's address space. It is not the shape of the country."
+        },
+        {
+          "mode": "wry",
+          "t": "You asked the map a question it could answer. It does not get many."
+        },
+        {
+          "mode": "open",
+          "t": "Nobody designed that shape. It is what a few decades of asking looks like."
+        }
+      ]
+    },
+    {
+      "id": "home.return",
+      "on": "came back to their own address",
+      "fires": "occasionally",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Back where you started. It has not changed."
+        },
+        {
+          "mode": "dry",
+          "t": "Your own address again. Smaller than it was, probably."
+        },
+        {
+          "mode": "open",
+          "t": "Home. The least remarkable place you have been today, and the only one that is yours."
+        }
+      ]
+    },
+    {
+      "id": "rail.top",
+      "on": "the whole of the visitor's address family is on screen",
+      "fires": "occasionally",
+      "text": [
+        {
+          "mode": "dry",
+          "only": [
+            "v4"
+          ],
+          "t": "All of it. Four billion addresses, and you can see the edges."
+        },
+        {
+          "mode": "open",
+          "only": [
+            "v4"
+          ],
+          "t": "Everything anybody has ever been given, at once. It is not as big as you were told."
+        },
+        {
+          "mode": "dry",
+          "only": [
+            "v6"
+          ],
+          "t": "All of it. Most of it has never been anything at all."
+        },
+        {
+          "mode": "open",
+          "only": [
+            "v6"
+          ],
+          "t": "You are looking at almost nothing, because almost none of it has been used."
+        },
+        {
+          "mode": "dry",
+          "t": "The whole family, end to end."
+        }
+      ]
+    },
+    {
+      "id": "rung.deepest",
+      "on": "the finest rung the family allows",
+      "fires": "occasionally",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "As close as the ladder goes. Below this it is individual addresses."
+        },
+        {
+          "mode": "wry",
+          "t": "The bottom. There is nothing smaller to show you."
+        },
+        {
+          "mode": "open",
+          "t": "This is the size of the thing that is actually yours."
+        }
+      ]
+    },
+    {
+      "id": "landmark.0.0.0.0/8",
+      "on": "standing in 0.0.0.0/8",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "The address a machine uses before it has one. Sixteen million ways of saying: not yet."
+        }
+      ]
+    },
+    {
+      "id": "landmark.10.0.0.0/8",
+      "on": "standing in 10.0.0.0/8",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "open",
+          "t": "Every office you have ever worked in is probably somewhere in here. All of them, at the same time."
+        }
+      ]
+    },
+    {
+      "id": "landmark.100.64.0.0/10",
+      "on": "standing in 100.64.0.0/10",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Millions of people are behind this right now and not one of them can be reached at it."
+        }
+      ]
+    },
+    {
+      "id": "landmark.127.0.0.0/8",
+      "on": "standing in 127.0.0.0/8",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "open",
+          "t": "Sixteen million addresses that all mean here, and nobody has ever needed more than the first one. Absurd. I adore it."
+        }
+      ]
+    },
+    {
+      "id": "landmark.169.254.0.0/16",
+      "on": "standing in 169.254.0.0/16",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "wry",
+          "t": "What a machine gives itself when nothing answers. Talking to yourself, formalised."
+        }
+      ]
+    },
+    {
+      "id": "landmark.172.16.0.0/12",
+      "on": "standing in 172.16.0.0/12",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "wry",
+          "t": "The private range nobody remembers. There are three, and this is the one people have to look up."
+        }
+      ]
+    },
+    {
+      "id": "landmark.192.0.2.0/24",
+      "on": "standing in 192.0.2.0/24",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Reserved so documentation has somewhere safe to point. You have read this address a hundred times without noticing it."
+        }
+      ]
+    },
+    {
+      "id": "landmark.192.168.0.0/16",
+      "on": "standing in 192.168.0.0/16",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "The one on the back of the router. Possibly the only address out here you already knew."
+        }
+      ]
+    },
+    {
+      "id": "landmark.198.18.0.0/15",
+      "on": "standing in 198.18.0.0/15",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "wry",
+          "t": "Set aside for equipment to shout at other equipment. It is not supposed to leave the building."
+        }
+      ]
+    },
+    {
+      "id": "landmark.198.51.100.0/24",
+      "on": "standing in 198.51.100.0/24",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "The second one. There are three, because one was not enough for the examples."
+        }
+      ]
+    },
+    {
+      "id": "landmark.203.0.113.0/24",
+      "on": "standing in 203.0.113.0/24",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "The third. Between them they have appeared in more documents than most real networks."
+        }
+      ]
+    },
+    {
+      "id": "landmark.224.0.0.0/4",
+      "on": "standing in 224.0.0.0/4",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "One packet, many listeners. Most of the internet politely declined to carry it."
+        }
+      ]
+    },
+    {
+      "id": "landmark.240.0.0.0/4",
+      "on": "standing in 240.0.0.0/4",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "open",
+          "t": "A sixteenth of all IPv4, set aside in 1981 for a future that never showed up. Forty-five years. Still empty. I think about it more than I should."
+        }
+      ]
+    },
+    {
+      "id": "landmark.255.255.255.255/32",
+      "on": "standing in 255.255.255.255/32",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "wry",
+          "t": "One address, meaning everybody on this wire. The shortest way there is to bother everyone at once."
+        }
+      ]
+    },
+    {
+      "id": "landmark.8.8.8.8/32",
+      "on": "standing in 8.8.8.8/32",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Eight eight eight eight. Chosen so you could remember it, and you did."
+        }
+      ]
+    },
+    {
+      "id": "landmark.1.1.1.1/32",
+      "on": "standing in 1.1.1.1/32",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "open",
+          "t": "The tidiest address there is. It took years of cleaning before anyone could use it, because half the internet was already sending it junk."
+        }
+      ]
+    },
+    {
+      "id": "landmark.9.9.9.9/32",
+      "on": "standing in 9.9.9.9/32",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Quad9. The third of the three you might have typed into a settings screen."
+        }
+      ]
+    },
+    {
+      "id": "landmark.::/128",
+      "on": "standing in ::/128",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "No address at all, written down."
+        }
+      ]
+    },
+    {
+      "id": "landmark.::1/128",
+      "on": "standing in ::1/128",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "wry",
+          "t": "Here, in IPv6. One address for it this time. They learned."
+        }
+      ]
+    },
+    {
+      "id": "landmark.64:ff9b::/96",
+      "on": "standing in 64:ff9b::/96",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "open",
+          "t": "The whole of IPv4, embedded inside IPv6 so the two internets can speak. Your own address is in here somewhere."
+        }
+      ]
+    },
+    {
+      "id": "landmark.2001::/32",
+      "on": "standing in 2001::/32",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "IPv6 smuggled through IPv4. It worked. Nobody was happy about it."
+        }
+      ]
+    },
+    {
+      "id": "landmark.2001:db8::/32",
+      "on": "standing in 2001:db8::/32",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Every IPv6 address you have ever seen in an example was probably in here."
+        }
+      ]
+    },
+    {
+      "id": "landmark.2002::/16",
+      "on": "standing in 2002::/16",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "open",
+          "t": "A bridge between the two internets. Built, used, and abandoned."
+        }
+      ]
+    },
+    {
+      "id": "landmark.fc00::/7",
+      "on": "standing in fc00::/7",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "IPv6's private space. Larger than all of IPv4, and it is the part you are not meant to route."
+        }
+      ]
+    },
+    {
+      "id": "landmark.fe80::/10",
+      "on": "standing in fe80::/10",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "Every IPv6 machine has one of these whether it wanted one or not."
+        }
+      ]
+    },
+    {
+      "id": "landmark.ff00::/8",
+      "on": "standing in ff00::/8",
+      "fires": "once ever",
+      "text": [
+        {
+          "mode": "wry",
+          "t": "Multicast again, with more room. Same result."
+        }
+      ]
+    },
+    {
+      "id": "landmark.root",
+      "on": "standing on any of the thirteen root servers, either family",
+      "fires": "occasionally",
+      "_note": "Thirteen letters x two families share one pool; the plate already names which letter.",
+      "text": [
+        {
+          "mode": "dry",
+          "t": "One of thirteen. Everything that turns a name into a number starts, eventually, here."
+        },
+        {
+          "mode": "dry",
+          "t": "Thirteen letters, and rather more than thirteen machines. The address is a place, not a box."
+        },
+        {
+          "mode": "wry",
+          "t": "A root server. It has been doing this since before most of the internet was a going concern."
+        },
+        {
+          "mode": "open",
+          "t": "Thirteen addresses hold the whole naming system up. It is a smaller number than it ought to be."
+        }
+      ]
+    },
+    {
+      "id": "egg.doors",
+      "on": "found one of the four ways from IPv4 into IPv6",
+      "fires": "once ever",
+      "_note": "The best egg available: entirely true, and pure arithmetic on the number the visitor arrived with.",
+      "text": [
+        {
+          "mode": "open",
+          "t": "Your address is already in here. It always was. Nobody had to put it anywhere."
+        },
+        {
+          "mode": "dry",
+          "t": "A door. The arithmetic is the whole mechanism - there is nothing else to it."
+        }
       ]
     }
-
   ]
 }
