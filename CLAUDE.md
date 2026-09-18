@@ -14,6 +14,8 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
 | **`PRODUCT_SOUL.md`** | defines the product's character. Read before any substantial product-facing change. |
 | **`CURRENT_STATE.md`** | defines implementation state — what is done, in progress, broken. |
 | **`APPROVAL_STATE.md`** | defines approval boundaries. |
+| **`docs/ip-build-plan-v3.md`** | **what is left and in what order.** The plan of record for remaining work. |
+| `docs/ip-plan-v2.md` | what each phase MEANS. Still authoritative for that. |
 | `PRESERVATION_BASELINE.md` | the recovery point. |
 | `PROJECT_STATE.md` | the long-form build log. |
 

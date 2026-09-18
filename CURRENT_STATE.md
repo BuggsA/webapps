@@ -293,6 +293,11 @@ numbers in `scripts/ip-build-space-field.py`.
 
 ## Immediate next 3–5 actions
 
+**Ordering now lives in [`docs/ip-build-plan-v3.md`](docs/ip-build-plan-v3.md).**
+Short version: the chain engine, then the doors, then the card, then the
+inward half, then the ghost tier - and an hour of somebody actually wandering
+is worth more than any of them.
+
 1. **Deploy the slash-less URL fix** — `deploy-hosting.ps1`, human-run. Until
    it ships, `/ip` without the trailing slash shows no address.
 2. **Finish phase B**: the previous container outlined as it shrinks, and the

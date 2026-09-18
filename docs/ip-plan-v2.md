@@ -563,6 +563,14 @@ Nothing else in this app will ever get that close to its own subject.
 
 ## The build order
 
+> **Superseded for ORDERING by [`ip-build-plan-v3.md`](ip-build-plan-v3.md),
+> 2026-09-18.** Work went out of order for a good reason - the story got
+> written before the machinery that carries it - and the letters below no
+> longer line up with what is built. The biggest change: **E and F became the
+> same work**, because both their content now exists and both need one engine.
+> This section is kept because the reasoning in it is still sound; it is no
+> longer the schedule.
+
 Eight phases. Each one lands something you can open and look at, `node
 --check` clean, and stops there. The order is chosen so the cheap tests come
 before the expensive commitments, and so the app is never left in a state
