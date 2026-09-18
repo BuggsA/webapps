@@ -99,9 +99,9 @@ def lint(guide, chains):
                 bad.append("%s fires once, so first match wins - but a line with no "
                            "only[] sits at index %d and every branch below it is dead"
                            % (b["id"], plain[0]))
-        if not plain:
-            bad.append("%s fires once and has no fallback - some visitor gets silence"
-                       % b["id"])
+        if not plain and not b.get("silence_ok"):
+            bad.append("%s fires once and has no fallback - some visitor gets silence. "
+                       "If that is intended, say so with silence_ok" % b["id"])
 
     # the unguarded mode has to stay rare where lines are heard often
     for tier, ceiling in (("constantly", 0.17), ("often", 0.20)):

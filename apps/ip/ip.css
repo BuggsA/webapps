@@ -400,6 +400,26 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 #controls button[aria-pressed="true"] {
   color: var(--cream);
 }
+/* The guide. Above the sightlines, below the plate, and out of the way of
+   both. Cream, because it is somebody telling you something - the one place
+   in the product where that is what is happening. */
+#guide {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--gutter) + 150px);
+  z-index: 4;
+  margin: 0;
+  width: min(54ch, calc(100% - var(--gutter) * 2));
+  text-align: center;
+  color: var(--cream);
+  font-size: calc(var(--ui) * 1.08);
+  font-weight: 300;
+  line-height: 1.55;
+  text-wrap: balance;
+}
+#guide[hidden] { display: none; }
+
 /* From here you can see. Sits under the plate, quiet, and never in front of
    the address -- it is an invitation, not an instruction. */
 #sight {

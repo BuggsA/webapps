@@ -22,7 +22,7 @@ Full reasoning: `ip-guide-voice.md`, `ip-emotional-design.md`, `ip-two-audiences
 
 | | |
 |---|---|
-| lines the guide can say | **126** across 41 buckets |
+| lines the guide can say | **126** across 42 buckets |
 | modes | dry 72 (57%) · wry 30 (24%) · open 24 (19%) |
 | chains | **9**, 29 beats |
 | beats the engine resolves at runtime | 17 of 29 |
@@ -107,16 +107,23 @@ Per tier, which is where the ratio actually matters:
 
 ### `open.cold` — the first thing said, once the address is on screen
 
-*fires once per visit · 6 lines*
+*fires once per visit · 4 lines*
 
-> Highest-leverage writing in the product. Interesting, not moving - the emotional design forbids front-loading. FIRST MATCH WINS, most specific first, last entry is the fallback and must work for BOTH families.
+> Highest-leverage writing in the product. Interesting, not moving - the emotional design forbids front-loading. FIRST MATCH WINS, most specific first, last entry is the fallback and must work for BOTH families. Registry-dependent branches are NOT here: the registry is deferred until the visitor moves and this fires before that, so they could never have run. They live in open.registry instead, which fires when the registry lands.
 
 - dry *only addr-in-100.64/10* — You arrived on an address out of the carriers' own shared range. That is not supposed to reach this far.
 - dry *only no-prefix* — Nothing I can see announces this exact range. Something larger around it is carrying you, which is ordinary and worth a look.
-- dry *only era<1995* — You are sitting in old space. Older than almost everything running on it.
-- dry *only rir=afrinic* — AFRINIC. The youngest of the five registries.
 - dry *only v6* — An IPv6 address. You arrived in the larger of the two internets, and by some distance the emptier one.
 - dry — That is the address this visit arrived on. Somebody is speaking for it. Let us go and find them.
+
+### `open.registry` — the registry has landed and has something to say about where they started
+
+*fires once per visit · 2 lines*
+
+> Split out of open.cold because those branches could never fire there. Same first-match-wins rule; the fallback is silence, which is why there is no unconditional entry - if the registry has nothing interesting to say about this address, he says nothing.
+
+- dry *only era<1995* — You are sitting in old space. Older than almost everything running on it.
+- dry *only rir=afrinic* — AFRINIC. The youngest of the five registries.
 
 ### `network.first` — entered an autonomous system not yet in the notebook
 

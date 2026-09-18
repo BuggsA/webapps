@@ -47,6 +47,11 @@
   <p id="plateNote"></p>
 </div>
 
+<!-- What he says. Never in front of the address, never where it can cover the
+     plate, and it removes itself. The facts are on the plate and stay there
+     whether he is muted or not. -->
+<p id="guide" hidden></p>
+
 <!-- Beat one of the loop: named, reachable things visible from wherever the
      instrument is pointed. Every one of them is a real cell of the field on
      screen, so touching one goes somewhere that exists. -->
@@ -84,6 +89,7 @@
        before it will let anything make a noise, so the two are the same
        event and there is nothing to explain. -->
   <button id="sound" type="button" aria-pressed="false">Sound</button>
+  <button id="guideBtn" type="button" aria-pressed="true">Guide on</button>
   <button id="notebook" type="button" aria-expanded="false" aria-controls="notePanel">Notebook</button>
   <button id="about" type="button" aria-expanded="false" aria-controls="aboutPanel">About</button>
 </nav>

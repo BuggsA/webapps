@@ -768,6 +768,7 @@
                          * highlight can be recomputed as the camera settles
                          * underneath it. Null when it is off the canvas. */
     sound: false,       /* the ears are off until asked, always */
+    guide: true,        /* the guide is ON by default and mutes persistently */
     gone: null,         /* and the coarsest. Together with `been` these are the
                          * two ends of the traverse, so every rung between
                          * them is one the visitor has genuinely passed. */
@@ -2094,6 +2095,101 @@
     return { kind: '2d', upload: function () {}, frame: frame };
   }
 
+  /* ══ CONTENT ═════════════════════════════════════════════════════════
+   * The guide's lines and the chains, loaded rather than written here. The
+   * owner's requirement, and it governs every phase after this one: adding a
+   * quest, a story or a line must mean adding rows, not editing logic. If
+   * anybody ever has to open this file to add a side line, this was built
+   * wrong.
+   *
+   * Deferred like the registry. Nothing is fetched until the visitor moves
+   * off Home, because the address is the product and nothing optional gets
+   * to go in front of it. */
+
+  var CONTENT = null;
+  var contentState = '';
+
+  function loadContent() {
+    if (contentState) return;
+    contentState = 'loading';
+    Promise.all([
+      fetch('content/guide.json', { cache: 'force-cache' }).then(function (r) { return r.json(); }),
+      fetch('content/lines.json', { cache: 'force-cache' }).then(function (r) { return r.json(); })
+    ]).then(function (both) {
+      CONTENT = { guide: both[0], chains: both[1] };
+      contentState = 'ready';
+      /* The cold open could never fire while this was deferred behind the
+       * first axis move: its whole job is to give somebody a reason to make
+       * that move. So it goes now, if they are still at home and have not
+       * already been spoken to. It is a line under the address, arriving
+       * after it, blocking nothing - which is not the same as being in
+       * front of it. */
+      if (!lastSpoke) speak('open.cold', 1, 0);
+    }).catch(function () {
+      /* the instrument is complete without him. No message: nobody asked for
+       * a narrator and nobody should be told one failed to arrive. */
+      contentState = 'none';
+    });
+  }
+
+  /* WHAT THE VISITOR IS, for only[] to test against. Every token here has to
+   * be something we can actually establish - the CGNAT branch was cut once
+   * already for claiming a test we cannot perform from one request. */
+  function visitorTags() {
+    var out = [], n = noteLoad();
+    if (!S.home) return out;
+    out.push(S.home.v === 6 ? 'v6' : 'v4');
+    if (S.home.v === 4) {
+      var a = Number(S.home.big);
+      if (a >= 0x64400000 && a < 0x64800000) out.push('addr-in-100.64/10');
+    }
+    if (S.net && S.net.status === 'empty') out.push('no-prefix');
+    var r = REG ? regAt(S.home.big, S.home.v) : null;
+    if (r && r.year && r.year < 1995) out.push('era<1995');
+    if (r && r.rirName) out.push('rir=' + r.rirName.toLowerCase().replace(/\s+/g, ''));
+    return out;
+  }
+
+  /* HOW WELL THEY KNOW THIS PLACE. The notebook already had the answer and
+   * the guide had no way to ask it. Thresholds are in guide.json's `_when`
+   * so they can be reviewed rather than discovered in here. */
+  function seenCount(key) {
+    var n = noteLoad(), s = n.sites[key];
+    return (s && s.n) ? s.n : (s ? 1 : 0);
+  }
+
+  var saidThisSession = {};
+
+  function pickLine(bucketId, seen) {
+    if (!CONTENT) return '';
+    var i, b = null, lines = CONTENT.guide.lines;
+    for (i = 0; i < lines.length; i++) if (lines[i].id === bucketId) { b = lines[i]; break; }
+    if (!b) return '';
+    var tags = visitorTags(), once = b.fires === 'once per visit', pool = [];
+    for (i = 0; i < b.text.length; i++) {
+      var t = b.text[i];
+      if (saidThisSession[t.t]) continue;
+      if (t.when === 'revisit' && seen < 1) continue;
+      if (t.when === 'familiar' && seen < 2) continue;
+      if (!t.when && seen >= 2 && Math.random() < 0.5 && b.text.some(function (x) {
+        return x.when && !saidThisSession[x.t];
+      })) continue;
+      if (t.only) {
+        var ok = true;
+        for (var j = 0; j < t.only.length; j++) if (tags.indexOf(t.only[j]) < 0) ok = false;
+        if (!ok) continue;
+      }
+      /* only[] means two different things and conflating them was a real bug.
+       * A bucket that fires once is a branch: first match wins, most specific
+       * first, fallback last. A pool is an eligibility filter and order in
+       * the array carries no meaning at all. */
+      if (once) return t.t;
+      pool.push(t.t);
+    }
+    if (!pool.length) return '';
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
   /* ══ NOTEBOOK ═════════════════════════════════════════════
    * What you found, kept between visits. `localStorage` and nothing else --
    * the same store the RIPEstat cache already uses. Nothing leaves the
@@ -2146,6 +2242,13 @@
   function noteSite(at, rec) {
     var n = noteLoad(), p = parseIp(at);
     var key = (rec && rec.status === 'ready' && rec.prefix) ? rec.prefix : at;
+    if (n.sites[key] && n.sites[key] !== 1) {
+      /* how MANY times, not merely whether. 'familiar' needs a count and the
+       * notebook was only ever recording a first sighting. */
+      n.sites[key].n = (n.sites[key].n || 1) + 1;
+      n.sites[key].t = Date.now();
+      noteSave();
+    }
     if (!n.sites[key] || n.sites[key] === 1) {
       /* The THING, not a tick against a count. No Man's Sky's answer to
        * "wide as an ocean, shallow as a puddle" was the Discovery Page --
@@ -2156,6 +2259,7 @@
       var rr0 = p ? regAt(p.big, p.v) : null;
       n.sites[key] = {
         t: Date.now(),
+        n: 1,
         asn: (rec && rec.status === 'ready' && rec.asn >= 0) ? rec.asn : -1,
         who: (rec && rec.holder) || '',
         cc: (rr0 && rr0.cc) || '',
@@ -2372,6 +2476,77 @@
     p2.textContent = 'Kept on this device only. Nothing is sent anywhere, and ' +
       'clearing your browser data clears this too.';
     el.noteBody.appendChild(p2);
+  }
+
+  /* ══ THE GUIDE ═══════════════════════════════════════════════════════
+   * Saying it is a different problem from writing it, and the harder one.
+   *
+   * There are 47 lines that can fire on an ordinary arrival. Speaking on
+   * every one of them would turn a quiet instrument into a game character
+   * with ambient barks, which is the opposite of what this is. So the
+   * scheduler is not a nicety, it is the feature:
+   *
+   *   - SILENCE while somebody is moving quickly. If the axis moved in the
+   *     last second they are travelling, not looking, and a line lands on
+   *     nobody.
+   *   - A CADENCE for ordinary lines. Roughly once a minute, no matter how
+   *     many blocks get clicked.
+   *   - PRECEDENCE. A landmark or a chain beat outranks a generic line and
+   *     interrupts it. Those are the ones worth hearing.
+   *   - NO REPEATS within a session, which is what the pool is for.
+   *   - A MUTE that persists, and the plate never goes quiet with him. The
+   *     facts are not his to withhold.
+   *
+   * Silence is a resource: the rare unguarded lines only land if there is
+   * quiet around them. See docs/ip-guide-voice.md. */
+
+  var GUIDE_KEY = 'ip.v1.guide';
+  var GENERIC_GAP = 55000;   /* ordinary lines: about once a minute */
+  var MOVING_QUIET = 1000;   /* travelling, not looking */
+  var lastSpoke = 0;
+  var lastAxisMove = 0;
+  var guideTimer = 0;
+
+  function guideWanted() {
+    try { return localStorage.getItem(GUIDE_KEY) !== '0'; } catch (_) { return true; }
+  }
+  function setGuide(on) {
+    S.guide = !!on;
+    try { localStorage.setItem(GUIDE_KEY, S.guide ? '1' : '0'); } catch (_) { }
+    if (!S.guide) showGuide('');
+    if (el.guideBtn) {
+      el.guideBtn.setAttribute('aria-pressed', S.guide ? 'true' : 'false');
+      el.guideBtn.textContent = S.guide ? 'Guide on' : 'Guide';
+    }
+  }
+
+  function showGuide(text) {
+    if (!el.guide) return;
+    if (guideTimer) { clearTimeout(guideTimer); guideTimer = 0; }
+    el.guide.textContent = text || '';
+    el.guide.hidden = !text;
+    if (text) {
+      /* long enough to read twice, then gone. He does not hold the floor. */
+      guideTimer = setTimeout(function () {
+        el.guide.hidden = true; el.guide.textContent = ''; guideTimer = 0;
+      }, 4200 + text.length * 45);
+    }
+  }
+
+  /* rank 0 = generic and interruptible, 1 = a named place or a chain beat */
+  function speak(bucketId, rank, seen) {
+    if (!S.guide || contentState !== 'ready') return false;
+    var now = Date.now();
+    if (!rank) {
+      if (now - lastSpoke < GENERIC_GAP) return false;
+      if (now - lastAxisMove < MOVING_QUIET) return false;
+    }
+    var t = pickLine(bucketId, seen || 0);
+    if (!t) return false;
+    saidThisSession[t] = 1;
+    lastSpoke = now;
+    showGuide(t);
+    return true;
   }
 
   /* ══ SOUND ════════════════════════════════════════════════
@@ -2620,6 +2795,7 @@
     /* the low-water mark of the whole session. Recorded before the ring
      * can rebuild and return early, or a rung crossing would lose it. */
     S.been = S.been === null ? next : Math.min(S.been, next);
+    lastAxisMove = Date.now();   /* travelling, not looking. he waits. */
     S.gone = S.gone === null ? next : Math.max(S.gone, next);
     noteDepth(next);
     if (cursor && layerAlpha[cursor.layer === undefined ? LY.BLOCK : cursor.layer] < 0.35) {
@@ -2977,7 +3153,22 @@
     /* the notebook records the ANSWER, not the asking: a place becomes a
      * place when it says what it is, including when what it says is that
      * nobody announces it. */
-    if (rec && (rec.status === 'ready' || rec.status === 'empty')) noteSite(at, rec);
+    if (rec && (rec.status === 'ready' || rec.status === 'empty')) {
+      var key = (rec.status === 'ready' && rec.prefix) ? rec.prefix : at;
+      var seen = seenCount(key);
+      noteSite(at, rec);
+      /* A named place outranks a generic line and interrupts the cadence,
+       * because those are the ones worth hearing. Everything else waits its
+       * turn or says nothing at all. */
+      var lm = markAt(S.aim, S.home ? S.home.v : 4);
+      /* the thirteen share one pool rather than carrying twenty-six near
+       * identical lines, and the plate already names which letter */
+      var lmId = lm ? (/^Root server /.test(lm.n) ? 'landmark.root' : 'landmark.' + lm.p) : '';
+      if (lm && speak(lmId, 1, seen)) { /* said */ }
+      else if (rec.status === 'ready') speak('arrive.ordinary', 0, seen);
+      else if (REG && regAt(S.aim, S.home.v)) speak('arrive.unannounced', 0, seen);
+      else speak('arrive.unallocated', 0, seen);
+    }
     rebuild();
     announce();
   }
@@ -3360,6 +3551,7 @@
   var regState = '';      /* '' | 'loading' | 'ready' | 'none' */
 
   function loadRegistry() {
+    loadContent();
     if (regState) return;
     regState = 'loading';
     fetch('data/space.bin', { cache: 'force-cache' })
@@ -3370,7 +3562,13 @@
       .then(function (buf) {
         REG = parseRegistry(new Uint8Array(buf));
         regState = REG ? 'ready' : 'none';
-        if (REG) { rebuild(); announce(); }
+        if (REG) {
+          rebuild(); announce();
+          /* now, and not before, the registry can say something about where
+           * they started. This has no fallback on purpose: if there is
+           * nothing interesting in the record, he says nothing. */
+          speak('open.registry', 1, 0);
+        }
       })
       .catch(function () {
         /* the map is poorer without it and still correct. No message: the
@@ -4271,6 +4469,11 @@
       el.answerNote.textContent = '';
       el.copy.hidden = false;
       document.title = S.home.text + ' — what’s my IP';
+      /* The cold open, once the address is up and never before it. It fires
+       * at rank 1 so the cadence does not swallow the one line that has to
+       * land. Content is deferred, so it only speaks if it is already here -
+       * nothing waits on him. */
+      loadContent();
     } else {
       el.addressText.textContent = 'Not available';
       el.address.classList.add('is-pending');
@@ -4344,6 +4547,7 @@
      * reason to fetch one. Harmless if it is already here or already on its
      * way -- loadRegistry guards itself. */
     loadRegistry();
+    loadContent();
     if (regState === 'loading') {
       var wait = setInterval(function () {
         if (regState === 'loading') return;
@@ -4477,7 +4681,8 @@
           'rail', 'railTrack', 'railMark', 'goHome', 'goBack', 'hint',
           'companionState', 'companionSummary', 'companionFacts',
           'about', 'aboutPanel', 'aboutClose', 'aboutBody', 'sound',
-          'notebook', 'notePanel', 'noteClose', 'noteBody', 'sight']);
+          'notebook', 'notePanel', 'noteClose', 'noteBody', 'sight',
+          'guide', 'guideBtn']);
 
     var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     S.reduced = mq.matches;
@@ -4518,6 +4723,10 @@
      * anyway. prefers-reduced-motion starts silent even if it was on last
      * time: the people who ask for less movement usually want less noise,
      * and one press gets it back. */
+    if (el.guideBtn) {
+      el.guideBtn.addEventListener('click', function () { setGuide(!S.guide); });
+      setGuide(guideWanted());
+    }
     if (el.notebook) {
       el.notebook.addEventListener('click', function () {
         if (el.notePanel.hidden) openNote(); else closeNote();
@@ -4591,6 +4800,15 @@
     back: back,
     home: goHome,
     trail: function () { return S.trail.length; },
+    guide: function (bucket, seen) {
+      if (bucket) return pickLine(bucket, seen || 0);
+      return { state: contentState, on: S.guide,
+               buckets: CONTENT ? CONTENT.guide.lines.length : 0,
+               chains: CONTENT ? CONTENT.chains.lines.length : 0,
+               tags: visitorTags(), saidThisSession: Object.keys(saidThisSession).length,
+               msSinceSpoke: lastSpoke ? Date.now() - lastSpoke : null,
+               msSinceAxisMoved: lastAxisMove ? Date.now() - lastAxisMove : null };
+    },
     /* Where the highlight is drawn, against where the mark it names
      * actually is. Half-cell drift between those two has now been found
      * three times in this file, and it is invisible at a small window --
