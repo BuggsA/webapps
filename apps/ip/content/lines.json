@@ -126,7 +126,13 @@
           "say": "And again. They were not being careless. There was no reason yet to be careful."
         }
       ],
-      "reveal": "For about ten years the internet was small enough that you could give away sixteen million addresses without anyone needing to think about it."
+      "reveal": "For about ten years the internet was small enough that you could give away sixteen million addresses without anyone needing to think about it.",
+      "grants": {
+        "kind": "before",
+        "value": 1990,
+        "label": "Before 1990",
+        "say": "You can ask the whole map for old space now. It was always there. You had no way to point at it."
+      }
     },
     {
       "id": "never-usable",
@@ -151,7 +157,12 @@
           "say": "And the same again in IPv6, with room for every example anyone will ever need."
         }
       ],
-      "reveal": "Some of this space was never meant for the public internet. Kept back for an addressing idea, or handed to writing so examples cannot collide with anything real. Different reasons, same result: a place on the map that nobody is going to."
+      "reveal": "Some of this space was never meant for the public internet. Kept back for an addressing idea, or handed to writing so examples cannot collide with anything real. Different reasons, same result: a place on the map that nobody is going to.",
+      "grants": {
+        "kind": "marks",
+        "label": "Set-aside space",
+        "say": "Every place like these, everywhere, whenever you want them."
+      }
     },
     {
       "id": "the-thirteen",
@@ -176,7 +187,12 @@
           "say": "And the same letter again, in the other internet. Thirteen is not thirteen machines."
         }
       ],
-      "reveal": "Thirteen letters hold up every name on the internet, and the number is small enough that people argue about it."
+      "reveal": "Thirteen letters hold up every name on the internet, and the number is small enough that people argue about it.",
+      "grants": {
+        "kind": "roots",
+        "label": "The thirteen",
+        "say": "All twenty-six of them, in both families, from anywhere you happen to be standing."
+      }
     },
     {
       "id": "sold-and-returned",
@@ -268,5 +284,6 @@
       ],
       "reveal": "One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two records disagreeing, not a measurement of anywhere."
     }
-  ]
+  ],
+  "_grants": "Finishing a chain can teach the map a new way of being looked at. The owner's report after days of wandering: 'I go, and then nothing happens.' A line of text is not a consequence. A lens is - it changes what the whole field shows from then on, it compounds, and hour five is richer than hour one. Nothing is invented: the data is already on the device and the lens is permission to ask for it. Only chains whose lens is computable offline grant one."
 }

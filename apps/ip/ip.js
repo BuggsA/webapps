@@ -3952,6 +3952,11 @@
       var y = REG.year[k];
       return y >= q.value && y < q.value + q.span;
     }
+    /* EARNED LENSES. A visitor who has finished a chain can ask the map a
+     * question the chain taught them to ask. 'marks' and 'roots' are not
+     * registry facts, so they are matched in the field loop where the
+     * landmarks for that field are already to hand. */
+    if (q.kind === 'before') { var yb = REG.year[k]; return !!yb && yb < q.value; }
     return false;
   }
 
