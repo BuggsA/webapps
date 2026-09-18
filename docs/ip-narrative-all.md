@@ -24,8 +24,8 @@ Full reasoning: `ip-guide-voice.md`, `ip-emotional-design.md`, `ip-two-audiences
 |---|---|
 | lines the guide can say | **126** across 41 buckets |
 | modes | dry 72 (57%) · wry 30 (24%) · open 24 (19%) |
-| chains | **7**, 18 beats |
-| beats the engine resolves at runtime | 8 of 18 |
+| chains | **9**, 28 beats |
+| beats the engine resolves at runtime | 16 of 28 |
 
 Per tier, which is where the ratio actually matters:
 
@@ -385,6 +385,66 @@ Per tier, which is where the ratio actually matters:
 # The chains
 
 `at` is a fixed address, verified against the registry this app ships. `find` is a rule the sightline engine resolves at runtime, so the chain works without anyone having chosen the address in advance. `teaches` is never shown to anybody.
+
+## Where you actually are
+
+*`the-main-line` · main*
+
+> Reconciles two lists that were never the same list: the seven beats in ip-plan-v2.md say what each step TEACHES, and the eight in ip-emotional-design.md say what each step FEELS. Teaching without a feeling is a curriculum; a feeling without a fact is a caption. Each beat below carries one of each, and the emotional beat is named so a later session cannot quietly drop it.
+
+1. **`the visitor's own address`**
+   > There. It exists somewhere other than here now, which is more than most of this map can say.
+   
+   <sub>teaches: it is a number, and somebody agreed to it</sub>
+2. ***find:* the prefix the visitor's address is announced in**
+   > Somebody stands up and says this range is theirs to speak for, and you are inside it. You have never met them.
+   
+   <sub>teaches: somebody speaks for you</sub>
+3. ***find:* another prefix the same network announces**
+   > Same network, different part of the map entirely. A network is not a place. It is a list of ranges somebody is willing to answer for.
+   
+   <sub>teaches: a network is not one range</sub>
+4. ***find:* the whole of the visitor's address family**
+   > All of it. Most of this is nothing - nobody has ever asked for it.
+   
+   <sub>teaches: the size, and how much of it is nothing</sub>
+5. ***find:* the nearest root server**
+   > Thirteen names hold up every name there is. For years one man kept the list of what went where, and he kept it by hand.
+   
+   <sub>teaches: a handful of named things hold the rest up, and people looked after them by hand</sub>
+6. ***find:* the origin network of any announced prefix**
+   > Anybody can say these addresses are theirs. Some of it is checked now. Not all of it, and none of it was then.
+   
+   <sub>teaches: announcing is a claim, and claims are mostly taken on trust</sub>
+7. **`208.65.153.0`**
+   > In 2008 a country ordered this range blocked, and the block was announced to everybody by mistake. For two hours nobody anywhere could reach what was behind it. No one meant that to happen, which is the part worth sitting with.
+   
+   <sub>teaches: a claim meant for one country escaped</sub>
+8. ***find:* the whole of the visitor's address family, again**
+   > Anybody can say these addresses are theirs. And mostly, they don't.
+   
+   <sub>teaches: the same fact, read the other way</sub>
+
+**Reveal —** There is no law here and there never was. It is claims, taken on trust, by strangers who have mostly never spoken - and it carried everything you did today.
+
+<sub>verified: 208.65.153.0 is present in space.bin as ARIN / US / 2006, so the beat is reachable. The 2008 incident is sourced in docs/ip-story-research.md and wants a second source before shipping. 'Some of it is checked now' is deliberately unquantified: origin validation is real and widely deployed and nowhere near universal, and any number quoted here would be wrong within a year.</sub>
+
+## The boundary
+
+*`the-boundary` · main · needs `the-main-line`*
+
+> The plan's beats 6 and 7. The instrument turns around, and the product ends where it should. Fear appeal is the cheapest win available here and taking it would make this a worse product: show how little was kept and let the relief be the payoff.
+
+1. ***find:* what actually crossed the wire to get here**
+   > Everything I have shown you came from one number and a handful of public registers. Here is all of it.
+   
+   <sub>teaches: what a visit really reveals</sub>
+2. ***find:* where our sight stops**
+   > This is where I stop being able to see. Your address says where to send the answer. It does not say who you are, and I could not tell you.
+   
+   <sub>teaches: your address is not you</sub>
+
+**Reveal —** An address is a delivery instruction that a great many strangers have agreed to honour. That is all it is, and it is not nothing.
 
 ## The oldest hands
 
