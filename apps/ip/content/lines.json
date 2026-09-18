@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "_note": "Phase F content, written during D because the guide's later beats need something to hang on. Schema from docs/ip-plan-v2.md: { id, kind, title, beats[], needs[] }. kind is main | side | egg | depth. needs[] names line ids that must be complete first, and a gate only exists where the lesson genuinely depends on the earlier one.",
+
+  "_verified": "Every fixed address below was checked on 2026-09-18 against apps/ip/data/space.bin - the file this app actually ships - not against an external source. Two claims died in that check and are not in here: 18.0.0.0 is dated 1994 in our registry, not the 1977 the published /8 lists give, so no line claims 1977; and our data carries no holder names at all, so no line names an organisation. Holders arrive from the live lookup and the plate says them. Where a beat needs routing data we do not ship, it is a find[] rule the engine resolves rather than an address I asserted.",
+
+  "_beats": "at = a fixed address, verified. find = a rule the sightline engine resolves at runtime, so the chain works without me knowing the answer. say = the guide. teaches = why the beat exists; it is never shown.",
+
+  "lines": [
+
+    {
+      "id": "oldest-hands",
+      "kind": "side",
+      "title": "The oldest hands",
+      "needs": [],
+      "_verified": "1982 is the earliest year present in space.bin. 12.0.0.0/8 is dated 1983 and is a whole /8. 9.0.0.0/8 is dated 1988.",
+      "beats": [
+        { "at": "192.5.21.0", "teaches": "the record goes back further than people expect",
+          "say": "Nineteen eighty-two. There is nothing older in the register I carry." },
+        { "at": "12.0.0.0", "teaches": "early allocations were enormous and casual",
+          "say": "Sixteen million addresses, to one organisation, in one go. The year after the oldest record there is." },
+        { "at": "9.0.0.0", "teaches": "it kept happening for a decade",
+          "say": "And again. They were not being careless. There was no reason yet to be careful." }
+      ],
+      "reveal": "For about ten years the internet was small enough that you could give away sixteen million addresses without anyone needing to think about it."
+    },
+
+    {
+      "id": "never-usable",
+      "kind": "side",
+      "title": "The addresses that can never be used",
+      "needs": [],
+      "_verified": "All three are landmarks already in MARKS and are RFC facts, not lookups.",
+      "beats": [
+        { "at": "240.0.0.0", "teaches": "space can be reserved and then simply never arrive",
+          "say": "Set aside in 1981 for a future that never showed up. Forty-five years. Still empty." },
+        { "at": "192.0.2.0", "teaches": "some addresses exist so that writing can be safe",
+          "say": "This one exists so that documentation has somewhere harmless to point." },
+        { "at": "2001:db8::", "teaches": "the same idea, made much larger the second time",
+          "say": "And the same again in IPv6, with room for every example anyone will ever write." }
+      ],
+      "reveal": "Some of this space was never meant for machines. It was set aside for ideas about machines, and it is still reserved for them."
+    },
+
+    {
+      "id": "the-thirteen",
+      "kind": "side",
+      "title": "The thirteen",
+      "needs": [],
+      "_verified": "Root addresses come from the IANA root hints, already in MARKS, both families.",
+      "beats": [
+        { "at": "198.41.0.4", "teaches": "there is a first one and it is an ordinary-looking address",
+          "say": "A. There is nothing about this address that looks like what it does." },
+        { "at": "192.203.230.10", "teaches": "they are scattered, not stacked",
+          "say": "E. Not next to the last one. They were never meant to fail together." },
+        { "find": "the same letter in the other family", "teaches": "the thirteen exist twice",
+          "say": "And the same letter again, in the other internet. Thirteen is not thirteen machines." }
+      ],
+      "reveal": "Thirteen letters hold up every name on the internet, and the number is small enough that people argue about it."
+    },
+
+    {
+      "id": "sold-and-returned",
+      "kind": "side",
+      "title": "Sold, and given back",
+      "needs": ["oldest-hands"],
+      "_verified": "36.0.0.0 reads APNIC / CN / 2011 in space.bin, which is consistent with the block having been returned and reissued. 18.0.0.0 reads ARIN / US / 1994. No holder is named by any line here; the plate names them from the live lookup.",
+      "beats": [
+        { "at": "18.0.0.0", "teaches": "a founding-era /8, and what happened to it is visible rather than asserted",
+          "say": "One of the big early ones. Look at who announces the halves of it now, and then look again." },
+        { "at": "36.0.0.0", "teaches": "the opposite decision, and the register records the consequence",
+          "say": "This one was handed back. Handed in, to be handed out again - and it was, on the other side of the world." }
+      ],
+      "reveal": "Once there was no more of it, address space became property. Two places that had been given the same kind of gift did opposite things with it, and the register remembers both."
+    },
+
+    {
+      "id": "small-countries",
+      "kind": "side",
+      "title": "Small countries, old space",
+      "needs": [],
+      "_verified": "Computed from space.bin 2026-09-18: Singapore holds 27,894,080 v4 addresses of which 66.0% were allocated before 1993, the highest share of any country holding over a million. North Korea holds one range of 1,024 addresses.",
+      "beats": [
+        { "find": "everything registered to Singapore", "teaches": "share of old space has nothing to do with size",
+          "say": "Two thirds of this was handed out before 1993. No country of that size has a claim like it." },
+        { "find": "everything registered to North Korea", "teaches": "the other end of the same scale",
+          "say": "One range. A thousand addresses, for a country." }
+      ],
+      "reveal": "How much of this a country holds says almost nothing about how large it is, and quite a lot about when it arrived."
+    },
+
+    {
+      "id": "the-quiet-ones",
+      "kind": "side",
+      "title": "The quiet ones",
+      "needs": [],
+      "_note": "Half authored, half computed - the template from docs/ip-story-research.md. The engine supplies the addresses because we cannot know them in advance; only the meaning is written.",
+      "beats": [
+        { "find": "allocated before 2000, and nothing announces it", "teaches": "old and silent is a real and common state",
+          "say": "Somebody was given this before the century turned, and nothing has spoken for it since." },
+        { "find": "another, further away", "teaches": "it is not a one-off",
+          "say": "Another. They are not rare, once you know the shape of them." },
+        { "find": "the largest run of them nearby", "teaches": "the dark is not empty",
+          "say": "All of this is held. None of it answers." }
+      ],
+      "reveal": "Registered before 1997 and it cannot be taken back for unpaid bills, so these sit here indefinitely. Most of them are simply forgotten - and forgotten space is the cheapest thing there is to borrow, if you are the sort of person who needs an address nobody is watching."
+    },
+
+    {
+      "id": "map-is-wrong",
+      "kind": "side",
+      "title": "Where the map is wrong",
+      "needs": ["the-quiet-ones"],
+      "_note": "Gated for a real reason, not an arbitrary one: a block announced from the wrong continent is not STRANGE until you have watched an ordinary network's footprint stay where it was put. Entirely computed - it needs live routing data we do not ship.",
+      "beats": [
+        { "find": "a prefix whose registered country is not where it is announced from", "teaches": "the register records paperwork, not geography",
+          "say": "Registered in one place. Announced from another. Neither of them is lying." },
+        { "find": "a second one, in a different registry", "teaches": "it is structural, not an error",
+          "say": "Again, and nothing is wrong. This is what the two records are for." }
+      ],
+      "reveal": "The registry says who was given it. The routing table says where it is being announced from today. People read the first as a map and it was never that."
+    }
+
+  ]
+}
