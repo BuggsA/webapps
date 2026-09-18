@@ -3,7 +3,50 @@
 Your public IP address, in the first frame, on a page that asks nobody else
 for it.
 
-Fourth in the series. Will live at `https://<distribution>/ip/`.
+Fourth in the series. Lives at `https://<distribution>/ip/`.
+
+---
+
+## What this is trying to achieve
+
+Somebody arrives wanting a number. They should have it in the first frame,
+from our own edge, with nothing in front of it — no banner, no consent, no
+tutorial. That promise is the floor and it is never traded for anything.
+
+Then, **if they want it**, the rest: the address space around them is real,
+enormous, and explorable, and almost nobody has ever seen it drawn. The aim
+is that somebody who came for a number leaves having felt something true
+about the internet — that it is mostly empty, that people built it by hand,
+that it runs on trust that has been broken and holds anyway.
+
+Three things make that hard, and they are the whole design problem:
+
+- **It has to be true.** Every mark is a real allocation at a real position.
+  Nothing is invented to make the picture better. The beauty is not applied
+  afterward — it is what a truthful diagram of this data looks like when it
+  is drawn carefully, in the dark, with enough space around it.
+- **It has to be worth exploring**, not just worth looking at once. That
+  means the open-world loop: see something from here, go to it, find
+  something, and from there see the next thing.
+- **It has to work for two readers at once** — somebody who has never heard
+  the word *prefix*, and somebody who has run networks for thirty years —
+  without the second one feeling patronised.
+
+It is an **instrument, not an illustration**: one surveying device with a
+home position, and moving the scale moves the instrument rather than the
+world.
+
+### Where the thinking lives
+
+| | |
+|---|---|
+| what the product IS, and must not become | [`../../PRODUCT_SOUL.md`](../../PRODUCT_SOUL.md) |
+| the plan | [`../../docs/ip-plan-v2.md`](../../docs/ip-plan-v2.md) |
+| why exploring it feels the way it does | [`../../docs/ip-exploration-research.md`](../../docs/ip-exploration-research.md) |
+| what story the history can actually tell | [`../../docs/ip-story-research.md`](../../docs/ip-story-research.md) |
+| the emotional arc, and what breaks it | [`../../docs/ip-emotional-design.md`](../../docs/ip-emotional-design.md) |
+| the guide's voice | [`../../docs/ip-guide-voice.md`](../../docs/ip-guide-voice.md) |
+| writing for both readers | [`../../docs/ip-two-audiences.md`](../../docs/ip-two-audiences.md) |
 
 - **Story:** [`../../docs/ip-narrative-and-outline.md`](../../docs/ip-narrative-and-outline.md)
 - **Design direction:** [`../../docs/ip-art-direction.md`](../../docs/ip-art-direction.md) — "Survey"
@@ -12,7 +55,18 @@ Fourth in the series. Will live at `https://<distribution>/ip/`.
 
 ---
 
-## Status: phase 4 (travel) of 7. **Live.**
+## Status
+
+**Phases A and B of [`ip-plan-v2.md`](../../docs/ip-plan-v2.md) are built and
+live**, on top of phases 1-4.5 of the original plan. Phase C is half done —
+the notebook is in, the celebration and the tracker are not. Phase D, the
+guide's lines, is being written; `content/guide.json` holds the first
+forty-two and nothing loads them yet.
+
+**Much of what follows this line was written during phase 4 and describes
+that.** It is kept because it is accurate about how those pieces work, not
+because it is a current inventory. For that, see
+[`../../CURRENT_STATE.md`](../../CURRENT_STATE.md).
 
 Phase 1 put the address on the page. Phase 2 replaced how the picture is
 drawn. Phase 3 added the first thing worth travelling to: the block your
@@ -35,8 +89,9 @@ What is here:
   answers the pointer.
 - **a Canvas 2D fallback** for the ~2% without WebGL2. Same scene data, drawn
   flatly and correctly. Force it with `?renderer=2d`.
-- **the scale axis**: one continuous value, wheel / drag / pinch, arrows and
-  PageUp/PageDown for the keyboard. It is *held, not stepped* — it does not
+- **the scale axis**: one continuous value, wheel / drag, arrows and
+  PageUp/PageDown for the keyboard. (**Pinch is not implemented** -- this
+  line claimed it for months and was wrong.) It is *held, not stepped* — it does not
   snap, because direct manipulation is what makes scale feel like something
   in your hand.
 - **the announced block**: the prefix as a field of marks, your address the
