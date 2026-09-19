@@ -123,18 +123,54 @@ visible deviation from the stills, and it is deliberate.*
 
 ## Colour
 
-Three roles, no more. Derived, not decorative.
+**FOUR roles as of 2026-09-19** — see the owner's decision below. Derived,
+not decorative.
 
 | Role | Value | Meaning — strictly enforced |
 |---|---|---|
 | **Cream** `#F2EDE3` | display numerals, current subject's name | the thing you are being told |
 | **Cold blue-white** `#CFE3FF` to `#5C7FA8` | every structure, every mark, every grid line | data that is not you |
 | **Warm amber** `#F5A623` to `#FFD9A0` | Home, the current position, the trail | **you, and only you** |
+| **Been** `rgb(1.0, 0.94, 0.82)` linear | a cell this visitor has asked about | **where you have been** |
 
 Amber is the scarcest thing on screen and it never means anything but *you*.
 That is what makes finding yourself at the horizon work without a legend.
 Uncertainty is not a fourth colour — it is **unresolved structure**: lower
 opacity, dotted instead of solid, no endpoint.
+
+### OWNER DECISION, 2026-09-19 — a fourth role for where you have been
+
+The three-role rule was locked. **The owner changed it**, in these words:
+
+> *"the color of visited ips should change. Something that doesn't compete
+> with your own ip address. Maybe a cream color."*
+
+Recorded here as their decision, per the standing rule that the app is not
+frozen and that an authorized change to a locked section gets written down
+with a date.
+
+**Why it was needed.** The map had no memory. `S.trail` is never drawn and
+the notebook is never read by the renderer, so nothing a visitor did changed
+the picture — three days of wandering left a frame identical to the first.
+This table already claimed amber covered "the trail"; it never did.
+
+**Why not amber, and why this is a new role rather than an extension of
+cream.** Amber is *you, now*. Spending it on your history would put hundreds
+of you on the plate and destroy the scarcity the row above depends on — the
+owner's own framing was that it must not compete with your address. It is
+not cream either, in the strict sense: cream is *what you are being told*,
+and where you have been is a fourth thing — *your own history*, which is
+about you without being you.
+
+**Why the value is not `#F2EDE3`.** The CSS cream is very nearly white, and
+white is what blown-out looks like in an additive HDR frame with a bloom
+chain. The hue is pushed warmer at the source so that it *lands* at cream
+on screen after the tone map. It is specified linear, not as a hex, because
+it is a renderer colour and never a CSS one.
+
+**It distinguishes by hue, deliberately not by brightness**, because
+brightness is already spoken for: it carries allocation age, which reference
+state R3 depends on.
 
 ## Type
 

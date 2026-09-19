@@ -75,7 +75,26 @@
     groundCss: '#05070d',
     cold: [0.40, 0.56, 0.82],
     coldHi: [0.80, 0.89, 1.0],
-    amber: [1.0, 0.66, 0.13]
+    amber: [1.0, 0.66, 0.13],
+    /* WHERE YOU HAVE BEEN. A FOURTH colour role, added 2026-09-19 by the
+     * owner's decision, against the locked three-role rule. Recorded as
+     * their decision, with the date, in docs/ip-art-direction.md.
+     *
+     * What it fixes: the map had no memory. Nothing the visitor did changed
+     * it, so three days of wandering left a frame identical to the first
+     * one. S.trail is never drawn and the notebook is never read by the
+     * renderer, despite the art direction claiming amber covers the trail.
+     *
+     * Why not amber: amber is you, NOW. Spending it on your history would
+     * put hundreds of you on the plate, and the one mark meaning "here I
+     * am" would stop being scarce. The owner's own framing - it must not
+     * compete with your own address.
+     *
+     * Why warmer than the CSS cream: #F2EDE3 is very nearly white, and
+     * white is what blown-out looks like in an additive HDR frame. The hue
+     * has to survive the bloom and the tone map, so it is pushed warmer at
+     * the source in order to LAND at cream on screen. */
+    been: [1.0, 0.94, 0.82]
   };
 
   /* The camera. Horizon at 0.33H, origin at 0.59H, at every state in every
@@ -605,6 +624,128 @@
      * different KIND of thing, not a brighter instance of the same thing --
      * that is what makes it navigable. See docs/ip-exploration-research.md. */
     return { cells: out, list: list };
+  }
+
+  /* WHERE YOU HAVE BEEN, as cells of this field.
+   *
+   * A BUG FIX, found 2026-09-19 while giving visited cells their own
+   * colour. S.asked is keyed by the aim's bare address ("193.0.6.139").
+   * The field looked up S.asked[fieldPrefix(f, i)] — "193.0.0.0/24" — and
+   * NOTHING has ever written a key in that shape. The two honest states
+   * the field means to draw, asked-and-announced and asked-and-empty,
+   * could therefore never be reached, at any rung, since they were
+   * written. The same dead lookup drove the hover note, which is why a
+   * cell you had stood in still read as unasked when you pointed at it.
+   *
+   * Keying by cell prefix could not have worked in any case: a visit is a
+   * POINT and a cell is an AREA, and one visit has to show at every rung,
+   * where the cell containing it is a different prefix each time. So the
+   * visit stays an address and is mapped into cells here, exactly the way
+   * marksInField maps a landmark's range.
+   *
+   * Cheap enough to do on every scene build because buildSpace runs on
+   * rung crossings, not on frames, and S.asked holds tens of entries. */
+  /* The notebook as address RANGES, parsed once and kept until it changes.
+   *
+   * A visit is a POINT, and `a` records it. The key is the announced
+   * PREFIX, which is what became known but is not where anybody stood.
+   *
+   * Drawing the prefix instead was tried and measured: five visits lit
+   * 1,541 of 4,096 cells, because an announced /14 is 1,024 cells at the
+   * /24 rung. At that rate the map is mostly cream after a morning and the
+   * mark stops meaning anything.
+   *
+   * Records written before `a` existed keep only the prefix, so we do not
+   * know which cell inside it they stood in. Those are drawn ONLY at rungs
+   * where the prefix is a single cell — where the question does not arise.
+   * Finer than that we decline to guess, which is the same rule the rest of
+   * the instrument runs on. They heal on the next visit. */
+  var beenCache = null;
+  function beenRanges() {
+    if (beenCache) return beenCache;
+    var out = [], n, k, s, sl, a, bits, len;
+    try { n = noteLoad(); } catch (e) { return (beenCache = out); }
+    for (k in n.sites) {
+      s = n.sites[k];
+      if (!s) continue;
+      sl = k.indexOf('/');
+      a = parseIp(sl < 0 ? k : k.slice(0, sl));
+      if (!a) continue;
+      bits = a.v === 4 ? 32 : 128;
+      len = sl < 0 ? bits : parseInt(k.slice(sl + 1), 10);
+      if (!(len >= 0 && len <= bits)) continue;
+      /* a `1` is a record written by an older version, which kept no
+       * details; it is still a place that was visited. */
+      var said = (s !== 1 && s.said && s.asn >= 0);
+      var pt = (s !== 1 && s.a) ? parseIp(s.a) : null;
+      out.push({ net: a.big, last: a.big + (1n << BigInt(bits - len)) - 1n,
+                 at: (pt && pt.v === a.v) ? pt.big : null,
+                 v: a.v, status: said ? 'ready' : 'empty',
+                 asn: said ? s.asn : -1, holder: (s !== 1 && s.who) || '' });
+    }
+    return (beenCache = out);
+  }
+
+  function beenInField(f) {
+    var out = {}, cells = FIELD * FIELD, lo = f.containerNet;
+    var hi = lo + (BigInt(cells) << f.cellShift) - 1n;
+    var k, a, rec, i, j, list, r, aa, bb;
+
+    /* announced outranks empty, because the cell does contain something;
+     * among equals the brighter claim wins. */
+    function put(idx, status, asn, holder, at) {
+      var cur = out[idx];
+      if (cur && cur.status === 'ready' && status !== 'ready') return;
+      if (cur && cur.status === status && cur.i >= at) return;
+      out[idx] = { status: status, asn: asn, holder: holder, i: at };
+    }
+
+    /* THIS session, from the lookup cache. A point: one cell, full weight. */
+    for (k in S.asked) {
+      rec = S.asked[k];
+      /* 'loading' is a question in flight, not an answer. Lighting it would
+       * say the instrument knows something it is still waiting for. */
+      if (!rec || rec.status === 'loading') continue;
+      a = parseIp(k);
+      if (!a || a.v !== f.v || a.big < lo || a.big > hi) continue;
+      i = Number((a.big - lo) >> f.cellShift);
+      if (i < 0 || i >= cells) continue;
+      put(i, rec.status, rec.asn, rec.holder, 1);
+    }
+
+    /* EVERY session, from the notebook. One cell each: a visit is a point,
+     * and a point is one cell at every rung. */
+    list = beenRanges();
+    for (j = 0; j < list.length; j++) {
+      r = list[j];
+      if (r.v !== f.v || r.last < lo || r.net > hi) continue;
+      if (r.at !== null) {
+        if (r.at < lo || r.at > hi) continue;
+        i = Number((r.at - lo) >> f.cellShift);
+      } else {
+        /* no recorded address: only place it where the prefix IS the cell,
+         * because anywhere finer we would be inventing which one. */
+        aa = r.net < lo ? 0 : Number((r.net - lo) >> f.cellShift);
+        bb = r.last > hi ? cells - 1 : Number((r.last - lo) >> f.cellShift);
+        if (bb >= cells) bb = cells - 1;
+        if (bb !== aa) continue;
+        i = aa;
+      }
+      if (i < 0 || i >= cells) continue;
+      put(i, r.status, r.asn, r.holder, 1);
+    }
+    return out;
+  }
+
+  /* How many cells of this field the visitor has asked about, NOT counting
+   * their own. Computed here rather than read off f.been, because the plate
+   * must never wait on a frame: buildSpace runs on rung crossings, and the
+   * text has to be right before the next one. That invariant has been
+   * broken three times in this file already. */
+  function beenCountIn(f) {
+    var b = beenInField(f), k, n = 0;
+    for (k in b) if (+k !== f.homeIdx) n++;
+    return n;
   }
 
   /* The landmark an address is standing in, if any; the most specific wins,
@@ -1208,6 +1349,10 @@
      * dark dots. */
     var reg = regInField(f);
     f.reg = reg;
+    /* where this visitor has already been, mapped onto this rung's cells.
+     * Kept on f so the hover note reads the same answer the picture drew. */
+    var been = beenInField(f);
+    f.been = been;
     /* how many cells this question lights, so it can be lit at a brightness
      * the frame can carry */
     var qn = 0, qi = 0.78;
@@ -1240,7 +1385,7 @@
       /* three honest states: unasked, asked-and-announced, asked-and-empty.
        * "Unasked" is no longer uniform: the registries already say whether
        * anybody holds this and since when, and that costs nobody a question. */
-      var rec = S.asked[fieldPrefix(f, i)];
+      var rec = been[i];
       if (!rec) {
         var lv = reg ? reg.level[i] : 0.16;
         if (S.query && reg) {
@@ -1254,12 +1399,21 @@
         }
         P([px, 0.003, pz], C.cold, lv, lv > 0.3 ? 1.9 : 1.5, layer, 0);
       } else if (rec.status === 'ready') {
-        P([px, 0.005, pz], C.coldHi, 0.95, 4.2, layer, 0);
-        Pool(px, pz, 0.055, C.coldHi, 0.13, layer);
+        /* C.been, not C.coldHi: a cell you asked about is no longer plain
+         * structure. The intensity is DOWN from 0.95 because been is a much
+         * brighter colour than coldHi (luminance 0.94 against 0.88) and the
+         * swap would otherwise have raised the whole visited set by a stop. */
+        P([px, 0.005, pz], C.been, 0.88 * rec.i, 4.2, layer, 0);
+        /* the floor only catches a place you can point at. A remembered
+         * prefix spanning hundreds of cells would otherwise lay down
+         * hundreds of pools and wash the plate out. */
+        if (rec.i > 0.6) Pool(px, pz, 0.055, C.been, 0.12, layer);
       } else {
         /* asked, and the answer was that nothing is announced here. That is
-         * a real answer, so it is marked — just not as light. */
-        P([px, 0.004, pz], C.cold, 0.34, 2.4, layer, 0);
+         * a real answer, so it is marked — just not as light. Still been:
+         * going somewhere and finding nothing is still having been. Down
+         * from 0.34 for the same luminance reason, been being 1.73x cold. */
+        P([px, 0.004, pz], C.been, 0.20 * rec.i, 2.4, layer, 0);
       }
     }
 
@@ -2232,6 +2386,9 @@
   function noteSave() {
     if (!note) return;
     note.last = Date.now();
+    /* the single write path, so the single place the map's memory of the
+     * notebook goes stale. Miss this and a place stays dark until reload. */
+    beenCache = null;
     try { localStorage.setItem(NOTE_KEY, JSON.stringify(note)); } catch (_) { }
   }
   function noteCount(o) { var n = 0, k; for (k in o) n++; return n; }
@@ -2247,6 +2404,8 @@
        * notebook was only ever recording a first sighting. */
       n.sites[key].n = (n.sites[key].n || 1) + 1;
       n.sites[key].t = Date.now();
+      /* upgrade a record written before `a` existed. See below. */
+      if (!n.sites[key].a) n.sites[key].a = at;
       noteSave();
     }
     if (!n.sites[key] || n.sites[key] === 1) {
@@ -2260,6 +2419,19 @@
       n.sites[key] = {
         t: Date.now(),
         n: 1,
+        /* WHERE THEY ACTUALLY STOOD, added 2026-09-19.
+         *
+         * The key is the announced PREFIX, which is what became known — but
+         * it is not where they were, and the map needs where they were. A
+         * /14 is 1,024 cells at the /24 rung: drawing the prefix as "you
+         * have been here" lit 38% of the field after five visits and the
+         * signal died. Measured, not guessed.
+         *
+         * One address is one cell at every rung, which is the truthful
+         * unit of a visit. Records written before this field existed have
+         * no `a` and are drawn only where the prefix IS one cell — see
+         * beenRanges. They heal the next time the place is visited. */
+        a: at,
         asn: (rec && rec.status === 'ready' && rec.asn >= 0) ? rec.asn : -1,
         who: (rec && rec.holder) || '',
         cc: (rr0 && rr0.cc) || '',
@@ -3073,7 +3245,10 @@
     var lmc = (g.f.marks && g.f.marks[idx]) || null;
     var lmk = lmc ? lmc.m : null;
     var ours = !!(g.f.shape && g.f.shape.cells[idx] !== undefined);
-    var rec = S.asked[name];
+    /* the same answer the picture drew — see beenInField. This used to be
+     * S.asked[name], a key nothing writes, so every one of the rec branches
+     * below was unreachable and a visited cell read as 'not asked'. */
+    var rec = (g.f.been && g.f.been[idx]) || null;
     var rg = REG ? regAt(first, g.f.v) : null;
     var note = ours && S.shape && S.shape.status === 'ready'
                ? 'announced by AS' + S.shape.asn
@@ -4271,27 +4446,42 @@
      * standing disclaimer honest — once a network has been asked about, it
      * is no longer true that only the visitor's own block is known. */
     var sh = S.shape, fs = f.shape;
-    if (fs && fs.here && sh && sh.status === 'ready') {
-      var who = 'AS' + sh.asn +
-                (S.subject && S.subject.asn === sh.asn && S.subject.holder
-                   ? ' · ' + S.subject.holder : '');
-      var all = shapeSize();
+    /* Both disclaimers below used to say, flatly, that nothing but the
+     * visitor's own block had been asked about. That was already untrue the
+     * moment they travelled, and it was invisible only because the visited
+     * cells were never drawn. Now that they are, the sentence sat next to a
+     * plateful of evidence against itself. Fixed 2026-09-19 with the bug
+     * that hid it. */
+    var bn = beenCountIn(f);
+    var mine = bn === 1 ? ' other block here has' : ' other blocks here have';
+    return (function () {
+      if (fs && fs.here && sh && sh.status === 'ready') {
+        var who = 'AS' + sh.asn +
+                  (S.subject && S.subject.asn === sh.asn && S.subject.holder
+                     ? ' · ' + S.subject.holder : '');
+        var all = shapeSize();
+        return { title: containerName(f), sub: sub + (mix ? '  ·  ' + mix : ''),
+                 note: group(String(fs.here)) +
+                       (fs.here === 1 ? ' of these blocks is' : ' of these blocks are') +
+                       ' announced by ' + who +
+                       (all ? ', which announces ' + all + ' in all' : '') +
+                       (bn ? '. ' + group(String(bn)) + mine + ' been asked about.'
+                           : '. Nothing else here has been asked about.') };
+      }
       return { title: containerName(f), sub: sub + (mix ? '  ·  ' + mix : ''),
-               note: group(String(fs.here)) +
-                     (fs.here === 1 ? ' of these blocks is' : ' of these blocks are') +
-                     ' announced by ' + who +
-                     (all ? ', which announces ' + all + ' in all' : '') +
-                     '. Nothing else here has been asked about.' };
-    }
-    return { title: containerName(f), sub: sub + (mix ? '  ·  ' + mix : ''),
-             /* the quiet part: where knowing stops and space begins. The
-              * registries now say a great deal about this field; what they
-              * cannot say is whether anything actually answers there. */
-             note: mix
-               ? 'The registries say that much. Whether anything announces ' +
-                 'any of it is a different question, and only yours has been asked.'
-               : 'Address space. Only yours has been looked up — whether ' +
-                 'anything announces the rest is not known here.' };
+               /* the quiet part: where knowing stops and space begins. The
+                * registries now say a great deal about this field; what they
+                * cannot say is whether anything actually answers there. */
+               note: mix
+                 ? 'The registries say that much. Whether anything announces ' +
+                   'any of it is a different question, and ' +
+                   (bn ? 'you have asked it of ' + group(String(bn)) + ' of them.'
+                       : 'only yours has been asked.')
+                 : 'Address space. ' +
+                   (bn ? 'Yours and ' + group(String(bn)) + ' more have been looked up'
+                       : 'Only yours has been looked up') +
+                   ' — whether anything announces the rest is not known here.' };
+    })();
   }
 
   function away() {
@@ -4897,6 +5087,27 @@
     reg: function (t) {
       var a = parseIp(t);
       return a ? regAt(a.big, a.v) : null;
+    },
+    /* WHERE YOU HAVE BEEN, counted rather than eyeballed.
+     *
+     * Exists because the visited states were unreachable for their whole
+     * life and nobody noticed: they fail SILENTLY, by drawing the same
+     * picture as an unvisited cell. A screenshot cannot tell you the
+     * difference between "no cells are visited" and "the lookup is dead",
+     * which is exactly how it survived. `answered` against `drawn` is the
+     * check: if you have been places and `drawn` is 0 at every rung, the
+     * mapping is broken again. */
+    been: function () {
+      var out = [], i, ly, fg, k, n = 0;
+      for (k in S.asked) if (S.asked[k] && S.asked[k].status !== 'loading') n++;
+      for (i = 0; i < SLOTS; i++) {
+        ly = LY.SLOT0 + i; fg = fieldGeoms[ly];
+        if (!fg || !fg.f) continue;
+        var b = fg.f.been || {}, c = 0, ready = 0, kk;
+        for (kk in b) { c++; if (b[kk].status === 'ready') ready++; }
+        out.push({ len: fg.f.containerLen, drawn: c, announced: ready });
+      }
+      return { answered: n, rungs: out };
     },
     query: function (q) { setQuery(q); return S.query; },
     lay: function () {
