@@ -13,6 +13,9 @@ useful layer is built on branch `claude/sleepy-tesla-kv7qqd`, not deployed
 approved.** Recommended next: make the map show where to go (territories,
 sightlines from the first frame) — ask before building it.
 
+**The code moved.** `apps/ip/ip.js` is now `apps/ip/js/NN-name.js` (owner,
+2026-11-11), proven identical. Read `apps/ip/MAP.md` first.
+
 ## Operating mode
 
 **WAITING_FOR_USER.** A preservation pass was requested mid-proposal. **No
@@ -62,7 +65,7 @@ The owner wandering for a day is worth more than all of them.
 6. **No third-party address lookup, ever.** Telemetry stays dormant.
 7. **Deploy is human-run, always.**
 8. **Content is data.** Adding a line or a quest means adding rows. If
-   anybody opens `ip.js` to add a side line, it was built wrong.
+   anybody opens `js/` to add a side line, it was built wrong.
 
 ## Most dangerous regressions
 
@@ -87,7 +90,7 @@ The owner wandering for a day is worth more than all of them.
 
 ## Canonical references
 
-`apps/ip/ip.js` · `ip.css` · `index.html` · **`content/guide.json`** ·
+`apps/ip/MAP.md` → `apps/ip/js/*.js` · `ip.css` · `index.html` · **`content/guide.json`** ·
 **`content/lines.json`** · `data/space.bin` · `hosting/edge/ip-whoami.js` ·
 `scripts/ip-narrative-review.py` · `docs/ip-art-direction.md` ·
 `docs/ip-build-plan-v3.md`
@@ -95,7 +98,7 @@ The owner wandering for a day is worth more than all of them.
 ## Critical commands
 
 ```bash
-node --check apps/ip/ip.js
+python scripts/ip-map.py                 # map + syntax + load order + duplicate names
 python scripts/ip-narrative-review.py    # regenerates the narrative doc AND lints it
 python scripts/ip-build-space-field.py   # rebuilds apps/ip/data/space.bin
 ```

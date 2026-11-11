@@ -26,6 +26,8 @@ like 'xyz Tennessee'."*
 
 | **Direction: useful first, then exploration** — *"It should be an exploration type of thing but it should be useful first before anything"*, with *"can you help fix this maybe help fix direction"* | standing direction, in `PRODUCT_SOUL.md` and `ip-build-plan-v3.md` |
 | Facts row (location, provider via edge ASN, address type) + Explore control + measured fit around the amber mark | COMPLETE in source, NOT deployed |
+| Keep WebGL2; split `ip.js` into `js/NN-name.js` + generated `MAP.md` — *"Yes lets keep it and break it up in a way that will be most token efficient later and easy to manage"* | COMPLETE, proven identical, NOT deployed |
+| Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
 
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not
 approved by this:** territories, any redesign of the composition, palette or

@@ -143,6 +143,32 @@
 </div>
 
 <script src="telemetry.js"></script>
-<script src="ip.js"></script>
+<!-- The app, in load order. These are classic scripts sharing one global
+     scope, so order is behaviour: they run in exactly the order the single
+     ip.js used to. What each one holds: MAP.md. -->
+<script src="js/00-config.js"></script>
+<script src="js/01-address.js"></script>
+<script src="js/02-curve.js"></script>
+<script src="js/03-landmarks.js"></script>
+<script src="js/04-ladder.js"></script>
+<script src="js/05-state.js"></script>
+<script src="js/06-camera.js"></script>
+<script src="js/07-scene.js"></script>
+<script src="js/08-gl.js"></script>
+<script src="js/09-c2d.js"></script>
+<script src="js/10-content.js"></script>
+<script src="js/11-notebook.js"></script>
+<script src="js/12-celebration.js"></script>
+<script src="js/13-guide.js"></script>
+<script src="js/14-sound.js"></script>
+<script src="js/15-renderer.js"></script>
+<script src="js/16-axis.js"></script>
+<script src="js/17-travel.js"></script>
+<script src="js/18-network.js"></script>
+<script src="js/19-registry.js"></script>
+<script src="js/20-query.js"></script>
+<script src="js/21-plate.js"></script>
+<script src="js/22-answer.js"></script>
+<script src="js/23-boot.js"></script>
 </body>
 </html>

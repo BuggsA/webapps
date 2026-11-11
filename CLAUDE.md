@@ -28,7 +28,7 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
   familiar web pattern disagrees with `PRODUCT_SOUL.md`, the product wins.
 - **"Clean up", "modernize", "polish" and "improve" are NOT permission to
   normalize the design.** No rounded corners, no soft shadows, no palette
-  modernization, no stripping the explanatory comments in `ip.js` — those
+  modernization, no stripping the explanatory comments in `apps/ip/js/` — those
   comments record specific failures and exist to stop them recurring.
 - **Intentional evolution IS allowed when explicitly authorized.** The app is
   not frozen. If the owner authorizes a change to a locked decision, make it
@@ -39,9 +39,13 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
 - **Deploy is human-run, always.** Prepare the commands; never run `aws`,
   `cdk`, or the deploy scripts.
 - **Phase-gated building: one phase, then stop and show it.**
+- **The code is `apps/ip/js/`, 24 small files. Read `apps/ip/MAP.md` first,**
+  then only the file(s) you need. They share one global scope and load in
+  numeric order; a new file needs its `<script>` tag in `index.html`, and
+  `python scripts/ip-map.py` must pass. Never define one name in two files.
 - **Content is data.** The guide's lines and the quest chains live in
   `apps/ip/content/*.json`. Adding a line, a quest or a story means adding
-  rows. **If you open `ip.js` to add a side line, it was built wrong.**
+  rows. **If you open `js/` to add a side line, it was built wrong.**
 - **The guide obeys the same evidence rule as the instrument.** *Lit = known,
   dark = unasked.* Four classes of claim are allowed and laundering a fact
   through his observation is not one of them - see `PRODUCT_SOUL.md` §8.9.
@@ -54,7 +58,8 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
 ## Commands
 
 ```bash
-node --check apps/ip/ip.js                  # the only JS check in this repo
+python scripts/ip-map.py                    # regenerate apps/ip/MAP.md AND check every
+                                            # file: syntax, load order, duplicate names
 python scripts/ip-narrative-review.py       # regenerate the narrative doc AND lint it
 python scripts/ip-build-space-field.py      # rebuild apps/ip/data/space.bin
 ```
