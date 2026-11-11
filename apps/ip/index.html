@@ -74,6 +74,35 @@
   </div>
 </div>
 
+<!-- THE ERRAND, EARLY (owner, 2026-11-11: speed is measured and defended).
+     The address used to be asked for only after all thirty js/ files had
+     arrived, ~1.7 s in; the answer itself takes ~150 ms. So the question is
+     asked here, while the parser is still reading, and the address is
+     painted the moment it lands. 25-answer.js picks up the same request
+     from window.__whoamiEarly rather than asking twice, and still does all
+     the real work (facts, title, Copy). This paints text only; a failure
+     here paints nothing and the app reports it as before. -->
+<script>
+  (function () {
+    if (/[?&]ip=/.test(location.search) || !window.fetch) return;
+    window.__whoamiEarly = fetch('whoami', {
+      headers: { Accept: 'application/json' }, cache: 'no-store'
+    }).then(function (r) {
+      if (!r.ok) throw new Error(String(r.status));
+      return r.json();
+    });
+    window.__whoamiEarly.then(function (d) {
+      var t = document.getElementById('addressText');
+      if (d && typeof d.ip === 'string' && d.ip && t &&
+          t.textContent.length < 2) {
+        t.textContent = d.ip;
+        document.getElementById('address')
+          .style.setProperty('--addr-chars', d.ip.length);
+      }
+    }, function () {});
+  })();
+</script>
+
 <!-- The subject plate: what the instrument is pointed at. -->
 <div id="plate" aria-hidden="true">
   <p id="plateTitle"></p>
@@ -156,6 +185,13 @@
   <div id="aboutInner">
     <button id="aboutClose" type="button">Close</button>
     <div id="aboutBody"></div>
+    <!-- The doors (owner, 2026-11-11): one small page per search people
+         make. Plain links in the page itself, so search engines find them. -->
+    <nav id="aboutDoors" aria-label="More answers">
+      <a href="/ipv6/">My IPv6 address</a>
+      <a href="/isp/">My internet provider</a>
+      <a href="/private/">Is this IP private?</a>
+    </nav>
   </div>
 </div>
 

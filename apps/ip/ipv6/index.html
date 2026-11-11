@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- A door (owner, 2026-11-11: "many doors", docs/ip-concept.md): one small,
+     fast page for one search, with the front page one link away.
+     Shared look and behaviour: /door/door.css, /door/door.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>What is my IPv6 address? — iphere</title>
+<meta name="description" content="Your IPv6 address, instantly, read by this site’s own edge. Or, plainly, whether this visit reached us over IPv4 instead.">
+<link rel="canonical" href="https://iphere.app/ipv6/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="iphere">
+<meta property="og:title" content="What is my IPv6 address? — iphere">
+<meta property="og:description" content="Your IPv6 address, instantly, read by this site’s own edge. Or, plainly, whether this visit reached us over IPv4 instead.">
+<meta property="og:url" content="https://iphere.app/ipv6/">
+<meta property="og:image" content="https://iphere.app/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/door/door.css">
+</head>
+<body data-door="ipv6">
+<main>
+  <h1>Your IPv6 address</h1>
+  <p id="big" class="big pending" aria-live="polite">&mdash;</p>
+  <p class="copyRow"><button id="copy" class="copy" type="button" hidden>Copy</button></p>
+  <p id="verdict" class="verdict"></p>
+  <dl>
+    <div id="rowKind" hidden><dt>Address type</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowOther" hidden><dt>IPv4 instead</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowNet" hidden><dt>Internet provider</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowWhere" hidden><dt>Location, approx.</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+  </dl>
+  <p class="note">Read by this site’s own edge for this visit. Not kept, and no one else is asked.</p>
+
+  <section class="prose">
+    <h2>What is an IPv6 address?</h2>
+    <p>IPv6 is the newer of the internet’s two address systems. An IPv4 address is 32 bits, written as four numbers like <code>203.0.113.7</code>, and there are only about 4.3 billion of them. An IPv6 address is 128 bits, written in hexadecimal groups like <code>2001:db8:85a3::8a2e:370:7334</code>, and there are enough for every grain of sand to have trillions.</p>
+    <h2>Why might I not see one?</h2>
+    <p>Each visit reaches a site over one or the other. If your provider gives your network IPv6, most devices prefer it. If this page says IPv4, either your provider or router has no IPv6 for you, or your device chose IPv4 for this connection. Many networks still have IPv4 only.</p>
+    <h2>Is my IPv6 address private?</h2>
+    <p>The one shown here is the address the internet sees. Addresses starting <code>fe80:</code> are link-local and those starting <code>fd</code> or <code>fc</code> are private; neither ever reaches a website. <a href="/private/">Check any address</a>.</p>
+  </section>
+</main>
+<nav class="doors" aria-label="More">
+  <a class="home" href="/">What’s my IP — and the map around it</a>
+  <a href="/ipv6/" aria-current="page">My IPv6</a>
+  <a href="/isp/">My provider</a>
+  <a href="/private/">Is this IP private?</a>
+</nav>
+<script src="/js/01-address.js"></script>
+<script src="/door/door.js"></script>
+</body>
+</html>

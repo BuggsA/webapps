@@ -216,13 +216,16 @@ function loadAddress() {
     showAddress();
   }
   var timer = setTimeout(function () { give(null, ''); }, 4000);
-  fetch('whoami', { headers: { Accept: 'application/json' }, cache: 'no-store' })
+  /* index.html asked already, before these files had loaded (the errand,
+   * early). Use that answer; ask here only if it was never asked. */
+  (window.__whoamiEarly ||
+   fetch('whoami', { headers: { Accept: 'application/json' }, cache: 'no-store' })
     .then(function (r) {
       if (!r.ok) throw new Error(String(r.status));
       var ct = r.headers.get('content-type') || '';
       return ct.indexOf('json') >= 0 ? r.json()
            : r.text().then(function (t) { return { ip: t.trim() }; });
-    })
+    }))
     .then(function (d) { give(parseIp(d && d.ip), 'edge', d && d.where, d && d.net); })
     .catch(function () { give(null, ''); });
 }
@@ -310,8 +313,11 @@ function aboutHTML() {
     'to RIPE. Staying on the answer does not.</p>',
 
     '<h3>What it keeps</h3>',
-    '<p>No account, no cookies for product behaviour, no advertising, no ',
-    'analytics. Public routing answers are cached in this browser’s local ',
+    '<p>No account, no cookies for product behaviour, no advertising. ',
+    'Visits are counted by Cloudflare Web Analytics, which sets no cookie. ',
+    /* owner, 2026-11-11: the analytics beacon is an approved exception */
+    'Public routing ',
+    'answers are cached in this browser’s local ',
     'storage so the same lookup is not repeated; that is public data about ',
     'networks, not a history of you.</p>',
 

@@ -29,12 +29,15 @@ What that means for ordering, from here:
    from our own edge; a plain "Explore the internet around this address"
    control with a one-line how-to. Nothing covers the amber mark — the
    answer measures where it is and moves out of the way.
-2. **Then: the map has to show where to go.** *This ordering is my
-   recommendation, not the owner's decision.* The diagnosis from 2026-09-18
+   *(Deployed since: iphere.app. Then, 2026-11-11, approved as "Let's do all
+   3": the errand, early, and the doors `/ipv6/` `/isp/` `/private/` - DONE
+   on `claude/peaceful-feynman-p7r37j`.)*
+2. **Then: the map has to show where to go.** **APPROVED 2026-11-11** (owner:
+   *"Let's do all 3"*) - territories and sightlines from the first frame.
+   Next phase; not started. The diagnosis from 2026-09-18
    still stands — the map's only destination vocabulary is brightness and
    the sightlines are hidden for the first minute. Territories plus
-   sightlines from the first frame is still the proposed fix, and **is
-   still NOT APPROVED.** The chain engine below puts words on a map that
+   sightlines from the first frame is the fix. The chain engine below puts words on a map that
    does not yet show places; I think direction comes first.
 3. Then the chain engine, the doors, the card, the inward half, the ghost
    tier, as below.

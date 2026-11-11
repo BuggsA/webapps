@@ -847,6 +847,17 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   margin-top: 2.6em;
 }
 #aboutBody .plate p { font-size: 12px; color: var(--cold-3); }
+/* The doors, at the foot of About: plain links to the small pages. */
+#aboutDoors {
+  display: flex; flex-wrap: wrap; gap: 6px 22px;
+  margin-top: 1.4em; padding-top: 1em; border-top: 1px solid var(--cold-4);
+}
+#aboutDoors a {
+  color: var(--cream); text-decoration: none; font-size: 13px;
+  letter-spacing: .04em; padding: 8px 0;
+  border-bottom: 1px solid var(--cold-4);
+}
+#aboutDoors a:hover { border-color: var(--cream); }
 
 /* ── SMALL SCREENS ───────────────────────────────────────────────────── */
 
