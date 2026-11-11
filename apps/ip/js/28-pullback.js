@@ -80,7 +80,7 @@ function pullWheel(d) {
 }
 
 /* Gestures that start OFF the canvas: the big address and the facts sit
- * above it, so a scroll or a swipe up over them never reached the axis.
+ * above it, so a scroll or a swipe over them never reached the axis.
  * At home those now start the first pull too. Buttons, links and the
  * panels keep their own behaviour. */
 function setupPull() {
@@ -90,7 +90,7 @@ function setupPull() {
   window.addEventListener('wheel', function (e) {
     if (!offCanvas(e.target) || e.ctrlKey) return;
     var d = e.deltaY;
-    if (pullWheel(d)) e.preventDefault();
+    if (pullWheel(-d)) e.preventDefault();   /* scroll UP is outward (19-input) */
   }, { passive: false });
 
   var sw = null;
@@ -103,8 +103,9 @@ function setupPull() {
   }, true);
   window.addEventListener('pointermove', function (e) {
     if (!sw || sw.id !== e.pointerId) return;
-    var up = sw.y - e.clientY, side = Math.abs(e.clientX - sw.x);
-    if (up > 28 && up > side * 1.5) {
+    /* a swipe DOWN is outward, as on the canvas (19-input) */
+    var out = e.clientY - sw.y, side = Math.abs(e.clientX - sw.x);
+    if (out > 28 && out > side * 1.5) {
       sw = null;
       if (pullEligible()) startPull();
     }

@@ -30,7 +30,7 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { background: var(--ground); }
+html, body { background: var(--ground); -webkit-tap-highlight-color: transparent; }
 body {
   min-height: 100vh;
   padding: clamp(40px, 9vh, 96px) var(--gutter) 48px;

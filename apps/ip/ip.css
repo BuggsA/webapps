@@ -68,6 +68,11 @@ html, body {
 body {
   overflow: hidden;
   touch-action: none;
+  /* THE BLUE FLASH (owner, 2026-11-11: "the screen flashes blue each time
+     I tap a new point"). Mobile browsers tint whatever was tapped, and the
+     thing tapped is a full-screen canvas - so the whole screen flashed.
+     Taps answer with the mark and the plate; they need no tint. */
+  -webkit-tap-highlight-color: transparent;
   padding:
     env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -386,6 +391,9 @@ body:not([data-state="home"]) #address {
   letter-spacing: .04em;
   line-height: 1;
 }
+/* the marker is a way home, and looks touchable (2026-11-11) */
+body:not([data-state="home"]) #address { cursor: pointer; pointer-events: auto; }
+body:not([data-state="home"]) #address:hover::before { color: var(--cream); }
 body:not([data-state="home"]) #address::before {
   content: 'HOME · ';
   color: var(--amber);

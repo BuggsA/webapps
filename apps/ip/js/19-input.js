@@ -11,13 +11,40 @@ function setupAxis() {
     var d = e.deltaY;
     if (e.deltaMode === 1) d *= 16;
     else if (e.deltaMode === 2) d *= S.H;
-    if (!e.ctrlKey && pullWheel(d)) return;   /* 28-pullback: the first pull */
-    setAxis(S.s + (e.ctrlKey ? -d : d) * 0.0022 * axisGain());
+    /* DIRECTION (owner, 2026-11-11: "pinch and scroll feels reversed").
+     * Scroll DOWN goes in - down into the address, the descent - and
+     * scroll up pulls back. A trackpad pinch arrives as a wheel event with
+     * ctrlKey, and spreading the fingers (negative deltaY) has to go IN:
+     * it used to be negated the other way, so a spread pulled back. */
+    if (!e.ctrlKey && pullWheel(-d)) return;   /* 28-pullback: the first pull */
+    setAxis(S.s + (e.ctrlKey ? d : -d) * 0.0022 * axisGain());
   }, { passive: false });
 
   var drag = null;
+  /* PINCH on a touchscreen (2026-11-11; it was never implemented, so two
+   * fingers acted as one drag that kept changing hands). Spread = in,
+   * pinch = out, like every map. One axis unit is 12 bits, a 4096x change
+   * in area; the factor keeps a comfortable spread to roughly one rung. */
+  var touches = {}, pinch = null;
+  function touchCount() { var n = 0; for (var k in touches) n++; return n; }
+  function pinchDist() {
+    var p = [], k;
+    for (k in touches) p.push(touches[k]);
+    return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1;
+  }
   cv.addEventListener('pointerdown', function (e) {
-    cv.setPointerCapture(e.pointerId);
+    /* capture can refuse (a pointer already gone); the gesture still works */
+    try { cv.setPointerCapture(e.pointerId); } catch (_) { }
+    if (e.pointerType === 'touch') {
+      touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (touchCount() === 2) {
+        if (pull) stopPull();
+        pinch = { d0: pinchDist(), s0: S.s };
+        drag = null;
+        return;
+      }
+      if (touchCount() > 2) return;
+    }
     drag = { id: e.pointerId, y: e.clientY, x: e.clientX, moved: 0 };
   });
   cv.addEventListener('pointermove', function (e) {
@@ -30,6 +57,13 @@ function setupAxis() {
       S.ty = (e.clientY / window.innerHeight - 0.5) * 2;
       invalidate();
     }
+    if (touches[e.pointerId]) {
+      touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (pinch && touchCount() === 2) {
+        setAxis(pinch.s0 - Math.log2(pinchDist() / pinch.d0) * 0.55 * axisGain());
+        return;
+      }
+    }
     S.ptr = { x: e.clientX, y: e.clientY };
     /* cursor first: pick() defers to whichever cell the field resolved, so
      * the two cannot disagree about what is being pointed at */
@@ -39,13 +73,15 @@ function setupAxis() {
     var dy = e.clientY - drag.y, dxp = e.clientX - drag.x;
     drag.moved += Math.abs(dy) + Math.abs(dxp);
     drag.y = e.clientY; drag.x = e.clientX;
-    /* dragging up pulls the instrument back: outward.
+    /* dragging DOWN pulls the instrument back: outward, the same way a
+       scroll up does (owner, 2026-11-11: it felt reversed). Dragging up
+       goes in.
        dragging sideways TRAVELS, which is the point of the whole thing.
        shift-drag keeps the old behaviour of walking around the subject. */
-    /* the first drag upward from home is the first pull (28-pullback); the
+    /* the first drag downward from home is the first pull (28-pullback); the
      * rest of that drag leaves the axis to the glide */
-    if (dy < 0 && !drag.pulled && pullEligible()) { drag.pulled = true; drag.moved += 99; startPull(); }
-    if (Math.abs(dy) > 0 && !drag.pulled) setAxis(S.s - dy * 0.0042 * axisGain());
+    if (dy > 0 && !drag.pulled && pullEligible()) { drag.pulled = true; drag.moved += 99; startPull(); }
+    if (Math.abs(dy) > 0 && !drag.pulled) setAxis(S.s + dy * 0.0042 * axisGain());
     if (Math.abs(dxp) > 0) {
       if (e.shiftKey) setYaw(S.yaw - dxp * 0.005);
       else {
@@ -59,6 +95,12 @@ function setupAxis() {
     }
   });
   function end(e) {
+    if (touches[e.pointerId]) {
+      delete touches[e.pointerId];
+      /* a pinch is not a tap, and the finger left behind does not become
+       * a drag: lift both and start again */
+      if (pinch) { if (!touchCount()) pinch = null; drag = null; return; }
+    }
     if (!drag || drag.id !== e.pointerId) return;
     var wasTap = drag.moved < 8;
     drag = null;
