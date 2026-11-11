@@ -24,8 +24,8 @@ Full reasoning: `ip-guide-voice.md`, `ip-emotional-design.md`, `ip-two-audiences
 |---|---|
 | lines the guide can say | **126** across 42 buckets |
 | modes | dry 72 (57%) · wry 30 (24%) · open 24 (19%) |
-| chains | **9**, 30 beats |
-| beats the engine resolves at runtime | 17 of 30 |
+| chains | **9**, 31 beats |
+| beats the engine resolves at runtime | 15 of 31 |
 
 Per tier, which is where the ratio actually matters:
 
@@ -400,35 +400,35 @@ Per tier, which is where the ratio actually matters:
 > Reconciles two lists that were never the same list: the seven beats in ip-plan-v2.md say what each step TEACHES, and the eight in ip-emotional-design.md say what each step FEELS. Teaching without a feeling is a curriculum; a feeling without a fact is a caption. Each beat below carries one of each, and the emotional beat is named so a later session cannot quietly drop it.
 
 1. **`the visitor's own address`**
-   > There. It exists somewhere other than here now, which is more than most of this map can say.
+   > Copied. That number is how the whole internet finds you right now: every reply to everything you do today is addressed to it.
    
    <sub>teaches: it is a number, and somebody agreed to it</sub>
 2. ***find:* the prefix the visitor's address is announced in**
-   > Somebody stands up and says this range is theirs to speak for, and you are inside it. You have never met them.
+   > This is the block your address belongs to. Your internet provider tells the rest of the internet: send anything for these addresses to me. You are one of them.
    
    <sub>teaches: somebody speaks for you</sub>
 3. ***find:* another prefix the same network announces**
-   > Same network, different part of the map entirely. A network is not a place. It is a list of ranges somebody is willing to answer for.
+   > Same provider, a completely different part of the map. Providers do not own one neat neighbourhood. They collect blocks wherever they can get them, and answer for all of them.
    
    <sub>teaches: a network is not one range</sub>
 4. ***find:* the whole of the visitor's address family**
-   > All of it. Every number there will ever be in this family, and nearly all of them are taken. It still carried everything you did today.
+   > All of it: every IPv4 address there will ever be, about 4.3 billion. That is fewer than there are people. Nearly all of them are taken, and it still carried everything you did today.
    
    <sub>teaches: the size, and how little of it is left</sub>
 5. ***find:* the whole of the visitor's address family**
-   > All of it. Vastly more than has ever been handed out, and the part in use is a rounding error against the rest.
+   > All of IPv6: enough for every grain of sand on Earth to have trillions of addresses of its own. Less than a thousandth of the usable part has been handed out so far.
    
    <sub>teaches: the size, and how little of it has been needed</sub>
 6. ***find:* the nearest root server**
-   > Thirteen names hold up every name there is. And for years the register of which numbers had been given to whom was published, and largely kept, by one man.
+   > Every time you type a website’s name, the lookup starts, in principle, at a root server like this one. Thirteen names hold up every name on the internet. And for years the list of who had been given which numbers was kept largely by one man, Jon Postel.
    
    <sub>teaches: a handful of named things hold the rest up, and people looked after them by hand</sub>
 7. ***find:* the origin network of any announced prefix**
-   > A network can announce anything it likes. Every network decides for itself what to believe. Some of that is checked now - not all of it, and none of it was then.
+   > Anyone running a network can tell the rest: these addresses are mine. There is no referee. Every network decides for itself what to believe. Some of those claims are checked now. In 2008, none were.
    
    <sub>teaches: announcing is a claim, and every listener decides what to do with it</sub>
 8. **`208.65.153.0`**
-   > In 2008 a route meant to block one site inside one country escaped. For about two hours it pulled that site's traffic across the internet to somewhere it was never going. No one meant that to happen, which is the part worth sitting with.
+   > In February 2008, Pakistan ordered YouTube blocked. Pakistan Telecom did it by claiming YouTube’s addresses as its own, and the claim leaked out to the world. For about two hours, a lot of the world trying to reach YouTube was sent to Pakistan instead, and got nothing. Nobody meant it to happen.
    
    <sub>teaches: a claim meant for one country escaped</sub>
 9. ***find:* the whole of the visitor's address family, again**
@@ -436,9 +436,9 @@ Per tier, which is where the ratio actually matters:
    
    <sub>teaches: the same fact, read the other way</sub>
 
-**Reveal —** No single authority tells any network which route to trust. Each one accepts, rejects or checks what it hears, and most of the time those decisions agree well enough to have carried everything you did today.
+**Reveal —** No one is in charge of the internet’s map. Tens of thousands of networks each decide whose claims to believe, and most of the time they agree well enough to have carried everything you did today.
 
-<sub>verified: 208.65.153.0 is present in space.bin as ARIN / US / 2006. The 2008 incident is sourced in docs/ip-story-research.md; RIPE's own analysis states it could not determine how many sites were affected, so the beat says traffic was pulled across the internet and does NOT claim universal failure. 'Some of that is checked now' is deliberately unquantified - origin validation is real, widely deployed and nowhere near universal, and any number would be wrong within a year.</sub>
+<sub>verified: Rewritten 2026-11-11 for the average person, not a networking person (owner: 'If not interesting to the normal human it is likely noise'). Beats 6 and 8 still share 'Every network decides for itself what to believe' verbatim (see _reframe). 2008: RIPE NCC RIS case study 'YouTube Hijacking' - Pakistan Telecom (AS17557) announced 208.65.153.0/24 from 18:47 UTC on 24 Feb 2008, propagated by PCCW (AS3491), withdrawn 21:01 UTC: about two hours. RIPE could not measure how much of the internet was affected, so the beat says 'a lot of the world', never 'all'. The Pakistani government's order to block YouTube is widely reported (RIPE, CircleID, APNIC's ISP column 2008-03). 4.3 billion < world population (8+ billion). Under a thousandth of 2000::/3 handed out: 0.0925%, computed from space.bin by scripts/ip-build-door-stats.py. 2^128 / ~7.5e18 grains of sand is ~4.5e19 each, so 'trillions' understates and is true. Jon Postel ran IANA's number assignments until his death in 1998. 'Tens of thousands of networks': RIPE RIS sees over 70,000 originating AS numbers (scripts/ip-build-asn-field.py source). 'In 2008, none were': route origin validation (RPKI) began deployment after 2011.</sub>
 
 ## The boundary
 
@@ -482,43 +482,47 @@ Per tier, which is where the ratio actually matters:
 
 *`never-usable` · side*
 
-1. **`240.0.0.0`**
-   > A sixteenth of the whole space, kept back for an addressing idea that never arrived. Nobody has ever been given any of it.
+1. **`127.0.0.1`**
+   > 127.0.0.1 means “this computer”. Whatever device you are on, this address leads straight back to itself. There is an old joke about it: there’s no place like 127.0.0.1. Sixteen million addresses are set aside to mean nothing but “here”.
    
-   <sub>teaches: space can be reserved and then never arrive</sub>
-2. **`192.0.2.0`**
-   > This one exists so that writing about addresses cannot accidentally name a real one.
+   <sub>teaches: some addresses mean here, not somewhere</sub>
+2. **`::1`**
+   > ::1 means “this computer”. Whatever device you are on, this address leads straight back to itself. IPv4 spends sixteen million addresses on meaning “here”. IPv6 spends exactly one.
    
-   <sub>teaches: some addresses exist so that writing can be safe</sub>
-3. **`2001:db8::`**
-   > And the same again in IPv6, with room for every example anyone will ever need.
+   <sub>teaches: some addresses mean here, not somewhere</sub>
+3. **`192.0.2.0`**
+   > These are the internet’s 555 numbers. Films use fake 555 phone numbers so nobody real gets called by mistake. Manuals and textbooks use addresses from here, so no real computer is ever reached by mistake.
    
-   <sub>teaches: the same idea, made much larger the second time</sub>
+   <sub>teaches: space reserved so that examples cannot hit anything real</sub>
+4. **`240.0.0.0`**
+   > A sixteenth of all IPv4, 268 million addresses, kept back in the 1980s “for future use”. The future came and the world ran out of addresses, and these still sit empty: too much equipment treats them as off-limits. At today’s prices they would be worth billions.
+   
+   <sub>teaches: space kept back for a future that arrived without it</sub>
 
-**Reveal —** Some of this space was never meant for the public internet. Kept back for an addressing idea, or handed to writing so examples cannot collide with anything real. Different reasons, same result: a place on the map that nobody is going to.
+**Reveal —** Not every address is for the internet. Some mean “this computer”, some exist only for examples, and one huge stretch was saved for a future that arrived without it. The world ran short of addresses while these sat set aside.
 
-<sub>verified: All three are landmarks already in MARKS and are RFC facts, not lookups. On the date, which is contested: RFC 791 (1981-09) defined the class E range as reserved, while the IANA special-purpose registry records 1989-08 for its own entry. Those are two different events. The landmark line names 1981, which is the reservation rather than the registry record, and this chain names no date at all. Our own space.bin independently shows the range unallocated.</sub>
+<sub>verified: Rewritten 2026-11-11 for the average person, not a networking person (owner: 'If not interesting to the normal human it is likely noise'). 127.0.0.0/8 loopback: RFC 1122, 16,777,216 addresses; ::1 the single IPv6 loopback, RFC 4291. 192.0.2.0/24 and 2001:db8::/32 are documentation-only (RFC 5737, RFC 3849), the same idea as the 555-01xx numbers US films use. 240.0.0.0/4: 268,435,456 addresses, reserved 'for future use' since the 1980s (RFC 988, 1986, after RFC 791); RFC 3330 records it reserved; still reserved, with an IETF draft (draft-schoen-intarea-unicast-240) unadopted. Equipment that refuses it: RIPE address-policy list and RIPE 88 'Reclaiming 240/4'. 'Billions': 268M x ~$15-20 per address (IPv4Center, CircleID, 2025-26). All four places are landmarks in MARKS.</sub>
 
 ## The thirteen
 
 *`the-thirteen` · side*
 
 1. **`198.41.0.4`**
-   > A. There is nothing about this address that looks like what it does.
+   > Root server A. When you type a website’s name, finding it starts, in principle, with a server like this, which points the way to .com, .org and every other ending. A is run by Verisign, the company that also runs .com.
    
-   <sub>teaches: there is a first one and it is an ordinary-looking address</sub>
+   <sub>teaches: what a root server is for</sub>
 2. **`192.203.230.10`**
-   > E. Different people, different buildings, different networks from the last one. That is the part that matters, not where they sit on this map.
+   > Root server E is run by NASA. Others are run by the US Army, two universities, a Swedish organisation and a Japanese research project: twelve organisations, deliberately different, so that no single failure can take the internet’s names down.
    
-   <sub>teaches: they are separated by operator and site, not by address</sub>
-3. ***find:* the same letter in the other family**
-   > And the same letter again, in the other internet. Thirteen is not thirteen machines.
+   <sub>teaches: the thirteen are deliberately run by different hands</sub>
+3. **`193.0.14.129`**
+   > K is run from Amsterdam. And “thirteen servers” is only thirteen names: each one is really many copies spread around the world, about two thousand machines in all, and your lookups go to whichever copy is nearest.
    
-   <sub>teaches: the thirteen exist twice</sub>
+   <sub>teaches: thirteen is a number of names, not machines</sub>
 
-**Reveal —** Thirteen letters hold up every name on the internet, and the number is small enough that people argue about it.
+**Reveal —** Thirteen names, twelve organisations and about two thousand machines hold up every website name you have ever typed. It works because nobody owns all of it.
 
-<sub>verified: Root addresses come from the IANA root hints, already in MARKS, both families.</sub>
+<sub>verified: Rewritten 2026-11-11 for the average person, not a networking person (owner: 'If not interesting to the normal human it is likely noise'). Operators from IANA's root server list (iana.org/domains/root/servers), checked 2026-11-11: A and J Verisign; B USC-ISI and D University of Maryland (two universities); E NASA Ames; G US DoD; H US Army Research Lab; I Netnod (Sweden); K RIPE NCC (Amsterdam); M WIDE Project (Japan); C Cogent; F ISC; L ICANN - twelve organisations. Verisign runs .com. 'About two thousand machines': root-servers.org showed 2,048 operational instances on 2026-11-11; ICANN's RSSAC FAQ says more than 1,500. The old third beat (the same letter in the other family) needed the doors and is replaced by K.</sub>
 
 ## Sold, and given back
 
@@ -567,23 +571,25 @@ Per tier, which is where the ratio actually matters:
 > Half authored, half computed - the template from docs/ip-story-research.md. The engine supplies the addresses because we cannot know them in advance; only the meaning is written.
 
 1. ***find:* allocated before 2000, and nothing announces it**
-   > Somebody was given this before the century turned. There is no route to it that I can see today.
+   > Somebody was given these addresses before 2000, and today nothing on the internet leads here. They are not empty. They belong to someone. They have gone quiet.
    
    <sub>teaches: old and silent is a real and common state</sub>
 2. ***find:* another, further away**
-   > Another. They are not rare, once you know the shape of them.
+   > Another, from a different handout. Not a fluke, then.
    
    <sub>teaches: it is not a one-off</sub>
-3. ***find:* the largest run of them nearby**
-   > All of this is registered to somebody. None of it answers right now.
+3. **`11.0.0.0`**
+   > This is the Pentagon’s, and much of its space sat dormant for decades. On 20 January 2021, minutes after a new US president was sworn in, a company nobody had heard of began announcing it to the world: 175 million addresses by April. The Pentagon later said it had arranged it, to see who was using its addresses. Today it announces them itself.
    
-   <sub>teaches: the dark is not empty</sub>
+   <sub>teaches: quiet is not forgotten</sub>
 
-**Reveal —** Allocated a long time ago, and no route to any of it that anyone here can see today. That is all this shows, and it is enough: the dark on this map is not empty space. It is held space that has gone quiet, and there is far more of it than anybody expects.
+**Reveal —** Some of the dark on this map is not empty. It was handed out decades ago and went quiet: still taken, but not answering. And quiet does not mean forgotten. In 2021, 175 million of the Pentagon’s quiet addresses woke up overnight.
+
+<sub>verified: Rewritten 2026-11-11 for the average person, not a networking person (owner: 'If not interesting to the normal human it is likely noise'). The 2021 story: Doug Madory (Kentik) traced the first announcement by AS8003 (Global Resource Systems LLC, Plantation, Florida) to 16:57 UTC on 20 Jan 2021, minutes after the inauguration; 56 million addresses by late January, 175 million by mid-April; the Pentagon's Defense Digital Service called it a pilot to assess and prevent unauthorised use (AP / Washington Post, April 2021; SecurityWeek, SiliconANGLE); in September 2021 the announcements moved to DoD's own operations. LIVE 2026-11-11 (RIPEstat): 11.0.0.0/24, 21.0.0.0/8, 22.0.0.0/16, 26/8, 28/8, 30/8 announced by AS749 (DoD Network Information Center). IPv4 only: IPv6 allocations before 2000 are too rare to find.</sub>
 
 ## Where the map is wrong
 
-*`map-is-wrong` · side · needs `the-quiet-ones`*
+*`map-is-wrong` · side · needs `the-main-line`*
 
 > Gated for a real reason, not an arbitrary one: a block announced from the wrong continent is not STRANGE until you have watched an ordinary network's footprint stay where it was put. Entirely computed - it needs live routing data we do not ship.
 
@@ -605,7 +611,7 @@ Per tier, which is where the ratio actually matters:
 Derived from the content files on every regeneration, because the hand-written version of this section went stale the moment the main line was written and a reviewer found it before I did.
 
 - **The spine exists.** *Where you actually are* and *The boundary*, 11 beats total.
-- **9 chains, 30 beats**, of which **17 are `find` rules** the engine resolves at runtime rather than addresses anybody chose.
+- **9 chains, 31 beats**, of which **15 are `find` rules** the engine resolves at runtime rather than addresses anybody chose.
 - **Still unwritten:** the celebration lines. Phase C machinery does not exist, and the rule for them is already set - he describes the play, like an announcer, and never congratulates the viewer.
 
 # Known soft spots

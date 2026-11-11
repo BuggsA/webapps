@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-32 files, 7260 lines.
+32 files, 7264 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -44,7 +44,7 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `26-wiring.js` | 104 | what happens after the axis moves, and after a place answers |
 | `27-teaser.js` | 82 | the teaser: one true line about the visitor's own address, to make them stop |
 | `28-pullback.js` | 156 | the first pull: one gesture from home glides out to "You are here" |
-| `29-chains.js` | 610 | the stories: chains from content/lines.json, the tracker, and earned lenses |
+| `29-chains.js` | 614 | the stories: chains from content/lines.json, the tracker, and earned lenses |
 | `30-inward.js` | 229 | the inward half: what this visit told the site, what stayed on the device, and where sight stops |
 | `31-boot.js` | 312 | boot: wire everything up, start, and the window.__ip debug surface |
 
