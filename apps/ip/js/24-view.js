@@ -163,7 +163,7 @@ function syncHint() {
       el.hint.textContent = show
         ? (cursor && cursor.field
             ? 'Click to focus here, then zoom in'
-            : tap ? 'Tap a block, then drag down to go in'
+            : tap ? 'Tap a block, then spread two fingers to go in'
                   : 'Click any block to focus it — then zoom in on it yourself')
         : '';
       el.hint.style.opacity = show ? '1' : '0';

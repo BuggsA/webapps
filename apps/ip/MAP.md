@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-31 files, 6945 lines.
+31 files, 7003 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -34,18 +34,18 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `16-axis.js` | 66 | the scale axis: setting it, stepping it between stops, and its gain |
 | `17-pick.js` | 220 | what the pointer is on: the cursor, picking a cell, a tap |
 | `18-travel.js` | 171 | moving the aim: travel, back, Home, stepping, and asking what is there |
-| `19-input.js` | 110 | input: wheel, drag, touch and keys, wired to the axis and travel |
+| `19-input.js` | 152 | input: wheel, drag, touch and keys, wired to the axis and travel |
 | `20-network.js` | 187 | whoami is elsewhere; this is RIPEstat: the network, and its shape |
 | `21-registry.js` | 360 | space.bin: every allocation the five registries made |
 | `22-query.js` | 321 | asking the map a question, and drawing the answer |
 | `23-words.js` | 262 | the words: what the plate and the companion say about where you are |
 | `24-view.js` | 282 | the view: syncDom writes state into the page, one named step at a time |
-| `25-answer.js` | 368 | the answer: address, facts row, Explore, Copy, About, notebook panel |
+| `25-answer.js` | 382 | the answer: address, facts row, Explore, Copy, About, notebook panel |
 | `26-wiring.js` | 88 | what happens after the axis moves, and after a place answers |
 | `27-teaser.js` | 82 | the teaser: one true line about the visitor's own address, to make them stop |
-| `28-pullback.js` | 155 | the first pull: one gesture from home glides out to "You are here" |
+| `28-pullback.js` | 156 | the first pull: one gesture from home glides out to "You are here" |
 | `29-chains.js` | 604 | the stories: chains from content/lines.json, the tracker, and earned lenses |
-| `30-boot.js` | 309 | boot: wire everything up, start, and the window.__ip debug surface |
+| `30-boot.js` | 310 | boot: wire everything up, start, and the window.__ip debug surface |
 
 ## What each file defines, uses and is used by
 
@@ -159,7 +159,7 @@ What the pointer is on: the cursor, picking a cell, a tap. **Uses:** 00, 01, 04,
 
 ### `18-travel.js`
 
-Moving the aim: travel, back, Home, stepping, and asking what is there. **Uses:** 01, 05, 06, 11, 15, 16, 20, 23, 24, 26. **Used by:** 17, 19, 24, 29, 30.
+Moving the aim: travel, back, Home, stepping, and asking what is there. **Uses:** 01, 05, 06, 11, 15, 16, 20, 23, 24, 26. **Used by:** 17, 19, 24, 25, 29, 30.
 
 `travelTo` `back` `goHome` `stepAim` `askTimer` `askSubject` `applySubject`
 
@@ -189,7 +189,7 @@ Asking the map a question, and drawing the answer. **Uses:** 00, 01, 02, 03, 05,
 
 ### `23-words.js`
 
-The words: what the plate and the companion say about where you are. **Uses:** 00, 01, 02, 03, 04, 05, 06, 11, 17, 20, 21. **Used by:** 18, 19, 20, 22, 24, 26, 28.
+The words: what the plate and the companion say about where you are. **Uses:** 00, 01, 02, 03, 04, 05, 06, 11, 17, 20, 21. **Used by:** 18, 19, 20, 22, 24, 25, 26, 28.
 
 `V4_TOTAL` `V6_64` `awayPlate` `markPlate` `cellsPhrase` `fieldMix` `rungPlate` `plateFor` `summary` `announce`
 
@@ -201,9 +201,9 @@ The view: syncDom writes state into the page, one named step at a time. **Uses:*
 
 ### `25-answer.js`
 
-The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 20, 21, 24, 26, 27. **Used by:** 19, 22, 24, 27, 30.
+The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 18, 20, 21, 23, 24, 26, 27. **Used by:** 19, 22, 24, 27, 30.
 
-`countryName` `placeText` `showFacts` `syncExplore` `fitTimer` `fitAnswer` `fitSoon` `nameEdgeNet` `botTitle` `showAddress` `loadAddress` `setupCopy` `openNote` `closeNote` `aboutHTML` `aboutOpen` `openAbout` `closeAbout`
+`countryName` `placeText` `showFacts` `syncExplore` `fitTimer` `fitAnswer` `fitSoon` `nameEdgeNet` `botTitle` `showAddress` `loadAddress` `setupHomeMarker` `setupCopy` `openNote` `closeNote` `aboutHTML` `aboutOpen` `openAbout` `closeAbout`
 
 ### `26-wiring.js`
 

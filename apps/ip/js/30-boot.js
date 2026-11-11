@@ -107,6 +107,7 @@ function boot() {
   window.addEventListener('orientationchange', resize);
   setupAxis();
   setupCopy();
+  setupHomeMarker();   /* 25-answer */
   /* Off until asked, and the asking is the gesture browsers require
    * anyway. prefers-reduced-motion starts silent even if it was on last
    * time: the people who ask for less movement usually want less noise,

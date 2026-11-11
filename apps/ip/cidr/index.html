@@ -1,15 +1,19 @@
 <!doctype html>
-<!-- A door (owner, 2026-11-11: "many doors", docs/ip-concept.md): one small,
-     fast page for one search, with the front page one link away.
-     Shared look and behaviour: /door/door.css, /door/door.js. -->
+<!-- A door (owner, 2026-11-11: "many doors", docs/ip-concept.md), and one of
+     the two reference pages built to be linked to (owner, 2026-11-11: "for
+     backlinks and seo"). What earns a link: the best answer to the search,
+     a permalink for every result, tables worth citing with anchors to cite
+     them by, original numbers with a date and a source, and speed - no
+     ads, no trackers, nothing in the way. Shared look and behaviour:
+     /door/door.css, /door/door.js. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#05070d">
-<title>CIDR calculator: subnet range, netmask and host count — iphere</title>
-<meta name="description" content="Free IPv4 and IPv6 CIDR calculator. Type a range like 192.168.1.0/24 to get its first and last address, netmask, wildcard and number of hosts. Runs in your browser.">
+<title>CIDR & Subnet Calculator for IPv4 and IPv6 — iphere</title>
+<meta name="description" content="Free CIDR and subnet calculator. Type 192.168.1.0/24, an address and netmask, or a range, and get the first and last address, netmask, wildcard, usable hosts and subnets. Plus a full /0–/32 cheat sheet.">
 <link rel="canonical" href="https://iphere.app/cidr/">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
@@ -19,65 +23,131 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="iphere">
 <meta property="og:locale" content="en_US">
-<meta property="og:title" content="CIDR calculator: subnet range, netmask and host count — iphere">
-<meta property="og:description" content="Free IPv4 and IPv6 CIDR calculator. Type a range like 192.168.1.0/24 to get its first and last address, netmask, wildcard and number of hosts. Runs in your browser.">
+<meta property="og:title" content="CIDR & Subnet Calculator for IPv4 and IPv6 — iphere">
+<meta property="og:description" content="Free CIDR and subnet calculator. Type 192.168.1.0/24, an address and netmask, or a range, and get the first and last address, netmask, wildcard, usable hosts and subnets. Plus a full /0–/32 cheat sheet.">
 <meta property="og:url" content="https://iphere.app/cidr/">
 <meta property="og:image" content="https://iphere.app/share.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="What's my IP - iphere.app">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "@id": "https://iphere.app/cidr/", "url": "https://iphere.app/cidr/", "name": "CIDR calculator: subnet range, netmask and host count", "description": "Free IPv4 and IPv6 CIDR calculator. Type a range like 192.168.1.0/24 to get its first and last address, netmask, wildcard and number of hosts. Runs in your browser.", "inLanguage": "en", "isPartOf": {"@id": "https://iphere.app/#site"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "What's my IP", "item": "https://iphere.app/"}, {"@type": "ListItem", "position": 2, "name": "CIDR calculator", "item": "https://iphere.app/cidr/"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "@id": "https://iphere.app/cidr/", "url": "https://iphere.app/cidr/", "name": "CIDR & Subnet Calculator for IPv4 and IPv6", "description": "Free CIDR and subnet calculator. Type 192.168.1.0/24, an address and netmask, or a range, and get the first and last address, netmask, wildcard, usable hosts and subnets. Plus a full /0–/32 cheat sheet.", "inLanguage": "en", "dateModified": "2026-11-11", "isPartOf": {"@id": "https://iphere.app/#site"}, "publisher": {"@type": "Organization", "name": "iphere", "url": "https://iphere.app/"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "What's my IP", "item": "https://iphere.app/"}, {"@type": "ListItem", "position": 2, "name": "CIDR calculator", "item": "https://iphere.app/cidr/"}]}, {"@type": "WebApplication", "name": "CIDR and subnet calculator", "url": "https://iphere.app/cidr/", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "description": "Calculates the range, netmask, wildcard, host count and binary form of any IPv4 or IPv6 CIDR block, converts ranges and netmasks to CIDR, and splits blocks into subnets. Runs in the browser."}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is CIDR notation?", "acceptedAnswer": {"@type": "Answer", "text": "Classless Inter-Domain Routing writes a block of addresses as an address, a slash, and a prefix length: 192.168.1.0/24. The prefix length says how many leading bits are fixed. It replaced the old class A, B and C networks in 1993 and is defined today in RFC 4632."}}, {"@type": "Question", "name": "How many hosts are in a /24?", "acceptedAnswer": {"@type": "Answer", "text": "256 addresses, of which 254 can be given to devices: the first is the network address and the last is the broadcast address. Its netmask is 255.255.255.0."}}, {"@type": "Question", "name": "How many usable hosts are in a /29?", "acceptedAnswer": {"@type": "Answer", "text": "Eight addresses, six usable. A /30 has four addresses and two usable, which is why it was the classic size for a link between two routers - until /31 links became standard."}}, {"@type": "Question", "name": "Why does a /31 have two usable addresses?", "acceptedAnswer": {"@type": "Answer", "text": "A /31 has only two addresses, and on a point-to-point link neither a network address nor a broadcast address is needed, so both are used. RFC 3021 made this standard in 2000."}}, {"@type": "Question", "name": "How do I convert a netmask to CIDR?", "acceptedAnswer": {"@type": "Answer", "text": "Count the 1 bits in the mask. 255.255.255.0 is 24 ones, so /24; 255.255.252.0 is 22 ones, so /22. Type an address and a mask into the calculator above and it does this for you."}}, {"@type": "Question", "name": "How do I turn an IP range into CIDR blocks?", "acceptedAnswer": {"@type": "Answer", "text": "A range only becomes one block if it starts on a boundary of its own size and is a power of two long. Otherwise it needs several. Type the range above, like 10.0.0.0 - 10.0.5.255, and the calculator returns the fewest blocks that cover it exactly."}}, {"@type": "Question", "name": "What is a wildcard mask?", "acceptedAnswer": {"@type": "Answer", "text": "The netmask with every bit flipped: 0.0.0.255 for a /24. Cisco access lists and OSPF use it to say which bits may vary."}}, {"@type": "Question", "name": "How big is an IPv6 subnet?", "acceptedAnswer": {"@type": "Answer", "text": "A /64, almost always: 264 addresses, about 18 quintillion. Automatic address configuration (RFC 4862) depends on that size, so IPv6 networks are not made smaller to save space the way IPv4 ones are."}}]}]}</script>
 <link rel="preload" href="/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/door/door.css">
 </head>
 <body data-door="cidr">
 <main>
-  <h1>CIDR calculator</h1>
+  <h1>CIDR &amp; subnet calculator</h1>
   <p id="big" class="big pending" aria-live="polite">&mdash;</p>
-  <p class="copyRow"><button id="copy" class="copy" type="button" hidden>Copy</button></p>
+  <p class="copyRow"><button id="copy" class="copy" type="button" hidden>Copy</button><button id="share" class="copy" type="button" hidden>Copy link</button></p>
   <p id="verdict" class="verdict"></p>
   <form id="check" autocomplete="off">
-    <label for="q">Any IPv4 or IPv6 range
+    <label for="q">A block, an address and netmask, or a range
       <input id="q" name="q" type="text" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="192.168.1.0/24">
     </label>
     <button type="submit">Calculate</button>
   </form>
   <dl>
+    <div id="rowBlocks" hidden><dt>CIDR blocks</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
     <div id="rowFirst" hidden><dt>First address</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
     <div id="rowLast" hidden><dt>Last address</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
     <div id="rowCount" hidden><dt>Addresses</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
     <div id="rowUsable" hidden><dt>Usable hosts</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
     <div id="rowMask" hidden><dt>Netmask</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
     <div id="rowWild" hidden><dt>Wildcard mask</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowBin" hidden><dt>Binary</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
     <div id="rowKind" hidden><dt>Address type</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
   </dl>
-  <p class="note">Worked out in your browser. What you type is not sent anywhere.</p>
+  <p class="splitRow" hidden><label for="split" class="inline">Subnets</label> <select id="split"></select></p>
+  <div id="subnets" class="subnets"></div>
+  <p class="note">Worked out in your browser. What you type is not sent anywhere. Every result has its own link: use <em>Copy link</em> to share it.</p>
 
   <section class="prose">
-    <h2>What CIDR notation means</h2>
-    <p>A range like <code>192.168.1.0/24</code> is an address and a prefix length. The number after the slash says how many of the leading bits are fixed; the rest are free. IPv4 has 32 bits, so a <code>/24</code> leaves 8 free bits: 2<sup>8</sup> = 256 addresses. Every step down doubles it.</p>
-    <h2>Common IPv4 prefixes</h2>
-    <table>
-      <tr><td>/32</td><td>255.255.255.255 — one address</td></tr>
-      <tr><td>/30</td><td>255.255.255.252 — 4 addresses, 2 usable</td></tr>
-      <tr><td>/29</td><td>255.255.255.248 — 8 addresses, 6 usable</td></tr>
-      <tr><td>/28</td><td>255.255.255.240 — 16 addresses, 14 usable</td></tr>
-      <tr><td>/27</td><td>255.255.255.224 — 32 addresses, 30 usable</td></tr>
-      <tr><td>/26</td><td>255.255.255.192 — 64 addresses, 62 usable</td></tr>
-      <tr><td>/25</td><td>255.255.255.128 — 128 addresses, 126 usable</td></tr>
-      <tr><td>/24</td><td>255.255.255.0 — 256 addresses, 254 usable</td></tr>
-      <tr><td>/22</td><td>255.255.252.0 — 1,024 addresses</td></tr>
-      <tr><td>/20</td><td>255.255.240.0 — 4,096 addresses</td></tr>
-      <tr><td>/16</td><td>255.255.0.0 — 65,536 addresses</td></tr>
-      <tr><td>/8</td><td>255.0.0.0 — 16,777,216 addresses</td></tr>
+    <nav class="toc" aria-label="On this page">
+      <a href="#ipv4-subnet-cheat-sheet">IPv4 cheat sheet</a>
+      <a href="#ipv6-prefixes">IPv6 prefix sizes</a>
+      <a href="#questions">Questions</a>
+    </nav>
+
+    <h2 id="what-cidr-means">What CIDR notation means</h2>
+    <p>A block like <code>192.168.1.0/24</code> is an address and a prefix length. The number after the slash says how many of the leading bits are fixed; the rest are free. IPv4 has 32 bits, so a <code>/24</code> leaves 8 free: 2<sup>8</sup> = 256 addresses. Each step down the prefix doubles the block, and each step up halves it.</p>
+
+    <h2 id="ipv4-subnet-cheat-sheet">IPv4 subnet cheat sheet: every prefix from /0 to /32</h2>
+    <table class="cheat">
+      <thead><tr><th>CIDR</th><th>Netmask</th><th>Wildcard</th><th>Addresses</th><th>Usable hosts</th></tr></thead>
+      <tbody>
+      <tr id="slash-0"><td>/0</td><td>0.0.0.0</td><td>255.255.255.255</td><td>4,294,967,296</td><td>4,294,967,294</td></tr>
+      <tr id="slash-1"><td>/1</td><td>128.0.0.0</td><td>127.255.255.255</td><td>2,147,483,648</td><td>2,147,483,646</td></tr>
+      <tr id="slash-2"><td>/2</td><td>192.0.0.0</td><td>63.255.255.255</td><td>1,073,741,824</td><td>1,073,741,822</td></tr>
+      <tr id="slash-3"><td>/3</td><td>224.0.0.0</td><td>31.255.255.255</td><td>536,870,912</td><td>536,870,910</td></tr>
+      <tr id="slash-4"><td>/4</td><td>240.0.0.0</td><td>15.255.255.255</td><td>268,435,456</td><td>268,435,454</td></tr>
+      <tr id="slash-5"><td>/5</td><td>248.0.0.0</td><td>7.255.255.255</td><td>134,217,728</td><td>134,217,726</td></tr>
+      <tr id="slash-6"><td>/6</td><td>252.0.0.0</td><td>3.255.255.255</td><td>67,108,864</td><td>67,108,862</td></tr>
+      <tr id="slash-7"><td>/7</td><td>254.0.0.0</td><td>1.255.255.255</td><td>33,554,432</td><td>33,554,430</td></tr>
+      <tr id="slash-8"><td>/8</td><td>255.0.0.0</td><td>0.255.255.255</td><td>16,777,216</td><td>16,777,214</td></tr>
+      <tr id="slash-9"><td>/9</td><td>255.128.0.0</td><td>0.127.255.255</td><td>8,388,608</td><td>8,388,606</td></tr>
+      <tr id="slash-10"><td>/10</td><td>255.192.0.0</td><td>0.63.255.255</td><td>4,194,304</td><td>4,194,302</td></tr>
+      <tr id="slash-11"><td>/11</td><td>255.224.0.0</td><td>0.31.255.255</td><td>2,097,152</td><td>2,097,150</td></tr>
+      <tr id="slash-12"><td>/12</td><td>255.240.0.0</td><td>0.15.255.255</td><td>1,048,576</td><td>1,048,574</td></tr>
+      <tr id="slash-13"><td>/13</td><td>255.248.0.0</td><td>0.7.255.255</td><td>524,288</td><td>524,286</td></tr>
+      <tr id="slash-14"><td>/14</td><td>255.252.0.0</td><td>0.3.255.255</td><td>262,144</td><td>262,142</td></tr>
+      <tr id="slash-15"><td>/15</td><td>255.254.0.0</td><td>0.1.255.255</td><td>131,072</td><td>131,070</td></tr>
+      <tr id="slash-16"><td>/16</td><td>255.255.0.0</td><td>0.0.255.255</td><td>65,536</td><td>65,534</td></tr>
+      <tr id="slash-17"><td>/17</td><td>255.255.128.0</td><td>0.0.127.255</td><td>32,768</td><td>32,766</td></tr>
+      <tr id="slash-18"><td>/18</td><td>255.255.192.0</td><td>0.0.63.255</td><td>16,384</td><td>16,382</td></tr>
+      <tr id="slash-19"><td>/19</td><td>255.255.224.0</td><td>0.0.31.255</td><td>8,192</td><td>8,190</td></tr>
+      <tr id="slash-20"><td>/20</td><td>255.255.240.0</td><td>0.0.15.255</td><td>4,096</td><td>4,094</td></tr>
+      <tr id="slash-21"><td>/21</td><td>255.255.248.0</td><td>0.0.7.255</td><td>2,048</td><td>2,046</td></tr>
+      <tr id="slash-22"><td>/22</td><td>255.255.252.0</td><td>0.0.3.255</td><td>1,024</td><td>1,022</td></tr>
+      <tr id="slash-23"><td>/23</td><td>255.255.254.0</td><td>0.0.1.255</td><td>512</td><td>510</td></tr>
+      <tr id="slash-24"><td>/24</td><td>255.255.255.0</td><td>0.0.0.255</td><td>256</td><td>254</td></tr>
+      <tr id="slash-25"><td>/25</td><td>255.255.255.128</td><td>0.0.0.127</td><td>128</td><td>126</td></tr>
+      <tr id="slash-26"><td>/26</td><td>255.255.255.192</td><td>0.0.0.63</td><td>64</td><td>62</td></tr>
+      <tr id="slash-27"><td>/27</td><td>255.255.255.224</td><td>0.0.0.31</td><td>32</td><td>30</td></tr>
+      <tr id="slash-28"><td>/28</td><td>255.255.255.240</td><td>0.0.0.15</td><td>16</td><td>14</td></tr>
+      <tr id="slash-29"><td>/29</td><td>255.255.255.248</td><td>0.0.0.7</td><td>8</td><td>6</td></tr>
+      <tr id="slash-30"><td>/30</td><td>255.255.255.252</td><td>0.0.0.3</td><td>4</td><td>2</td></tr>
+      <tr id="slash-31"><td>/31</td><td>255.255.255.254</td><td>0.0.0.1</td><td>2</td><td>2</td></tr>
+      <tr id="slash-32"><td>/32</td><td>255.255.255.255</td><td>0.0.0.0</td><td>1</td><td>1</td></tr>
+      </tbody>
     </table>
-    <h2>Why two fewer usable hosts?</h2>
-    <p>In an ordinary IPv4 subnet the first address names the network and the last is its broadcast address, so neither is given to a device. A <code>/31</code> is the exception: a point-to-point link with both addresses usable (RFC 3021). IPv6 has no broadcast address.</p>
-    <h2>IPv6 prefixes</h2>
-    <p>IPv6 ranges are written the same way. A single network is normally a <code>/64</code> - 18 quintillion addresses - and a home is often given a <code>/56</code> or <code>/48</code>, room for 256 or 65,536 of those networks.</p>
-    <h2>Where your own address sits</h2>
-    <p>The <a href="/">front page</a> shows your address and lets you pull back to the real block it is announced in, as routed on the internet today. <a href="/private/">Check whether an address is private</a>.</p>
+    <p class="fine">Usable hosts leave out the network and broadcast addresses, except /31 (<a href="https://www.rfc-editor.org/rfc/rfc3021" rel="noopener">RFC 3021</a>) and /32. Link to any row: <code>iphere.app/cidr/#slash-24</code>.</p>
+
+    <h2 id="ipv6-prefixes">IPv6 prefix sizes</h2>
+    <table>
+      <tr><td>/128</td><td>One address: a single interface, or a loopback</td></tr>
+      <tr><td>/127</td><td>A point-to-point link between two routers (RFC 6164)</td></tr>
+      <tr><td>/64</td><td>One network. The standard size of an IPv6 subnet: 18,446,744,073,709,551,616 addresses, and what SLAAC needs</td></tr>
+      <tr><td>/60</td><td>16 networks. What some providers give a home</td></tr>
+      <tr><td>/56</td><td>256 networks. A common size for a home or small business</td></tr>
+      <tr><td>/48</td><td>65,536 networks. A typical site or organisation</td></tr>
+      <tr><td>/32</td><td>65,536 /48s. The usual minimum a registry gives a provider</td></tr>
+      <tr><td>/29</td><td>8 /32s. A larger provider</td></tr>
+      <tr><td>/16</td><td>A huge range; 2002::/16 (6to4) is one</td></tr>
+      <tr><td>/3</td><td>2000::/3: all of the public IPv6 handed out so far</td></tr>
+    </table>
+
+    <h2 id="questions">Questions</h2>
+    <h3 id="what-is-cidr">What is CIDR notation?</h3>
+    <p>Classless Inter-Domain Routing writes a block of addresses as an address, a slash, and a prefix length: <code>192.168.1.0/24</code>. The prefix length says how many leading bits are fixed. It replaced the old class A, B and C networks in 1993 and is defined today in <a href="https://www.rfc-editor.org/rfc/rfc4632" rel="noopener">RFC 4632</a>.</p>
+    <h3 id="hosts-in-24">How many hosts are in a /24?</h3>
+    <p>256 addresses, of which 254 can be given to devices: the first is the network address and the last is the broadcast address. Its netmask is <code>255.255.255.0</code>.</p>
+    <h3 id="hosts-in-29">How many usable hosts are in a /29?</h3>
+    <p>Eight addresses, six usable. A /30 has four addresses and two usable, which is why it was the classic size for a link between two routers - until /31 links became standard.</p>
+    <h3 id="slash-31">Why does a /31 have two usable addresses?</h3>
+    <p>A /31 has only two addresses, and on a point-to-point link neither a network address nor a broadcast address is needed, so both are used. <a href="https://www.rfc-editor.org/rfc/rfc3021" rel="noopener">RFC 3021</a> made this standard in 2000.</p>
+    <h3 id="netmask-to-cidr">How do I convert a netmask to CIDR?</h3>
+    <p>Count the 1 bits in the mask. <code>255.255.255.0</code> is 24 ones, so /24; <code>255.255.252.0</code> is 22 ones, so /22. Type an address and a mask into the calculator above and it does this for you.</p>
+    <h3 id="range-to-cidr">How do I turn an IP range into CIDR blocks?</h3>
+    <p>A range only becomes one block if it starts on a boundary of its own size and is a power of two long. Otherwise it needs several. Type the range above, like <code>10.0.0.0 - 10.0.5.255</code>, and the calculator returns the fewest blocks that cover it exactly.</p>
+    <h3 id="wildcard">What is a wildcard mask?</h3>
+    <p>The netmask with every bit flipped: <code>0.0.0.255</code> for a /24. Cisco access lists and OSPF use it to say which bits may vary.</p>
+    <h3 id="ipv6-subnet">How big is an IPv6 subnet?</h3>
+    <p>A /64, almost always: 2<sup>64</sup> addresses, about 18 quintillion. Automatic address configuration (<a href="https://www.rfc-editor.org/rfc/rfc4862" rel="noopener">RFC 4862</a>) depends on that size, so IPv6 networks are not made smaller to save space the way IPv4 ones are.</p>
+
+    <h2 id="see-also">See also</h2>
+    <p><a href="/private/">Is an IP address private or public?</a> · <a href="/ipv4-vs-ipv6/">IPv4 vs IPv6, and converting between them</a> · <a href="/">What is my IP address</a>, and the map of the whole address space around it.</p>
+    <p class="updated">Updated <time datetime="2026-11-11">2026-11-11</time>. Standards: <a href="https://www.rfc-editor.org/rfc/rfc4632" rel="noopener">RFC 4632</a> (CIDR), <a href="https://www.rfc-editor.org/rfc/rfc1918" rel="noopener">RFC 1918</a> (private ranges), <a href="https://www.rfc-editor.org/rfc/rfc3021" rel="noopener">RFC 3021</a> (/31 links), <a href="https://www.rfc-editor.org/rfc/rfc4291" rel="noopener">RFC 4291</a> (IPv6 addressing).</p>
   </section>
 </main>
 <nav class="doors" aria-label="More">

@@ -94,8 +94,8 @@ function syncExplore() {
   var moved = S.gone !== null && S.gone > 0.02;
   var touch = window.matchMedia && window.matchMedia('(hover: none)').matches;
   el.exploreHow.textContent = moved ? '' :
-    (touch ? 'or drag up to zoom out yourself'
-           : 'or scroll down, or drag up, to zoom out yourself');
+    (touch ? 'or pinch, or drag down, to zoom out yourself'
+           : 'or scroll up, or drag down, to zoom out yourself');
 }
 
 /* NOTHING COVERS THE AMBER MARK. At home it sits at the world origin, so
@@ -239,6 +239,20 @@ function loadAddress() {
     }))
     .then(function (d) { give(parseIp(d && d.ip), 'edge', d && d.where, d && d.net); })
     .catch(function () { give(null, ''); });
+}
+
+/* "HOME · 193.0.6.139" (owner, 2026-11-11: tapping HOME next to the
+ * address did nothing). Away from home the answer shrinks to that marker
+ * and its word is a promise, so it keeps it: a tap or click goes home. A
+ * drag across the address to select and copy it is left alone. */
+function setupHomeMarker() {
+  el.address.addEventListener('click', function () {
+    if (document.body.dataset.state === 'home') return;
+    var sel = window.getSelection && String(window.getSelection());
+    if (sel) return;
+    goHome();
+    announce();
+  });
 }
 
 function setupCopy() {
