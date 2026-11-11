@@ -19,24 +19,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<title>What's my IP</title>
-<meta name="description" content="Your public IP address, immediately, on a page that asks nobody else for it.">
+<meta name="theme-color" content="#05070d">
+<!-- SEARCH (owner, 2026-11-11: "make it SEO optimal"). The words people
+     actually type - "what's my IP address", "my IP location", "my ISP" -
+     belong in the title and description, because that is the first thing a
+     searcher reads of this sidewalk. 25-answer.js puts the visitor's own
+     address in front of this title once it arrives, but never for a crawler
+     (see botTitle there). -->
+<title>What’s my IP address? Your public IP, location and ISP — iphere</title>
+<meta name="description" content="See your public IP address instantly - IPv4 or IPv6 - with your approximate location and internet provider. No ads, no trackers, and nobody else is asked for it.">
 <link rel="canonical" href="https://iphere.app/">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
 <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="iphere">
-<meta property="og:title" content="What's my IP">
-<meta property="og:description" content="Your public IP address, immediately, on a page that asks nobody else for it.">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="What’s my IP address? — iphere">
+<meta property="og:description" content="Your public IP address, location and provider, instantly, on a page that asks nobody else for it. Then, if you like, the whole internet around it.">
 <meta property="og:url" content="https://iphere.app/">
 <meta property="og:image" content="https://iphere.app/share.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="What's my IP - iphere.app">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"iphere","url":"https://iphere.app/"}</script>
+<!-- Structured data: what this site is, for search engines. Facts only:
+     free, no account, runs in the browser. -->
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[
+{"@type":"WebSite","@id":"https://iphere.app/#site","name":"iphere","alternateName":"What's my IP - iphere","url":"https://iphere.app/","inLanguage":"en"},
+{"@type":"WebApplication","@id":"https://iphere.app/#app","name":"What's my IP address - iphere","url":"https://iphere.app/","description":"Shows your public IP address (IPv4 or IPv6), approximate location and internet provider, read by the site's own edge, and a map of the whole internet address space around it.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires a web browser","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isPartOf":{"@id":"https://iphere.app/#site"}}
+]}</script>
+<!-- The answer is set in Archivo; fetch it with the page, not after the CSS. -->
+<link rel="preload" href="fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="ip.css">
 </head>
 <body data-state="home">
@@ -188,12 +204,37 @@
   <div id="aboutInner">
     <button id="aboutClose" type="button">Close</button>
     <div id="aboutBody"></div>
+    <!-- SEARCH (owner, 2026-11-11: "make it SEO optimal"). The questions
+         people search for, answered in plain words, in the page's own HTML
+         so a crawler reads them without running anything. Behind About,
+         never in front of the address: it costs the errand nothing. Every
+         sentence here is true of this site as built - same evidence rule
+         as everything else. -->
+    <section id="aboutFaq" aria-labelledby="faqTitle">
+      <h2 id="faqTitle">Questions people ask</h2>
+      <h3>What is an IP address?</h3>
+      <p>The number the internet uses to send traffic back to you. Every device that talks to a website does so from an address: four numbers like <span class="mono-i">203.0.113.7</span> in IPv4, or hexadecimal groups like <span class="mono-i">2001:db8::7</span> in IPv6.</p>
+      <h3>What is my public IP address?</h3>
+      <p>The one shown at the top of this page: the address websites see when you visit them. At home it usually belongs to your router and is shared by every device behind it. Your computer has a different, private address on your own network - <a href="/private/">check whether an address is private</a>.</p>
+      <h3>How accurate is the location?</h3>
+      <p>It is where your network appears to be, not where you are. It is usually right about the country and often right about the region; a mobile carrier can put you a city away, and a VPN a country away.</p>
+      <h3>Why does it show IPv6 instead of IPv4?</h3>
+      <p>Each visit reaches a site over one or the other, and most devices prefer IPv6 when their network has it. <a href="/ipv6/">Your IPv6 address</a> explains more, and <a href="/ipv4-vs-ipv6/">IPv4 vs IPv6</a> compares the two.</p>
+      <h3>Who is my internet provider?</h3>
+      <p>The network your address belongs to, named by its AS number. On a VPN or at work, that is whoever’s network you are actually going through. <a href="/isp/">See your provider</a>.</p>
+      <h3>Can someone find me from my IP address?</h3>
+      <p>Not your home. An address points to your provider and roughly to an area; only your provider can match it to an account, and normally only under a legal process.</p>
+      <h3>How do I change or hide my IP address?</h3>
+      <p>A VPN or a privacy relay shows sites a different address. Moving to another network - a phone hotspot, a café - changes it too. Restarting a home router sometimes gets a new one from the provider, but many providers keep the same address for months.</p>
+    </section>
     <!-- The doors (owner, 2026-11-11): one small page per search people
          make. Plain links in the page itself, so search engines find them. -->
     <nav id="aboutDoors" aria-label="More answers">
       <a href="/ipv6/">My IPv6 address</a>
       <a href="/isp/">My internet provider</a>
       <a href="/private/">Is this IP private?</a>
+      <a href="/ipv4-vs-ipv6/">IPv4 vs IPv6</a>
+      <a href="/cidr/">CIDR calculator</a>
     </nav>
   </div>
 </div>

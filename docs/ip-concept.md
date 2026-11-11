@@ -53,6 +53,12 @@ Ask, in this order:
   one small fast page per search, no map, linked from About and the sitemap.
   Shared look and behaviour in `door/`.
 
+- **Search** (2026-11-11, asked for: *"make it SEO optimal"*): titles and
+  descriptions in the words people search, structured data, the common
+  questions answered in plain HTML behind About, a crawler-safe tab title,
+  and two more doors - `/ipv4-vs-ipv6/` and `/cidr/`. The first frame is
+  unchanged.
+
 ## Proposed — implications not yet decided by the owner
 
 These follow from the concept. They are Claude's reading, listed so they can

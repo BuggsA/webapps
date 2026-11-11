@@ -847,6 +847,24 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   margin-top: 2.6em;
 }
 #aboutBody .plate p { font-size: 12px; color: var(--cold-3); }
+/* The questions people search for (2026-11-11), set exactly like the About
+   text above them: the same book, a later page. */
+#aboutFaq { margin-top: 2.6em; padding-top: 1.4em; border-top: 1px solid var(--cold-4); }
+#aboutFaq h2 {
+  color: var(--cream); font-size: clamp(22px, 3vw, 32px); font-weight: 260;
+  font-stretch: 106%; margin: 0 0 .5em; letter-spacing: -.004em;
+}
+#aboutFaq h3 {
+  color: var(--cold-1); font-size: var(--ui); font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase; margin: 1.8em 0 .4em;
+}
+#aboutFaq p {
+  color: var(--cold-2); font-size: clamp(14px, 1.45vw, 16px);
+  line-height: 1.62; margin: .55em 0;
+}
+#aboutFaq .mono-i { color: var(--cold-1); letter-spacing: .02em; }
+#aboutFaq a { color: var(--cream); text-decoration: none; border-bottom: 1px solid var(--cold-4); }
+#aboutFaq a:hover { border-color: var(--cream); }
 /* The doors, at the foot of About: plain links to the small pages. */
 #aboutDoors {
   display: flex; flex-wrap: wrap; gap: 6px 22px;

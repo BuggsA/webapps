@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- A door (owner, 2026-11-11: "many doors", docs/ip-concept.md): one small,
+     fast page for one search, with the front page one link away.
+     Shared look and behaviour: /door/door.css, /door/door.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05070d">
+<title>IPv4 vs IPv6: the difference, and which one you are using — iphere</title>
+<meta name="description" content="What is the difference between IPv4 and IPv6? A plain comparison, and which of the two your connection is using right now.">
+<link rel="canonical" href="https://iphere.app/ipv4-vs-ipv6/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="iphere">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="IPv4 vs IPv6: the difference, and which one you are using — iphere">
+<meta property="og:description" content="What is the difference between IPv4 and IPv6? A plain comparison, and which of the two your connection is using right now.">
+<meta property="og:url" content="https://iphere.app/ipv4-vs-ipv6/">
+<meta property="og:image" content="https://iphere.app/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="What's my IP - iphere.app">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "@id": "https://iphere.app/ipv4-vs-ipv6/", "url": "https://iphere.app/ipv4-vs-ipv6/", "name": "IPv4 vs IPv6: the difference, and which one you are using", "description": "What is the difference between IPv4 and IPv6? A plain comparison, and which of the two your connection is using right now.", "inLanguage": "en", "isPartOf": {"@id": "https://iphere.app/#site"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "What's my IP", "item": "https://iphere.app/"}, {"@type": "ListItem", "position": 2, "name": "IPv4 vs IPv6", "item": "https://iphere.app/ipv4-vs-ipv6/"}]}]}</script>
+<link rel="preload" href="/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/door/door.css">
+</head>
+<body data-door="vs">
+<main>
+  <h1>IPv4 or IPv6: which are you using?</h1>
+  <p id="big" class="big pending" aria-live="polite">&mdash;</p>
+  <p id="verdict" class="verdict"></p>
+  <dl>
+    <div id="rowAddr" hidden><dt>Your IP address</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowNet" hidden><dt>Internet provider</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+  </dl>
+  <p class="copyRow"><button id="copy" class="copy" type="button" hidden>Copy</button></p>
+  <p class="note">Read by this site’s own edge for this visit. Not kept, and no one else is asked.</p>
+
+  <section class="prose">
+    <h2>IPv4 and IPv6, side by side</h2>
+    <table>
+      <tr><td>Size</td><td>IPv4: 32 bits. IPv6: 128 bits.</td></tr>
+      <tr><td>How many</td><td>IPv4: about 4.3 billion. IPv6: about 340 undecillion (3.4 × 10<sup>38</sup>).</td></tr>
+      <tr><td>Written as</td><td>IPv4: four numbers, <code>203.0.113.7</code>. IPv6: eight hexadecimal groups, with runs of zeros shortened to <code>::</code>, <code>2001:db8::7</code>.</td></tr>
+      <tr><td>Defined</td><td>IPv4: RFC 791, 1981. IPv6: RFC 2460 in 1998, now RFC 8200.</td></tr>
+      <tr><td>Private range</td><td>IPv4: <code>10/8</code>, <code>172.16/12</code>, <code>192.168/16</code>. IPv6: unique local <code>fc00::/7</code>.</td></tr>
+      <tr><td>Sharing</td><td>IPv4: usually one public address per home, shared through NAT. IPv6: usually a whole block per home, so each device can have its own.</td></tr>
+    </table>
+    <h2>Why are there two?</h2>
+    <p>IPv4 was designed when 4.3 billion addresses looked like plenty. The regional registries began running out in 2011, and most have now handed out their last ordinary IPv4 blocks; the internet kept working by sharing addresses behind NAT. IPv6 was made so that every device could have an address of its own again. The two run side by side, and most networks speak both.</p>
+    <h2>Which one does my connection use?</h2>
+    <p>Each connection uses one or the other. When your network has both, most devices try IPv6 first and fall back to IPv4 if it is slower to answer. The answer at the top of this page is the one this visit actually used. <a href="/ipv6/">See your IPv6 address</a>.</p>
+    <h2>Is IPv6 faster or safer?</h2>
+    <p>Neither, by design. Speed depends on the route your traffic takes, not the address family, and both carry the same encrypted web traffic. IPv6 can be quicker where it avoids a provider’s NAT, and a home router should firewall both.</p>
+    <h2>See the whole address space</h2>
+    <p>The <a href="/">front page</a> shows your address, and lets you pull back to the block it sits in, the registry that handed it out, and all of IPv4 or IPv6 around it.</p>
+  </section>
+</main>
+<nav class="doors" aria-label="More">
+  <a class="home" href="/">What’s my IP — and the map around it</a>
+  <a href="/ipv6/">My IPv6</a>
+  <a href="/isp/">My provider</a>
+  <a href="/private/">Is this IP private?</a>
+  <a href="/ipv4-vs-ipv6/" aria-current="page">IPv4 vs IPv6</a>
+  <a href="/cidr/">CIDR calculator</a>
+</nav>
+<script src="/js/01-address.js"></script>
+<script src="/door/door.js"></script>
+</body>
+</html>

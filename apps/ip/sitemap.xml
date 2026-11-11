@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Every page meant for search, at its canonical address. lastmod is the
+     date the page's own content last changed - update it by hand when a
+     page changes, never to make a page look fresh. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://iphere.app/</loc>
-  </url>
-  <url>
-    <loc>https://iphere.app/ipv6/</loc>
-  </url>
-  <url>
-    <loc>https://iphere.app/isp/</loc>
-  </url>
-  <url>
-    <loc>https://iphere.app/private/</loc>
-  </url>
+  <url><loc>https://iphere.app/</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://iphere.app/ipv6/</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://iphere.app/isp/</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://iphere.app/private/</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://iphere.app/ipv4-vs-ipv6/</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://iphere.app/cidr/</loc><lastmod>2026-11-11</lastmod></url>
 </urlset>

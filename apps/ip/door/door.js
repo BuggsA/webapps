@@ -253,6 +253,104 @@ DOORS.private = function () {
   });
 };
 
+/* IPv4 vs IPv6 (2026-11-11, from the list in docs/ip-concept.md): which of
+ * the two this visit actually used, from our own edge, above a plain
+ * comparison. The only fact about the visitor is the one whoami gave. */
+DOORS.vs = function () {
+  doorWhoami().then(function (d) {
+    var a = parseIp(d && d.ip);
+    if (!a) throw new Error('no address');
+    doorBig(a.v === 6 ? 'IPv6' : 'IPv4');
+    doorEl('verdict').textContent = a.v === 6
+      ? 'This visit reached us over IPv6, the newer of the two.'
+      : 'This visit reached us over IPv4. Your network may not have IPv6, or your device chose IPv4 this time.';
+    doorRow('rowAddr', a.text, 'This visit’s address');
+    doorCopy(a.text);
+    doorRow('rowNet', d.net && d.net.org, d.net && d.net.asn ? 'AS' + d.net.asn : '');
+  }).catch(function () {
+    doorBig('Not available', true);
+    doorEl('verdict').textContent =
+      'This page could not read your address from its own edge, and it will not ask anyone else for it.';
+  });
+};
+
+/* A count of addresses, readable at any size: exact with commas while it
+ * fits in a sentence, and as a power of two once it does not. */
+function doorCount(n, hostBits) {
+  if (hostBits <= 48) return group(n.toString());
+  var s = n.toString();
+  return '2^' + hostBits + ' (about ' + s[0] + '.' + s.slice(1, 3) +
+         ' × 10^' + (s.length - 1) + ')';
+}
+
+/* CIDR calculator (2026-11-11, from the list in docs/ip-concept.md). Pure
+ * arithmetic in the browser, with the same parser the app uses: nothing
+ * typed here is sent anywhere. */
+DOORS.cidr = function () {
+  var form = doorEl('check'), input = doorEl('q');
+  var ROWS = ['rowFirst', 'rowLast', 'rowCount', 'rowUsable',
+              'rowMask', 'rowWild', 'rowKind'];
+  function show(text, example) {
+    var raw = String(text || '').trim().replace(/\s+/g, '');
+    if (raw.indexOf('/') < 0) {
+      var bare = parseIp(raw);
+      if (bare) raw += '/' + bare.bits;
+    }
+    var c = parseCidr(raw);
+    if (!c) {
+      doorBig('Not a range', true);
+      doorEl('verdict').textContent =
+        'Type an address and a prefix length, like 192.168.1.0/24 or 2001:db8::/48.';
+      ROWS.forEach(function (r) { doorRow(r, ''); });
+      return;
+    }
+    var hostBits = c.bits - c.len;
+    var size = 1n << BigInt(hostBits);
+    var last = c.net + size - 1n;
+    var netText = ipToText(c.net, c.v) + '/' + c.len;
+    var typed = parseIp(raw.split('/')[0]);
+    doorBig(netText, false);
+    doorEl('verdict').textContent =
+      (example ? 'An example. Type any range above. ' : '') +
+      (typed && typed.big !== c.net
+        ? raw + ' has host bits set; the block it sits in is ' + netText + '.'
+        : 'IPv' + c.v + ', a /' + c.len + ': ' + doorCount(size, hostBits) +
+          (size === 1n ? ' address.' : ' addresses.'));
+    doorRow('rowFirst', ipToText(c.net, c.v), 'The network address');
+    doorRow('rowLast', ipToText(last, c.v), '');
+    doorRow('rowCount', doorCount(size, hostBits), '');
+    if (c.v === 4) {
+      var usable = hostBits === 0 ? 1n : hostBits === 1 ? 2n : size - 2n;
+      doorRow('rowUsable', group(usable.toString()),
+              hostBits === 1 ? 'Point-to-point link, RFC 3021'
+              : hostBits === 0 ? 'A single host'
+              : 'Without the network and broadcast addresses');
+      var mask = ((1n << 32n) - 1n) ^ (size - 1n);
+      doorRow('rowMask', ipToText(mask, 4), '');
+      doorRow('rowWild', ipToText(size - 1n, 4), 'Used in ACLs and OSPF');
+    } else {
+      doorRow('rowUsable', '', '');
+      doorRow('rowMask', '', '');
+      doorRow('rowWild', '', '');
+    }
+    var k = doorClassify({ v: c.v, big: c.net, bits: c.bits,
+                           text: ipToText(c.net, c.v) });
+    doorRow('rowKind', k.name, k.range ? k.range + (k.ref ? ', ' + k.ref : '') : k.ref);
+    doorCopy(netText);
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    show(input.value, false);
+    var u = new URL(location.href);
+    u.searchParams.set('q', input.value.trim());
+    history.replaceState(null, '', u);
+  });
+  var q = new URLSearchParams(location.search).get('q');
+  if (q) { input.value = q; show(q, false); return; }
+  input.value = '192.168.1.0/24';
+  show(input.value, true);
+};
+
 (function () {
   var which = document.body.getAttribute('data-door');
   if (DOORS[which]) DOORS[which]();

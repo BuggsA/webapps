@@ -1,0 +1,94 @@
+<!doctype html>
+<!-- A door (owner, 2026-11-11: "many doors", docs/ip-concept.md): one small,
+     fast page for one search, with the front page one link away.
+     Shared look and behaviour: /door/door.css, /door/door.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05070d">
+<title>CIDR calculator: subnet range, netmask and host count — iphere</title>
+<meta name="description" content="Free IPv4 and IPv6 CIDR calculator. Type a range like 192.168.1.0/24 to get its first and last address, netmask, wildcard and number of hosts. Runs in your browser.">
+<link rel="canonical" href="https://iphere.app/cidr/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="iphere">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="CIDR calculator: subnet range, netmask and host count — iphere">
+<meta property="og:description" content="Free IPv4 and IPv6 CIDR calculator. Type a range like 192.168.1.0/24 to get its first and last address, netmask, wildcard and number of hosts. Runs in your browser.">
+<meta property="og:url" content="https://iphere.app/cidr/">
+<meta property="og:image" content="https://iphere.app/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="What's my IP - iphere.app">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "@id": "https://iphere.app/cidr/", "url": "https://iphere.app/cidr/", "name": "CIDR calculator: subnet range, netmask and host count", "description": "Free IPv4 and IPv6 CIDR calculator. Type a range like 192.168.1.0/24 to get its first and last address, netmask, wildcard and number of hosts. Runs in your browser.", "inLanguage": "en", "isPartOf": {"@id": "https://iphere.app/#site"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "What's my IP", "item": "https://iphere.app/"}, {"@type": "ListItem", "position": 2, "name": "CIDR calculator", "item": "https://iphere.app/cidr/"}]}]}</script>
+<link rel="preload" href="/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/door/door.css">
+</head>
+<body data-door="cidr">
+<main>
+  <h1>CIDR calculator</h1>
+  <p id="big" class="big pending" aria-live="polite">&mdash;</p>
+  <p class="copyRow"><button id="copy" class="copy" type="button" hidden>Copy</button></p>
+  <p id="verdict" class="verdict"></p>
+  <form id="check" autocomplete="off">
+    <label for="q">Any IPv4 or IPv6 range
+      <input id="q" name="q" type="text" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="192.168.1.0/24">
+    </label>
+    <button type="submit">Calculate</button>
+  </form>
+  <dl>
+    <div id="rowFirst" hidden><dt>First address</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowLast" hidden><dt>Last address</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowCount" hidden><dt>Addresses</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowUsable" hidden><dt>Usable hosts</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowMask" hidden><dt>Netmask</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowWild" hidden><dt>Wildcard mask</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowKind" hidden><dt>Address type</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+  </dl>
+  <p class="note">Worked out in your browser. What you type is not sent anywhere.</p>
+
+  <section class="prose">
+    <h2>What CIDR notation means</h2>
+    <p>A range like <code>192.168.1.0/24</code> is an address and a prefix length. The number after the slash says how many of the leading bits are fixed; the rest are free. IPv4 has 32 bits, so a <code>/24</code> leaves 8 free bits: 2<sup>8</sup> = 256 addresses. Every step down doubles it.</p>
+    <h2>Common IPv4 prefixes</h2>
+    <table>
+      <tr><td>/32</td><td>255.255.255.255 — one address</td></tr>
+      <tr><td>/30</td><td>255.255.255.252 — 4 addresses, 2 usable</td></tr>
+      <tr><td>/29</td><td>255.255.255.248 — 8 addresses, 6 usable</td></tr>
+      <tr><td>/28</td><td>255.255.255.240 — 16 addresses, 14 usable</td></tr>
+      <tr><td>/27</td><td>255.255.255.224 — 32 addresses, 30 usable</td></tr>
+      <tr><td>/26</td><td>255.255.255.192 — 64 addresses, 62 usable</td></tr>
+      <tr><td>/25</td><td>255.255.255.128 — 128 addresses, 126 usable</td></tr>
+      <tr><td>/24</td><td>255.255.255.0 — 256 addresses, 254 usable</td></tr>
+      <tr><td>/22</td><td>255.255.252.0 — 1,024 addresses</td></tr>
+      <tr><td>/20</td><td>255.255.240.0 — 4,096 addresses</td></tr>
+      <tr><td>/16</td><td>255.255.0.0 — 65,536 addresses</td></tr>
+      <tr><td>/8</td><td>255.0.0.0 — 16,777,216 addresses</td></tr>
+    </table>
+    <h2>Why two fewer usable hosts?</h2>
+    <p>In an ordinary IPv4 subnet the first address names the network and the last is its broadcast address, so neither is given to a device. A <code>/31</code> is the exception: a point-to-point link with both addresses usable (RFC 3021). IPv6 has no broadcast address.</p>
+    <h2>IPv6 prefixes</h2>
+    <p>IPv6 ranges are written the same way. A single network is normally a <code>/64</code> - 18 quintillion addresses - and a home is often given a <code>/56</code> or <code>/48</code>, room for 256 or 65,536 of those networks.</p>
+    <h2>Where your own address sits</h2>
+    <p>The <a href="/">front page</a> shows your address and lets you pull back to the real block it is announced in, as routed on the internet today. <a href="/private/">Check whether an address is private</a>.</p>
+  </section>
+</main>
+<nav class="doors" aria-label="More">
+  <a class="home" href="/">What’s my IP — and the map around it</a>
+  <a href="/ipv6/">My IPv6</a>
+  <a href="/isp/">My provider</a>
+  <a href="/private/">Is this IP private?</a>
+  <a href="/ipv4-vs-ipv6/">IPv4 vs IPv6</a>
+  <a href="/cidr/" aria-current="page">CIDR calculator</a>
+</nav>
+<script src="/js/01-address.js"></script>
+<script src="/door/door.js"></script>
+</body>
+</html>

@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-30 files, 6273 lines.
+30 files, 6284 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -40,7 +40,7 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `22-query.js` | 305 | asking the map a question, and drawing the answer |
 | `23-words.js` | 262 | the words: what the plate and the companion say about where you are |
 | `24-view.js` | 280 | the view: syncDom writes state into the page, one named step at a time |
-| `25-answer.js` | 356 | the answer: address, facts row, Explore, Copy, About, notebook panel |
+| `25-answer.js` | 367 | the answer: address, facts row, Explore, Copy, About, notebook panel |
 | `26-wiring.js` | 67 | what happens after the axis moves, and after a place answers |
 | `27-teaser.js` | 82 | the teaser: one true line about the visitor's own address, to make them stop |
 | `28-pullback.js` | 155 | the first pull: one gesture from home glides out to "You are here" |
@@ -202,7 +202,7 @@ The view: syncDom writes state into the page, one named step at a time. **Uses:*
 
 The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 20, 21, 24, 27. **Used by:** 19, 22, 24, 27, 29.
 
-`countryName` `placeText` `showFacts` `syncExplore` `fitTimer` `fitAnswer` `fitSoon` `nameEdgeNet` `showAddress` `loadAddress` `setupCopy` `openNote` `closeNote` `aboutHTML` `aboutOpen` `openAbout` `closeAbout`
+`countryName` `placeText` `showFacts` `syncExplore` `fitTimer` `fitAnswer` `fitSoon` `nameEdgeNet` `botTitle` `showAddress` `loadAddress` `setupCopy` `openNote` `closeNote` `aboutHTML` `aboutOpen` `openAbout` `closeAbout`
 
 ### `26-wiring.js`
 
