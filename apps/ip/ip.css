@@ -65,6 +65,22 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+*, *::before, *::after { -webkit-tap-highlight-color: transparent; }
+
+/* THE PHONE'S OWN EDGES (owner, 2026-11-11: "The menu bar doesn't seem to
+   work at all ... It does on my pc not my phone"). viewport-fit=cover lets
+   the page draw under the status bar and the home indicator, and those are
+   the phone's, not ours: a tap there scrolls to the top, swipes home or
+   wakes the toolbar, and never reaches the page. The body's safe-area
+   padding does nothing for fixed elements, and everything that sits on an
+   edge here is fixed - so each of them adds the inset itself. */
+:root {
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+
 body {
   overflow: hidden;
   touch-action: none;
@@ -376,8 +392,8 @@ body:not([data-state="home"]) #explore { display: none; }
    element, two lives: it never unmounts, so it is never re-announced and
    Copy is never more than a Tab away. */
 body:not([data-state="home"]) #answer {
-  left: var(--gutter);
-  top: calc(var(--gutter) + 2px);
+  left: calc(var(--gutter) + var(--safe-l));
+  top: calc(var(--gutter) + 2px + var(--safe-t));
   transform: none;
   width: auto;
   text-align: left;
@@ -393,13 +409,21 @@ body:not([data-state="home"]) #address {
 }
 /* the marker is a way home, and looks touchable (2026-11-11) */
 body:not([data-state="home"]) #address { cursor: pointer; pointer-events: auto; }
-body:not([data-state="home"]) #address:hover::before { color: var(--cream); }
-body:not([data-state="home"]) #address::before {
-  content: 'HOME · ';
+/* HOME is a real button since 2026-11-11 (owner, twice: "home doesn't take
+   you home"). It was a ::before label with a click listener on the <p>,
+   which phones do not reliably treat as tappable. */
+#homeMark { display: none; }
+body:not([data-state="home"]) #homeMark {
+  display: inline;
   color: var(--amber);
+  font: inherit;
   font-weight: 500;
   letter-spacing: .14em;
+  padding: 12px 0;
+  margin: -12px 0;
+  touch-action: manipulation;
 }
+body:not([data-state="home"]) #homeMark:hover { color: var(--cream); }
 body:not([data-state="home"]) #copy { font-size: 10px; min-height: 34px; }
 /* Once the answer is the compact HOME marker, its note stays in that
    top-left column rather than spanning the frame and printing itself
@@ -418,7 +442,7 @@ body:not([data-state="home"]) #answerNote {
   position: fixed;
   z-index: 3;
   left: 50%;
-  top: clamp(52px, 11vh, 120px);
+  top: calc(clamp(52px, 11vh, 120px) + var(--safe-t));
   transform: translateX(-50%);
   width: calc(100% - var(--gutter) * 2);
   max-width: min(760px, calc(100% - var(--gutter) * 2));
@@ -532,7 +556,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   position: fixed;
   z-index: 3;
   left: 50%;
-  bottom: calc(var(--gutter) + 10px);
+  bottom: calc(var(--gutter) + 10px + var(--safe-b));
   transform: translateX(-50%);
   color: var(--cold-3);
   font-size: var(--ui);
@@ -600,7 +624,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 #below {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--gutter) + 52px);
+  bottom: calc(var(--gutter) + 52px + var(--safe-b));
   transform: translateX(-50%);
   z-index: 4;
   width: min(64ch, calc(100% - var(--gutter) * 2));
@@ -769,7 +793,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   position: fixed;
   z-index: 5;
   left: var(--gutter);
-  bottom: calc(var(--gutter) + 8px);
+  bottom: calc(var(--gutter) + 8px + var(--safe-b));
   font-size: var(--ui);
   line-height: 1.55;
   clip-path: inset(50%);
@@ -801,8 +825,8 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 #controls {
   position: fixed;
   z-index: 4;
-  right: var(--gutter);
-  bottom: calc(var(--gutter) - 8px);
+  right: calc(var(--gutter) + var(--safe-r));
+  bottom: calc(var(--gutter) - 8px + var(--safe-b));
   display: flex;
   gap: 2px;
 }
@@ -868,13 +892,14 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 
 #aboutInner, #noteInner, #inwardInner, #shareInner {
   width: min(62ch, calc(100% - var(--gutter) * 2));
-  padding: clamp(40px, 9vh, 96px) 0;
+  padding: calc(clamp(40px, 9vh, 96px) + var(--safe-t)) 0
+           calc(clamp(40px, 9vh, 96px) + var(--safe-b));
   position: relative;
 }
 #aboutClose, #noteClose, #inwardClose, #shareClose {
   position: absolute;
   right: 0;
-  top: clamp(16px, 4vh, 40px);
+  top: calc(clamp(16px, 4vh, 40px) + var(--safe-t));
   color: var(--cold-3);
   font-size: 11px;
   font-weight: 500;
@@ -1012,12 +1037,12 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
    address is the fact, and the sentence is already on the plate's own note */
 @media (max-width: 560px) {
   #markNote { display: none; }
-  #controls { right: 6px; bottom: 2px; }
+  #controls { right: calc(6px + var(--safe-r)); bottom: calc(2px + var(--safe-b)); }
   #controls button { padding: 0 8px; font-size: 10px; letter-spacing: .12em; }
   /* the hint sat on top of the menu row; lift it clear (2026-11-11) */
-  #hint { bottom: 50px; }
+  #hint { bottom: calc(50px + var(--safe-b)); }
   /* and the "from here you can see" column sits just above the hint */
-  #below { bottom: 82px; }
+  #below { bottom: calc(82px + var(--safe-b)); }
   #answer { top: 34%; }
 }
 

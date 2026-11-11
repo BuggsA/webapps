@@ -59,7 +59,7 @@ function pickRenderer() {
 
 function boot() {
   cv = document.getElementById('field');
-  grab(['address', 'addressText', 'copy', 'answerNote', 'live',
+  grab(['address', 'homeMark', 'addressText', 'copy', 'answerNote', 'live',
         'facts', 'factWhere', 'wherePlace', 'whereSub', 'factNet', 'netName',
         'netSub', 'kindName', 'kindSub', 'whereNote', 'explore', 'exploreBtn',
         'exploreHow', 'teaser', 'here', 'hereNote',

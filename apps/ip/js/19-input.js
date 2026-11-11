@@ -46,6 +46,15 @@ function setupAxis() {
       if (touchCount() > 2) return;
     }
     drag = { id: e.pointerId, y: e.clientY, x: e.clientX, moved: 0 };
+    /* A FINGER HAS NO HOVER. A tap travels to whatever the cursor names,
+     * and only pointermove set the cursor - so on a phone a tap went to
+     * wherever the last DRAG ended, not where it landed (found 2026-11-11).
+     * Touch and pen name the cell under them the moment they come down. */
+    if (e.pointerType !== 'mouse') {
+      S.ptr = { x: e.clientX, y: e.clientY };
+      setCursor(cursorAt(e.clientX, e.clientY));
+      pick(e.clientX, e.clientY);
+    }
   });
   cv.addEventListener('pointermove', function (e) {
     /* if the button came up somewhere we never heard about — the pointer
