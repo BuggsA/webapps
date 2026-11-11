@@ -46,16 +46,23 @@ Ask, in this order:
 - **The first pull** (2026-11-11): the first outward gesture glides out to
   the whole address space, and "You are here" names the visitor's mark.
 
+- **The errand, early** (2026-11-11, approved): the address is asked for
+  from an inline script while the page is still parsing, not after the
+  thirty `js/` files - about a second sooner on a real connection.
+- **The doors** (2026-11-11, approved): `/ipv6/`, `/isp/`, `/private/` -
+  one small fast page per search, no map, linked from About and the sitemap.
+  Shared look and behaviour in `door/`.
+
 ## Proposed — implications not yet decided by the owner
 
 These follow from the concept. They are Claude's reading, listed so they can
 be confirmed or struck out, **not approved by being written here.**
 
-- **Speed is measured and defended.** The address appears before anything
+- **Speed is measured and defended.** *(the first step of this is now built: the errand, early)* The address appears before anything
   else loads; the 3D map loads after it, never before.
 - **Phones are the main road.** Most search traffic is mobile. Every errand
   works fully by touch.
-- **Many doors.** Traffic comes from many searches, not one: *what is my
+- **Many doors.** *(APPROVED 2026-11-11; the first three are built)* Traffic comes from many searches, not one: *what is my
   IPv6*, *what is my ISP*, *IP lookup*, *is this IP private*, *IPv4 vs
   IPv6*, *CIDR calculator*. Each is its own small, fast, beautiful page on
   the same sidewalk.

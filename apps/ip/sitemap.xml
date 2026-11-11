@@ -3,4 +3,13 @@
   <url>
     <loc>https://iphere.app/</loc>
   </url>
+  <url>
+    <loc>https://iphere.app/ipv6/</loc>
+  </url>
+  <url>
+    <loc>https://iphere.app/isp/</loc>
+  </url>
+  <url>
+    <loc>https://iphere.app/private/</loc>
+  </url>
 </urlset>

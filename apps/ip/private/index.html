@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- A door (owner, 2026-11-11: "many doors", docs/ip-concept.md): one small,
+     fast page for one search, with the front page one link away.
+     Shared look and behaviour: /door/door.css, /door/door.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Is this IP address private or public? — iphere</title>
+<meta name="description" content="Check whether an IPv4 or IPv6 address is private, public or special-use, against the IANA registries. Instant, and nothing is sent anywhere.">
+<link rel="canonical" href="https://iphere.app/private/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="iphere">
+<meta property="og:title" content="Is this IP address private or public? — iphere">
+<meta property="og:description" content="Check whether an IPv4 or IPv6 address is private, public or special-use, against the IANA registries. Instant, and nothing is sent anywhere.">
+<meta property="og:url" content="https://iphere.app/private/">
+<meta property="og:image" content="https://iphere.app/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/door/door.css">
+</head>
+<body data-door="private">
+<main>
+  <h1>Is this IP address private?</h1>
+  <p id="big" class="big pending" aria-live="polite">&mdash;</p>
+  <p id="verdict" class="verdict"></p>
+  <form id="check" autocomplete="off">
+    <label for="q">Any IPv4 or IPv6 address
+      <input id="q" name="q" type="text" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="192.168.1.10">
+    </label>
+    <button type="submit">Check</button>
+  </form>
+  <dl>
+    <div id="rowRange" hidden><dt>Range</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowRef" hidden><dt>Defined in</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowRoute" hidden><dt>On the internet</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+  </dl>
+  <p class="note">Checked in your browser against the IANA special-purpose address registries. What you type is not sent anywhere.</p>
+
+  <section class="prose">
+    <h2>The private ranges</h2>
+    <table>
+      <tr><td>10.0.0.0/8</td><td>Private (RFC 1918)</td></tr>
+      <tr><td>172.16.0.0/12</td><td>Private (RFC 1918) — 172.16.0.0 to 172.31.255.255</td></tr>
+      <tr><td>192.168.0.0/16</td><td>Private (RFC 1918) — most home routers</td></tr>
+      <tr><td>fc00::/7</td><td>IPv6 unique local, usually starting <code>fd</code></td></tr>
+    </table>
+    <h2>Private is not the same as special-use</h2>
+    <p>Some addresses are neither private nor public: <code>127.0.0.1</code> is loopback, <code>169.254.x.x</code> and <code>fe80::</code> are link-local, and <code>100.64.0.0/10</code> is the shared space providers use for carrier-grade NAT. None of them are routed across the internet.</p>
+    <h2>Why does my computer show a different address from this page?</h2>
+    <p>Your computer usually has a private address on your own network, like <code>192.168.1.23</code>. Your router swaps it for one public address on the way out, and that public address is what websites see. <a href="/">See yours</a>.</p>
+  </section>
+</main>
+<nav class="doors" aria-label="More">
+  <a class="home" href="/">What’s my IP — and the map around it</a>
+  <a href="/ipv6/">My IPv6</a>
+  <a href="/isp/">My provider</a>
+  <a href="/private/" aria-current="page">Is this IP private?</a>
+</nav>
+<script src="/js/01-address.js"></script>
+<script src="/door/door.js"></script>
+</body>
+</html>

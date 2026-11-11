@@ -37,8 +37,9 @@ All of these sit in `apps/ip/`, so they land at the site root:
 | `_headers` | Pages response headers: long cache for `fonts/` and `data/`, no Referer sent anywhere, `noindex` on the `.md` files. |
 | `404.html` | Without one, Pages answers **every** unknown path - including `/robots.txt` and `/sitemap.xml` - with `index.html` and a 200. Search engines read that as endless duplicate pages. |
 | `robots.txt` | Allow everything, and points at the sitemap. |
-| `sitemap.xml` | The one page, at its canonical address `https://iphere.app/`. `index.html` carries the matching `<link rel="canonical">`. |
+| `sitemap.xml` | The front page and the doors, at its canonical address `https://iphere.app/`. `index.html` carries the matching `<link rel="canonical">`. |
 | `favicon.ico`, `icon-*.png`, `apple-touch-icon.png` | The reticle mark as real files Google and phones can fetch (Google needs a crawlable favicon, a multiple of 48 px; it crops it to a circle, which the concentric mark survives). Built by `scripts/ip-build-icons.py`. |
+| `ipv6/`, `isp/`, `private/`, `door/` | The doors (owner, 2026-11-11): one small fast page per search, sharing `door/door.css` and `door/door.js`, and `js/01-address.js` for parsing. Listed in `sitemap.xml`. |
 | `share.png` | 1200x630 link-preview image (`og:image`). Same script. |
 | `data/space.bin.gz` | Pages will not compress `application/octet-stream`, so the raw 2.9 MB `space.bin` was downloaded uncompressed. The page fetches this 439 KB copy and unpacks it with `DecompressionStream`; `space.bin` is the fallback. Both are written by `scripts/ip-build-space-field.py`. |
 
