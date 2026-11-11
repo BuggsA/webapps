@@ -85,8 +85,11 @@
 <script>
   (function () {
     if (/[?&]ip=/.test(location.search) || !window.fetch) return;
+    /* priority: high - otherwise the answer queues behind the thirty js/
+     * files on the same connection: measured live, 150 ms became ~800. */
     window.__whoamiEarly = fetch('whoami', {
-      headers: { Accept: 'application/json' }, cache: 'no-store'
+      headers: { Accept: 'application/json' }, cache: 'no-store',
+      priority: 'high'
     }).then(function (r) {
       if (!r.ok) throw new Error(String(r.status));
       return r.json();
