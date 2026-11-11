@@ -66,7 +66,6 @@
 
 'use strict';
 
-
 /* ══ CONFIG ══════════════════════════════════════════════════════════ */
 
 var C = {
@@ -107,6 +106,9 @@ var CAM = { y: 0.55, z: -2.2, pitch: 0.16, fov: 0.888 };
  * has to be laid out along -x. SCREEN_X flips it in one place. */
 function SCREEN_X(x) { return -x; }
 
+
+
+
 var FIELD = 64;      /* the space fields are always 64x64 cells, stated */
 var STEP_BITS = 12;  /* 4096 cells, so one whole step of the axis is 12 bits */
 
@@ -140,7 +142,9 @@ var BASE = 0.58;     /* world units per scene unit at rest */
  * undefined and every scale in the app silently NaN, with a blank frame
  * and nothing in the console. */
 var ZOOM = FIELD;
+
 var FOG = 0.085;
+
 var FOCAL = 2.55;
 
 /* Layers let one instance buffer carry geometry at different scales and
@@ -152,10 +156,13 @@ var FOCAL = 2.55;
  * A rung contributes nothing once it is a whole step away, so at most
  * three are ever live and the fourth is headroom. */
 var SLOTS = 4;
+
 var LY = { CHASSIS: 0, BLOCK: 1, HOME: 2, SLOT0: 3 };
+
 var LAYERS = LY.SLOT0 + SLOTS;
 
-
 var RIPE = 'https://stat.ripe.net/data/';
+
+
 var CACHE_TTL = 1000 * 60 * 60 * 24 * 7;   /* routing facts move in months */
 var CACHE_KEY = 'ip.v1.';

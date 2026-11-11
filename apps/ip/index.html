@@ -143,9 +143,10 @@
 </div>
 
 <script src="telemetry.js"></script>
-<!-- The app, in load order. These are classic scripts sharing one global
-     scope, so order is behaviour: they run in exactly the order the single
-     ip.js used to. What each one holds: MAP.md. -->
+<!-- The app, in load order: classic scripts sharing one global scope. Most
+     of them only declare functions, which can live in any file; order
+     matters for the few statements that run at load (the landmark list in
+     03, and 26-boot, which must be last). What each one holds: MAP.md. -->
 <script src="js/00-config.js"></script>
 <script src="js/01-address.js"></script>
 <script src="js/02-curve.js"></script>
@@ -163,12 +164,15 @@
 <script src="js/14-sound.js"></script>
 <script src="js/15-renderer.js"></script>
 <script src="js/16-axis.js"></script>
-<script src="js/17-travel.js"></script>
-<script src="js/18-network.js"></script>
-<script src="js/19-registry.js"></script>
-<script src="js/20-query.js"></script>
-<script src="js/21-plate.js"></script>
-<script src="js/22-answer.js"></script>
-<script src="js/23-boot.js"></script>
+<script src="js/17-pick.js"></script>
+<script src="js/18-travel.js"></script>
+<script src="js/19-input.js"></script>
+<script src="js/20-network.js"></script>
+<script src="js/21-registry.js"></script>
+<script src="js/22-query.js"></script>
+<script src="js/23-words.js"></script>
+<script src="js/24-view.js"></script>
+<script src="js/25-answer.js"></script>
+<script src="js/26-boot.js"></script>
 </body>
 </html>

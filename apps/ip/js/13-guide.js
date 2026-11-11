@@ -28,15 +28,21 @@
  * quiet around them. See docs/ip-guide-voice.md. */
 
 var GUIDE_KEY = 'ip.v1.guide';
+
+
+
 var GENERIC_GAP = 55000;   /* ordinary lines: about once a minute */
 var MOVING_QUIET = 1000;   /* travelling, not looking */
 var lastSpoke = 0;
+
 var lastAxisMove = 0;
+
 var guideTimer = 0;
 
 function guideWanted() {
   try { return localStorage.getItem(GUIDE_KEY) !== '0'; } catch (_) { return true; }
 }
+
 function setGuide(on) {
   S.guide = !!on;
   try { localStorage.setItem(GUIDE_KEY, S.guide ? '1' : '0'); } catch (_) { }

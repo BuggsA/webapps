@@ -1,9 +1,11 @@
-/* apps/ip/js/19-registry.js — space.bin: every allocation the five registries made.
+/* apps/ip/js/21-registry.js — space.bin: every allocation the five registries made.
  * One of the files ip used to be. Read ../MAP.md first: it lists what
  * every file defines and uses. All files share one global scope and
  * load in numeric order from index.html. */
 
 'use strict';
+
+
 
 /* ══ REGISTRY ════════════════════════════════════════════════════════
  * Phase A of ../../docs/ip-plan-v2.md: the map stops being empty.
@@ -219,6 +221,8 @@ function eraLevel(year) {
   if (year < 2021) return 0.13;
   return 0.11;
 }
+
+
 var UNALLOCATED = 0.055;   /* darker than anything held by anybody */
 
 /* Every cell of a field, keyed by era brightness, in one pass over the

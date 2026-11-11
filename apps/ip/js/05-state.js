@@ -60,3 +60,11 @@ var S = {
 };
 
 var cv, el = {}, R = null;
+
+function grab(ids) { ids.forEach(function (id) { el[id] = document.getElementById(id); }); }
+
+function say(m) { if (el.live) el.live.textContent = m; }
+
+function away() {
+  return !!(S.home && S.aim !== null && S.aim !== S.home.big);
+}

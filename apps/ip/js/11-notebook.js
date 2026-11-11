@@ -25,12 +25,14 @@
  * worst bug this file could have. */
 
 var NOTE_KEY = 'ip.v1.note';
+
 var note = null;
 
 function noteBlank() {
   return { v: 1, first: 0, last: 0, sites: {}, firstSite: '', nets: {},
            ccs: {}, deepest: 0, oldest: 0, dist: 0 };
 }
+
 function noteLoad() {
   if (note) return note;
   note = noteBlank();
@@ -44,6 +46,7 @@ function noteLoad() {
   if (!note.first) note.first = Date.now();
   return note;
 }
+
 function noteSave() {
   if (!note) return;
   note.last = Date.now();
@@ -52,6 +55,7 @@ function noteSave() {
   beenCache = null;
   try { localStorage.setItem(NOTE_KEY, JSON.stringify(note)); } catch (_) { }
 }
+
 function noteCount(o) { var n = 0, k; for (k in o) n++; return n; }
 
 /* A place, the moment it answers. Recorded whether or not anybody
@@ -114,6 +118,7 @@ function noteSite(at, rec) {
   }
   noteSave();
 }
+
 function noteHolder(asn, holder) {
   if (!(asn >= 0) || !holder) return;
   var n = noteLoad(), k, s, hit = false;
@@ -126,10 +131,12 @@ function noteHolder(asn, holder) {
   }
   if (hit) noteSave();
 }
+
 function noteDepth(axis) {
   var n = noteLoad();
   if (axis > n.deepest) { n.deepest = axis; noteSave(); }
 }
+
 function noteDist(fromBig, toBig) {
   if (fromBig === null || toBig === null) return;
   var n = noteLoad();
@@ -141,6 +148,7 @@ function noteDist(fromBig, toBig) {
 /* How many countries hold any address space at all, so "eleven countries"
  * has a denominator. Counted once from the registry already loaded. */
 var regCCs = 0;
+
 function allCountries() {
   if (regCCs || !REG || !REG.cc) return regCCs;
   var seen = {}, i;

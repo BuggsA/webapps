@@ -1,4 +1,4 @@
-/* apps/ip/js/18-network.js — whoami is elsewhere; this is RIPEstat: the network, and its shape.
+/* apps/ip/js/20-network.js — whoami is elsewhere; this is RIPEstat: the network, and its shape.
  * One of the files ip used to be. Read ../MAP.md first: it lists what
  * every file defines and uses. All files share one global scope and
  * load in numeric order from index.html. */

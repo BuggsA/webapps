@@ -1,4 +1,4 @@
-/* apps/ip/js/22-answer.js — the answer: address, facts row, Explore, Copy, About, notebook panel.
+/* apps/ip/js/25-answer.js — the answer: address, facts row, Explore, Copy, About, notebook panel.
  * One of the files ip used to be. Read ../MAP.md first: it lists what
  * every file defines and uses. All files share one global scope and
  * load in numeric order from index.html. */
@@ -107,6 +107,7 @@ function syncExplore() {
  * Called on load and resize only - never per frame, and never moves the
  * camera; it moves text out of the camera's way. */
 var fitTimer = 0;
+
 function fitAnswer() {
   var box = document.getElementById('answer');
   if (!box) return;
@@ -132,6 +133,7 @@ function fitAnswer() {
   box.classList.add('tight');
   lift();
 }
+
 function fitSoon() {
   clearTimeout(fitTimer);
   fitTimer = setTimeout(fitAnswer, 60);
@@ -271,6 +273,7 @@ function openNote() {
   el.notebook.setAttribute('aria-expanded', 'true');
   el.noteClose.focus();
 }
+
 function closeNote() {
   el.notePanel.hidden = true;
   el.notebook.setAttribute('aria-expanded', 'false');
@@ -325,6 +328,7 @@ function aboutHTML() {
 }
 
 var aboutOpen = false;
+
 function openAbout() {
   if (!el.aboutBody.dataset.built) {
     el.aboutBody.innerHTML = aboutHTML();
@@ -335,6 +339,7 @@ function openAbout() {
   aboutOpen = true;
   el.aboutClose.focus();
 }
+
 function closeAbout() {
   el.aboutPanel.hidden = true;
   el.about.setAttribute('aria-expanded', 'false');

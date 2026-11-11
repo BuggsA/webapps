@@ -17,6 +17,7 @@
  * to go in front of it. */
 
 var CONTENT = null;
+
 var contentState = '';
 
 function loadContent() {

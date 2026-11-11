@@ -16,11 +16,13 @@ function mul(a, b) {
   }
   return o;
 }
+
 function persp(fov, asp, n, f) {
   var t = 1 / Math.tan(fov / 2);
   return new Float32Array([t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)/(n-f),-1,
                            0,0,2*f*n/(n-f),0]);
 }
+
 function look(eye, at, up) {
   function sub(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
   function nz(v){var l=Math.hypot(v[0],v[1],v[2])||1;return [v[0]/l,v[1]/l,v[2]/l];}
@@ -30,6 +32,7 @@ function look(eye, at, up) {
   return new Float32Array([x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
                            -dt(x,eye),-dt(y,eye),-dt(z,eye),1]);
 }
+
 /* The camera basis, yaw included. `look` builds its axes from
  * z = normalize(eye - at), so for a camera facing +z the right vector is
  * (-1, 0, 0) and world +x renders on the LEFT. Everything that reasons
@@ -40,6 +43,7 @@ function camBasis() {
   function ry(v) { return [v[0]*cy + v[2]*sy, v[1], -v[0]*sy + v[2]*cy]; }
   return { right: ry([-1, 0, 0]), up: ry([0, cp, sp]), fwd: ry([0, -sp, cp]) };
 }
+
 function eyePos() {
   var b = camBasis(), cy = Math.cos(S.yaw), sy = Math.sin(S.yaw);
   var e = [CAM.z * sy, CAM.y, CAM.z * cy];
@@ -51,11 +55,13 @@ function eyePos() {
   }
   return e;
 }
+
 function viewProj() {
   var eye = eyePos(), b = camBasis();
   var at = [eye[0] + b.fwd[0]*10, eye[1] + b.fwd[1]*10, eye[2] + b.fwd[2]*10];
   return mul(persp(CAM.fov, S.W / S.H, 0.02, 400), look(eye, at, [0,1,0]));
 }
+
 function toScreen(VP, x, y, z) {
   var cx = VP[0]*x + VP[4]*y + VP[8]*z + VP[12];
   var cy = VP[1]*x + VP[5]*y + VP[9]*z + VP[13];
@@ -65,7 +71,9 @@ function toScreen(VP, x, y, z) {
 }
 
 var layerScale = new Float32Array(LAYERS);
+
 var layerAlpha = new Float32Array(LAYERS);
+
 /* What each layer WEIGHS, and what each layer EMITS, are not the same
  * number. layerAlpha is the weight: which state owns the plate, which
  * field answers the pointer, which rung the sound is on. layerLight is
@@ -73,6 +81,8 @@ var layerAlpha = new Float32Array(LAYERS);
  * two were one array until a rung dimmed for being small also stopped
  * being pickable and handed the plate to the block. */
 var layerLight = new Float32Array(LAYERS);
+
+
 var layerPan = new Float32Array(LAYERS * 2);   /* x,z per layer */
 
 /* Each state fades in over its own window and is drawn at its own scale,
@@ -90,8 +100,11 @@ function weightAt(a) {
   var c = Math.cos(d * Math.PI / 2);
   return c * c;
 }
+
 function scaleAt(a) { return BASE * Math.pow(ZOOM, a - S.s); }
+
 function panX(ly) { return layerPan[ly * 2]; }
+
 function panZ(ly) { return layerPan[ly * 2 + 1]; }
 
 /* The states are NORMALISED to sum to one.
@@ -223,4 +236,24 @@ function layers() {
     if (!r) continue;
     layerLight[LY.SLOT0 + i] *= Math.min(1, Math.pow(ZOOM, r.axis - S.s));
   }
+}
+
+function activeField() {
+  var i, ly, best = null, bw = LIVE;
+  for (i = 0; i < SLOTS; i++) {
+    ly = LY.SLOT0 + i;
+    if (fieldGeoms[ly] && layerAlpha[ly] > bw) { bw = layerAlpha[ly]; best = fieldGeoms[ly]; }
+  }
+  return best;
+}
+
+function activeRung() {
+  var i, best = null, bw = LIVE;
+  for (i = 0; i < SLOTS; i++) {
+    if (S.rungs[i] && S.rungs[i].f && layerAlpha[LY.SLOT0 + i] > bw) {
+      bw = layerAlpha[LY.SLOT0 + i]; best = S.rungs[i];
+    }
+  }
+  if (best) best.alpha = bw;
+  return best;
 }

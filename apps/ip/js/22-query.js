@@ -1,4 +1,4 @@
-/* apps/ip/js/20-query.js — asking the map a question, and drawing the answer.
+/* apps/ip/js/22-query.js — asking the map a question, and drawing the answer.
  * One of the files ip used to be. Read ../MAP.md first: it lists what
  * every file defines and uses. All files share one global scope and
  * load in numeric order from index.html. */

@@ -167,6 +167,7 @@ function marksInField(f) {
  * Finer than that we decline to guess, which is the same rule the rest of
  * the instrument runs on. They heal on the next visit. */
 var beenCache = null;
+
 function beenRanges() {
   if (beenCache) return beenCache;
   var out = [], n, k, s, sl, a, bits, len;

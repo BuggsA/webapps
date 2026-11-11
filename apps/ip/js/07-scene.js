@@ -8,7 +8,12 @@
 /* ══ SCENE ═══════════════════════════════════════════════════════════ */
 
 var lines = [], points = [], pools = [], surfs = [], targets = [];
+
 var markAnchor = null;
+
+
+
+
 var blockGeom = null;   /* what pick() needs to invert the projection */
 var fieldGeoms = {};    /* layer -> the same, for whichever rungs are live */
 var cursor = null;      /* the mark the pointer is nearest, and what it is */
@@ -18,12 +23,15 @@ function L(a, b, col, i, w, glow, layer, id) {
                glow: glow === undefined ? 0.3 : glow,
                layer: layer||0, id: id||0 });
 }
+
 function P(p, col, i, size, layer, id) {
   points.push({ p:p, col:col, i:i, size:size||6, layer:layer||0, id:id||0 });
 }
+
 function Pool(x, z, r, col, i, layer) {
   pools.push({ x:x, z:z, r:r, col:col, i:i, layer:layer||0 });
 }
+
 function Surf(cen, u, v, col, i, layer, id) {
   surfs.push({ cen:cen, u:u, v:v, col:col, i:i, layer:layer||0, id:id||0 });
 }

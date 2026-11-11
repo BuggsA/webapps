@@ -1,4 +1,4 @@
-/* apps/ip/js/23-boot.js — boot: wire everything up, start, and the window.__ip debug surface.
+/* apps/ip/js/26-boot.js — boot: wire everything up, start, and the window.__ip debug surface.
  * One of the files ip used to be. Read ../MAP.md first: it lists what
  * every file defines and uses. All files share one global scope and
  * load in numeric order from index.html. */

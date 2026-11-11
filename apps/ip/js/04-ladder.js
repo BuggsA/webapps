@@ -113,10 +113,12 @@ function rungKey() {
   }
   return k;
 }
+
 function fieldPrefix(f, index) {
   return ipToText(f.containerNet + (BigInt(index) << f.cellShift), f.v) +
          '/' + f.cellLen;
 }
+
 function containerName(f) {
   return ipToText(f.containerNet, f.v) + '/' + f.containerLen;
 }
@@ -131,6 +133,7 @@ function cacheGet(k) {
     return (!o || Date.now() - o.t > CACHE_TTL) ? null : o.d;
   } catch (_) { return null; }
 }
+
 function cacheSet(k, d) {
   try { localStorage.setItem(CACHE_KEY + k, JSON.stringify({ t: Date.now(), d: d })); }
   catch (_) { /* private mode or full quota: not a failure worth showing */ }

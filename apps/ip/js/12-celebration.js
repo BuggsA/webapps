@@ -27,6 +27,9 @@
  * again. */
 
 var CEL_MS = 1150;
+
+
+
 var celBase = null;    /* array lengths with no celebration in them */
 var cel = null;        /* { t0, x, z, layer, label } */
 

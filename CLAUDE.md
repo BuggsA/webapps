@@ -39,7 +39,7 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
 - **Deploy is human-run, always.** Prepare the commands; never run `aws`,
   `cdk`, or the deploy scripts.
 - **Phase-gated building: one phase, then stop and show it.**
-- **The code is `apps/ip/js/`, 24 small files. Read `apps/ip/MAP.md` first,**
+- **The code is `apps/ip/js/`, small files, one job each. Read `apps/ip/MAP.md` first,**
   then only the file(s) you need. They share one global scope and load in
   numeric order; a new file needs its `<script>` tag in `index.html`, and
   `python scripts/ip-map.py` must pass. Never define one name in two files.

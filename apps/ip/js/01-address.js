@@ -8,12 +8,16 @@
 /* ══ UTIL ════════════════════════════════════════════════════════════ */
 
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
 function lerp(a, b, t) { return a + (b - a) * t; }
+
 function smooth(t) { return t * t * (3 - 2 * t); }
+
 function rgba(c, a) {
   return 'rgba(' + Math.round(c[0]*255) + ',' + Math.round(c[1]*255) + ',' +
          Math.round(c[2]*255) + ',' + a + ')';
 }
+
 function group(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
 /* ── addresses ─────────────────────────────────────────────────────── */
@@ -29,6 +33,7 @@ function parseIp4(str) {
   }
   return { v: 4, big: v, bits: 32, text: str };
 }
+
 function parseIp6(str) {
   var halves = str.split('::');
   if (halves.length > 2) return null;
@@ -60,12 +65,14 @@ function parseIp6(str) {
   for (i = 0; i < 8; i++) v = (v << 16n) | BigInt(all[i]);
   return { v: 6, big: v, bits: 128, text: str };
 }
+
 function parseIp(str) {
   if (!str) return null;
   str = String(str).trim();
   if (str.length > 45) return null;
   return str.indexOf(':') >= 0 ? parseIp6(str) : parseIp4(str);
 }
+
 function parseCidr(str) {
   if (!str) return null;
   var bits = String(str).split('/');
@@ -177,6 +184,7 @@ function d2xy(n, d) {
   }
   return [x, y];
 }
+
 function xy2d(n, x, y) {
   var rx, ry, d = 0, sc, tmp;
   for (sc = n / 2; sc > 0; sc = Math.floor(sc / 2)) {

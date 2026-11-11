@@ -30,12 +30,16 @@
  * arrive -- which matters, because frames stop when the axis does. */
 
 var OCTAVES = 4;
+
 var SOUND_KEY = 'ip.v1.sound';
+
+
 var snd = null;      /* the audio graph, once a gesture has allowed one */
 
 function soundRemembered() {
   try { return localStorage.getItem(SOUND_KEY) === '1'; } catch (_) { return false; }
 }
+
 function rememberSound(on) {
   try { localStorage.setItem(SOUND_KEY, on ? '1' : '0'); } catch (_) { }
 }
@@ -84,6 +88,7 @@ function soundFrame() {
   if (!S.sound || !snd) return;
   try { soundFrameInner(); } catch (_) { S.sound = false; }
 }
+
 function soundFrameInner() {
   var ctx = snd.ctx, t = ctx.currentTime, i, k, r, w;
   if (ctx.state === 'suspended') { try { ctx.resume(); } catch (_) { } }
