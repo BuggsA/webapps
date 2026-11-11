@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-33 files, 7602 lines.
+33 files, 7616 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -33,14 +33,14 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `15-renderer.js` | 125 | choosing a renderer, driving frames, stopping when still |
 | `16-axis.js` | 66 | the scale axis: setting it, stepping it between stops, and its gain |
 | `17-pick.js` | 220 | what the pointer is on: the cursor, picking a cell, a tap |
-| `18-travel.js` | 171 | moving the aim: travel, back, Home, stepping, and asking what is there |
-| `19-input.js` | 154 | input: wheel, drag, touch and keys, wired to the axis and travel |
+| `18-travel.js` | 174 | moving the aim: travel, back, Home, stepping, and asking what is there |
+| `19-input.js` | 163 | input: wheel, drag, touch and keys, wired to the axis and travel |
 | `20-network.js` | 187 | whoami is elsewhere; this is RIPEstat: the network, and its shape |
 | `21-registry.js` | 360 | space.bin: every allocation the five registries made |
 | `22-query.js` | 321 | asking the map a question, and drawing the answer |
 | `23-words.js` | 262 | the words: what the plate and the companion say about where you are |
 | `24-view.js` | 283 | the view: syncDom writes state into the page, one named step at a time |
-| `25-answer.js` | 383 | the answer: address, facts row, Explore, Copy, About, notebook panel |
+| `25-answer.js` | 385 | the answer: address, facts row, Explore, Copy, About, notebook panel |
 | `26-wiring.js` | 104 | what happens after the axis moves, and after a place answers |
 | `27-teaser.js` | 82 | the teaser: one true line about the visitor's own address, to make them stop |
 | `28-pullback.js` | 156 | the first pull: one gesture from home glides out to "You are here" |
@@ -161,7 +161,7 @@ What the pointer is on: the cursor, picking a cell, a tap. **Uses:** 00, 01, 04,
 
 ### `18-travel.js`
 
-Moving the aim: travel, back, Home, stepping, and asking what is there. **Uses:** 01, 05, 06, 11, 15, 16, 20, 23, 24, 26. **Used by:** 17, 19, 24, 25, 29, 31, 32.
+Moving the aim: travel, back, Home, stepping, and asking what is there. **Uses:** 01, 05, 06, 11, 15, 16, 20, 23, 24, 26, 28. **Used by:** 17, 19, 24, 25, 29, 31, 32.
 
 `travelTo` `back` `goHome` `stepAim` `askTimer` `askSubject` `applySubject`
 
@@ -221,7 +221,7 @@ The teaser: one true line about the visitor's own address, to make them stop. **
 
 ### `28-pullback.js`
 
-The first pull: one gesture from home glides out to "You are here". **Uses:** 01, 04, 05, 06, 16, 23. **Used by:** 19, 24, 31, 32.
+The first pull: one gesture from home glides out to "You are here". **Uses:** 01, 04, 05, 06, 16, 23. **Used by:** 18, 19, 24, 31, 32.
 
 `pull` `pulledOnce` `pullEligible` `startPull` `pullFrame` `stopPull` `pullWheel` `setupPull` `syncHere` `explorePressed`
 

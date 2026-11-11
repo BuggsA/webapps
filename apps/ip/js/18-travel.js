@@ -66,6 +66,9 @@ function back() {
 }
 
 function goHome() {
+  /* a glide still running (28-pullback) would carry the axis straight back
+   * out, and Home would look as though it did nothing */
+  if (pull) stopPull();
   S.yaw = 0;
   S.pickAxis = null;
   S.trail.length = 0;

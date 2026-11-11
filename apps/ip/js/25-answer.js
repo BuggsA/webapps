@@ -247,10 +247,12 @@ function loadAddress() {
  * and its word is a promise, so it keeps it: a tap or click goes home. A
  * drag across the address to select and copy it is left alone. */
 function setupHomeMarker() {
-  el.address.addEventListener('click', function () {
-    if (document.body.dataset.state === 'home') return;
-    var sel = window.getSelection && String(window.getSelection());
-    if (sel) return;
+  /* A real button now. The old listener on the <p> also refused whenever
+   * any text was selected (meant for dragging across the address to copy
+   * it) - and a phone keeps a selection after a long-press, so HOME could
+   * stay dead for the rest of the visit. */
+  el.homeMark.addEventListener('click', function (e) {
+    e.stopPropagation();
     goHome();
     announce();
   });
