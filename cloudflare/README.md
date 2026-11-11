@@ -36,10 +36,28 @@ All of these sit in `apps/ip/`, so they land at the site root:
 |---|---|
 | `_headers` | Pages response headers: long cache for `fonts/` and `data/`, no Referer sent anywhere, `noindex` on the `.md` files. |
 | `404.html` | Without one, Pages answers **every** unknown path - including `/robots.txt` and `/sitemap.xml` - with `index.html` and a 200. Search engines read that as endless duplicate pages. |
-| `robots.txt` | Allow everything. Gains a `Sitemap:` line once the custom domain is chosen. |
+| `robots.txt` | Allow everything, and points at the sitemap. |
+| `sitemap.xml` | The one page, at its canonical address `https://iphere.app/`. `index.html` carries the matching `<link rel="canonical">`. |
 | `data/space.bin.gz` | Pages will not compress `application/octet-stream`, so the raw 2.9 MB `space.bin` was downloaded uncompressed. The page fetches this 439 KB copy and unpacks it with `DecompressionStream`; `space.bin` is the fallback. Both are written by `scripts/ip-build-space-field.py`. |
 
 `functions/whoami.js` answers `/whoami` with the address, plus `where`
 (Cloudflare's own `request.cf` city/region/country) and `net` (`request.cf`
 AS number and name). Nobody else is asked.
 
+
+## The custom domain: `iphere.app` (owner, 2026-11-11)
+
+The ip project's production address is **`https://iphere.app/`**; the
+canonical tag, `robots.txt` and `sitemap.xml` all name it. Set up in the
+Cloudflare dashboard, not in this repo:
+
+1. Bought through Cloudflare Registrar, so its DNS is already on Cloudflare.
+2. Workers & Pages -> `ip` -> Custom domains -> add `iphere.app` (Cloudflare
+   writes the DNS record and the certificate). Optionally `www.iphere.app`
+   too, redirected to the bare domain.
+3. `ip-5q5.pages.dev` -> `iphere.app` is a **Bulk Redirect** (Rules ->
+   Redirect Rules -> Bulk Redirects): source `ip-5q5.pages.dev`, target
+   `https://iphere.app`, 301, with *preserve query string*, *subpath
+   matching* and *preserve path suffix* on. It lives in the dashboard
+   rather than as a Pages Function so it costs no Function invocations, and
+   it leaves branch previews (`<branch>.ip-5q5.pages.dev`) alone.
