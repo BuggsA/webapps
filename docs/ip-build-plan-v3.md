@@ -142,7 +142,13 @@ somebody wants to post it.
 **Carried forward from the mobile decision:** the share path is where "a dumb
 phone version" stops being free. This is the phase that forces that question.
 
-## 4. The inward half — v2's H
+## 4. The inward half — v2's H — **BUILT SMALL 2026-11-11**, preview only
+
+As built: `js/30-inward.js`, a panel reachable from About and as the last
+two beats of *The boundary*. I1 what arrived (whoami's echoed headers, in
+plain words), I2 what stayed on the device, I3 why it matters, I4 where
+sight stops. Not built from the plan: the outward sound stopping, and the
+privacy audit as a separate document. *The boundary* now ships.
 
 The instrument turns around and the product ends. **Informs rather than
 alarms** — fear appeal is the cheapest available win here and taking it would

@@ -838,7 +838,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 
 /* ── ABOUT ───────────────────────────────────────────────────────────── */
 
-#aboutPanel, #notePanel {
+#aboutPanel, #notePanel, #inwardPanel {
   position: fixed;
   inset: 0;
   z-index: 6;
@@ -847,7 +847,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   display: grid;
   place-items: start center;
 }
-#aboutPanel[hidden], #notePanel[hidden] { display: none; }
+#aboutPanel[hidden], #notePanel[hidden], #inwardPanel[hidden] { display: none; }
 
 /* The notebook reuses the About panel's frame: same width, same rhythm, same
    way out. It is a second page of the same book, not a new kind of surface. */
@@ -866,12 +866,12 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 }
 #noteBody ul.sites li:first-child { border-top: 0; }
 
-#aboutInner, #noteInner {
+#aboutInner, #noteInner, #inwardInner {
   width: min(62ch, calc(100% - var(--gutter) * 2));
   padding: clamp(40px, 9vh, 96px) 0;
   position: relative;
 }
-#aboutClose, #noteClose {
+#aboutClose, #noteClose, #inwardClose {
   position: absolute;
   right: 0;
   top: clamp(16px, 4vh, 40px);
@@ -883,9 +883,9 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   min-height: 44px;
   min-width: 44px;
 }
-#aboutClose:hover, #noteClose:hover { color: var(--cream); }
+#aboutClose:hover, #noteClose:hover, #inwardClose:hover { color: var(--cream); }
 
-#aboutBody h2, #noteBody h2 {
+#aboutBody h2, #noteBody h2, #inwardBody h2 {
   color: var(--cream);
   font-size: clamp(22px, 3vw, 32px);
   font-weight: 260;
@@ -893,8 +893,8 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   margin: 1.8em 0 .5em;
   letter-spacing: -.004em;
 }
-#aboutBody h2:first-child, #noteBody h2:first-child { margin-top: 0; }
-#aboutBody h3, #noteBody h3 {
+#aboutBody h2:first-child, #noteBody h2:first-child, #inwardBody h2:first-child { margin-top: 0; }
+#aboutBody h3, #noteBody h3, #inwardBody h3 {
   color: var(--cold-1);
   font-size: var(--ui);
   font-weight: 500;
@@ -902,7 +902,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   text-transform: uppercase;
   margin: 1.8em 0 .4em;
 }
-#aboutBody p {
+#aboutBody p, #inwardBody p {
   color: var(--cold-2);
   font-size: clamp(14px, 1.45vw, 16px);
   line-height: 1.62;
@@ -955,6 +955,26 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   border-bottom: 1px solid var(--cold-4);
 }
 #aboutDoors a:hover { border-color: var(--cream); }
+
+/* THE INWARD HALF (30-inward). The same book as About; the rows are the
+   facts row's hairlines. The story's own words are cream, because that is
+   somebody telling you something. Nothing here is red: it informs. */
+#aboutInwardRow { margin-top: 2em; }
+#aboutInward {
+  color: var(--cream); font-size: clamp(15px, 1.6vw, 18px); font-weight: 340;
+  border-bottom: 1px solid var(--cold-3); padding: 6px 0; min-height: 44px;
+}
+#aboutInward:hover { border-color: var(--cream); }
+#inwardBody dl.inward { margin: .6em 0 0; border-top: 1px solid var(--cold-4); }
+#inwardBody dl.inward > div {
+  display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 5fr); gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid var(--cold-4); align-items: baseline;
+}
+#inwardBody dt { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--cold-3); }
+#inwardBody dd { margin: 0; color: var(--cream); font-size: 16px; overflow-wrap: anywhere; }
+#inwardBody dd .sub { display: block; color: var(--cold-2); font-size: 13px; margin-top: 3px; line-height: 1.5; }
+#inwardBody p.said, #inwardBody p.reveal { color: var(--cream); font-weight: 340; }
+#inwardEdge { margin-top: 2.4em; padding-top: 1.2em; border-top: 1px solid var(--cold-3); }
 
 /* ── SMALL SCREENS ───────────────────────────────────────────────────── */
 

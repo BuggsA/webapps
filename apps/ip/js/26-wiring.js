@@ -85,3 +85,19 @@ function afterQuerySet() {
 function afterHomeNetwork() {
   chainsAfterAxis();   /* 29-chains */
 }
+
+/* After the visitor opens "What your visit told this site" (30-inward). */
+function afterInwardOpened() {
+  chainEvent({ kind: 'inward-open' });   /* 29-chains: The boundary, beat 1 */
+}
+
+/* After they have read down to where this site's sight stops. */
+function afterInwardEnd() {
+  if (chainEvent({ kind: 'inward-edge' }) && inwardOpen) {
+    /* the story just ended: its last words belong on the page they are reading */
+    el.inwardBody.textContent = '';
+    el.inwardBody.appendChild(inwardHTML());
+    var e = document.getElementById('inwardEdge');
+    if (e) e.scrollIntoView({ block: 'nearest' });
+  }
+}

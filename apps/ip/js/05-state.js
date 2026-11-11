@@ -16,6 +16,8 @@ var S = {
   edgeNet: null,      /* the network the edge saw this visit arrive from:
                        * {asn, org}. The name may be filled in later from
                        * RIPEstat by the AS NUMBER, never by the address. */
+  sent: null,         /* the request headers the edge echoed back for this
+                       * visit (30-inward shows them). Never kept. */
   net: null,
   asked: {},          /* cell prefix -> what came back when we asked */
   aim: null,          /* BigInt: the address the instrument is POINTED AT.

@@ -102,7 +102,7 @@ function nearestRoot() {
 
 /* Can this visitor ever meet this beat? */
 function beatLive(b) {
-  if (!S.home || !b.rule || b.rule === 'other-family' || b.rule === 'inward') return false;
+  if (!S.home || !b.rule || b.rule === 'other-family') return false;
   if (b.only && !tagsHave(b.only)) return false;
   if (b.rule === 'at') return beatAddr(b) !== null;
   if (b.rule === 'same-network') return sameNetTarget() !== false;
@@ -190,6 +190,10 @@ function beatMet(b, ev, l) {
              !(s && s.k.indexOf('q' + regIndex(ev.big, v)) >= 0);
     case 'cc-mismatch':
       return ev.kind === 'mismatch' && !(s && s.k.indexOf('r' + ev.rir) >= 0);
+    case 'inward-open':
+      return ev.kind === 'inward-open';
+    case 'inward-edge':
+      return ev.kind === 'inward-edge';
   }
   return false;
 }
@@ -342,6 +346,7 @@ function beatTarget(b) {
     case 'root': var rt = nearestRoot(); return rt === null ? null : { addr: rt };
     case 'same-network': var sn = sameNetTarget(); return sn ? { addr: sn } : null;
     case 'query-cc': return { query: { kind: 'cc', value: b.cc } };
+    case 'inward-open': return { open: 'inward' };
   }
   return null;
 }
@@ -350,6 +355,7 @@ function goTarget(t) {
   if (!t) return;
   if (t.addr !== undefined) travelTo(t.addr, true);
   else if (t.query) setQuery(t.query);
+  else if (t.open === 'inward') openInward();   /* 30-inward */
 }
 
 /* STORIES ON THE HORIZON, for 22-query's "From here you can see". The
@@ -510,7 +516,7 @@ function syncTrack() {
   if (bi >= 0) {
     var b = l.beats[bi], t = beatTarget(b), g;
     if (t) g = trackBtn(b.goal, 'beat ask', function () { goTarget(t); },
-                        t.query ? 'Ask the map' : 'Go there');
+                        t.query ? 'Ask the map' : t.open ? 'Open it' : 'Go there');
     else { g = document.createElement('span'); g.className = 'beat'; g.textContent = b.goal; }
     el.track.appendChild(g);
   } else {

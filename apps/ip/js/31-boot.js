@@ -1,4 +1,4 @@
-/* apps/ip/js/30-boot.js — boot: wire everything up, start, and the window.__ip debug surface.
+/* apps/ip/js/31-boot.js — boot: wire everything up, start, and the window.__ip debug surface.
  * One of the files ip used to be. Read ../MAP.md first: it lists what
  * every file defines and uses. All files share one global scope and
  * load in numeric order from index.html. */
@@ -70,7 +70,8 @@ function boot() {
         'companionState', 'companionSummary', 'companionFacts',
         'about', 'aboutPanel', 'aboutClose', 'aboutBody', 'sound',
         'notebook', 'notePanel', 'noteClose', 'noteBody', 'sight',
-        'guide', 'guideBtn', 'found', 'track']);
+        'guide', 'guideBtn', 'found', 'track',
+        'inwardPanel', 'inwardClose', 'inwardBody']);
 
   var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
   S.reduced = mq.matches;
@@ -108,6 +109,7 @@ function boot() {
   setupAxis();
   setupCopy();
   setupHomeMarker();   /* 25-answer */
+  setupInward();       /* 30-inward */
   /* Off until asked, and the asking is the gesture browsers require
    * anyway. prefers-reduced-motion starts silent even if it was on last
    * time: the people who ask for less movement usually want less noise,

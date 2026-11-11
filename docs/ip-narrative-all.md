@@ -24,8 +24,8 @@ Full reasoning: `ip-guide-voice.md`, `ip-emotional-design.md`, `ip-two-audiences
 |---|---|
 | lines the guide can say | **126** across 42 buckets |
 | modes | dry 72 (57%) · wry 30 (24%) · open 24 (19%) |
-| chains | **9**, 29 beats |
-| beats the engine resolves at runtime | 17 of 29 |
+| chains | **9**, 30 beats |
+| beats the engine resolves at runtime | 17 of 30 |
 
 Per tier, which is where the ratio actually matters:
 
@@ -444,7 +444,7 @@ Per tier, which is where the ratio actually matters:
 
 *`the-boundary` · main · needs `the-main-line`*
 
-> The plan's beats 6 and 7. The instrument turns around, and the product ends where it should. Fear appeal is the cheapest win available here and taking it would make this a worse product: show how little was kept and let the relief be the payoff.
+> The plan's beats 6 and 7. The instrument turns around, and the product ends where it should. Fear appeal is the cheapest win available here and taking it would make this a worse product: show how little was kept and let the relief be the payoff. Unblocked 2026-11-11 by a small inward half (js/30-inward.js): what arrived with the visit, what stayed on the device, why it matters, and where sight stops.
 
 1. ***find:* what actually crossed the wire to get here**
    > Everything I have shown you came from one number and a handful of public registers. Here is all of it.
@@ -524,18 +524,24 @@ Per tier, which is where the ratio actually matters:
 
 *`sold-and-returned` · side · needs `oldest-hands`*
 
+> Rewritten 2026-11-11 for an ordinary reader (owner: 'If not interesting to the normal human it is likely noise. Not your average networking person, but the average person'). The hook is money and generosity, which everyone understands: one university sold its spare addresses, another gave them away. The old draft's claim that 36/8 went to 'a registry that did not exist when it was first handed out' was dropped: the register dates Stanford's block 1993, the year APNIC began, and nothing found says otherwise.
+
 1. **`18.0.0.0`**
-   > One of the big early ones. Look at who announces the halves of it now, and then look again.
+   > MIT's. Sixteen million addresses, given to one university back when the internet was a research project. MIT still answers for this end of it.
    
-   <sub>teaches: a founding-era /8, and what happened to it is visible rather than asserted</sub>
-2. **`36.0.0.0`**
-   > This one is registered on the other side of the world now, to a registry that did not exist when it was first handed out.
+   <sub>teaches: a founding-era block, held by one university</sub>
+2. **`18.200.0.0`**
+   > Same block, and Amazon answers here. In 2017 MIT sold millions of addresses it was not using, and spent the money on its own network. Addresses had run out, so they had become worth buying.
    
-   <sub>teaches: the opposite decision, and the register records the consequence</sub>
+   <sub>teaches: addresses became property, and were sold</sub>
+3. **`36.0.0.0`**
+   > This was Stanford's, all sixteen million. In 2000 Stanford handed the whole block back, for nothing. Ten years later it was given out again, across Asia, most of it to networks in China.
+   
+   <sub>teaches: the opposite decision, and where the space went</sub>
 
-**Reveal —** Once there was no more of it, address space became something you could transfer. Where a block is registered today and where it started are two different questions, and this map only answers the first.
+**Reveal —** Once there were no more addresses, the old ones became property. One university sold millions of its spare ones; another gave its whole block away, which at today's prices of around twenty dollars an address would be worth hundreds of millions of dollars. Where a block is registered today says very little about where it started.
 
-<sub>verified: 36.0.0.0 reads APNIC / CN / 2011 in space.bin, which is consistent with the block having been returned and reissued. 18.0.0.0 reads ARIN / US / 1994. No holder is named by any line here; the plate names them from the live lookup.</sub>
+<sub>verified: Checked 2026-11-11. LIVE (RIPEstat network-info): 18.0.0.0/16 announced by AS3, MIT; 18.200.0.0/16 and 18.130.0.0/16 by AS16509, Amazon; 36.0.0.0 not announced. space.bin: 36.0.0.0/8 is APNIC, all of it handed out in 2011, about 70% registered to China (CN), the rest ID, JP, TW, NP. MIT's sale: Network World, 'MIT selling 8 million coveted IPv4 addresses; Amazon a buyer' (2017); Internet Society blog, 'MIT goes on IPv4 selling spree' (May 2017) - sale proceeds to fund MIT's network upgrade. Stanford: IANA IPv4 address-space registry history, 36/8 Stanford, returned to IANA as reserved 2000-07, allocated to APNIC 2010-10 (NANOG and APNIC announcements, October 2010; Geoff Huston's 36/8 study). Stanford's stated reason was not found, so no line gives one. Price: IPv4Center 2025 report, average $27.75 per address over 2025; CircleID and IPv4Center put early-2026 averages near $20; /16-sized blocks traded below $15. 'Hundreds of millions of dollars' for 16.8 million addresses holds at any of these ($250M at $15). No line names an exact figure, because the price moves.</sub>
 
 ## Small countries, old space
 
@@ -599,10 +605,7 @@ Per tier, which is where the ratio actually matters:
 Derived from the content files on every regeneration, because the hand-written version of this section went stale the moment the main line was written and a reviewer found it before I did.
 
 - **The spine exists.** *Where you actually are* and *The boundary*, 11 beats total.
-- **9 chains, 29 beats**, of which **17 are `find` rules** the engine resolves at runtime rather than addresses anybody chose.
-- **2 chains cannot ship yet:**
-  - *The boundary* — Needs the inward half - phase H - which does not exist. The beats are written so the spine is settled and the side chains have something to point at, but nothing here can be built or locked yet.
-  - *Sold, and given back* — The RETURN is not verified. space.bin shows 36.0.0.0 registered to CN under APNIC in 2011, which is consistent with a block having been given back and reissued and is not evidence that it was. Either a real historical source arrives or this chain does not ship. The beats are written so it can be decided rather than forgotten.
+- **9 chains, 30 beats**, of which **17 are `find` rules** the engine resolves at runtime rather than addresses anybody chose.
 - **Still unwritten:** the celebration lines. Phase C machinery does not exist, and the rule for them is already set - he describes the play, like an announcer, and never congratulates the viewer.
 
 # Known soft spots
