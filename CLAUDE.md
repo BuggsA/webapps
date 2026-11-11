@@ -10,6 +10,7 @@ Cloudflare Pages project. The current work is **`apps/ip`**, a beautiful
 
 | file | authority |
 |---|---|
+| **`docs/ip-concept.md`** | **the concept: a beautiful sidewalk, built for traffic** (owner, 2026-11-11). **Outranks every other document here.** One page. |
 | **`COMPACTION_REHYDRATION.md`** | **read first after any compact, resume or restart.** The concise recovery index. |
 | **`PRODUCT_SOUL.md`** | defines the product's character. Read before any substantial product-facing change. |
 | **`CURRENT_STATE.md`** | defines implementation state — what is done, in progress, broken. |
@@ -21,6 +22,9 @@ Cloudflare Pages project. The current work is **`apps/ip`**, a beautiful
 
 ## Rules
 
+- **The goal is traffic; the product is a beautiful sidewalk** (owner,
+  2026-11-11, `docs/ip-concept.md`). The errand - the IP, fast - always
+  wins. Exploring is optional and must cost the errand nothing.
 - **Useful first, then exploration** (owner, 2026-11-11). The first frame
   is a complete what's-my-IP answer before it is an invitation. Nothing
   optional stands between a visitor and the facts they came for.

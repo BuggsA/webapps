@@ -21,6 +21,13 @@ Companion documents, all of which exist and are authoritative:
 
 ---
 
+> **2026-11-11 — the concept changed. Read `docs/ip-concept.md` first.** The
+> goal is now **traffic**; beauty is how it competes, not what it is for.
+> *"Sidewalks don't have to be dirty, cracked and littered. Make a nice one.
+> If people want to stop and see the beauty or interact they can, but they
+> can still get to the store down the way."* Where this document disagrees
+> with that page, that page wins.
+
 ## 1. What the product is
 
 **A beautiful "what's my IP".** Your public address, in the first frame, from

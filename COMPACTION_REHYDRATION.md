@@ -7,6 +7,10 @@ Second preservation pass, 2026-09-18.
 
 ## Update 2026-11-11 — read this before the rest
 
+**THE CONCEPT: `docs/ip-concept.md`.** Goal is traffic. A beautiful sidewalk:
+the errand (your IP, fast) always wins; exploring is optional and costs the
+errand nothing. Its "Proposed" section is NOT approved.
+
 **Standing direction from the owner: useful first, then exploration.** The
 useful layer is built on branch `claude/sleepy-tesla-kv7qqd`, not deployed
 (see `docs/ip-build-plan-v3.md`, "THE DIRECTION"). **Next is NOT

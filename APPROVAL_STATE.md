@@ -31,6 +31,8 @@ like 'xyz Tennessee'."*
 | Wiring file — *"yes do the wiring file next"* | COMPLETE, proven identical, NOT deployed |
 | **Cloudflare Pages only; AWS dormant** — *"Can't we ignore aws for now like it doesn't exist. Build it so it is compatible for cloudflare?"* | standing decision. `_headers`, `404.html`, `robots.txt`, `space.bin.gz` added. Merging to `master` = deploy, owner only |
 | Custom domain, canonical, sitemap, share tags | **NOT done** — waiting on which domain |
+| **The concept: goal is traffic, "a beautiful sidewalk"** — owner's own words, in `docs/ip-concept.md` | **standing decision, outranks older docs.** Its "Proposed" implications are NOT approved |
+| The atlas of famous places, names over territories | proposed, superseded by stepping back — NOT approved |
 | Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
 
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not
