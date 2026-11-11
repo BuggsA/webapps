@@ -37,6 +37,7 @@ like 'xyz Tennessee'."*
 | #3 shareable "save my spot" image, #4 place of the day, #5 plain-words taps | proposed, NOT approved |
 | Privacy-respecting tally of whether people stop | proposed again as the way to measure #1/#2, NOT approved |
 | **Merge `claude/sleepy-tesla-kv7qqd` to `master`** (= production deploy) — *"can you do a pr and merge please?"*, 2026-11-11 | authorised for THIS merge only. The standing rule is unchanged: Claude does not merge to `master` without a fresh instruction |
+| **Merge `ip/custom-domain-iphere` to `master`** (= production deploy: iphere.app canonical, sitemap, favicon files, share image) — *"yes merge please"*, 2026-11-11 | authorised for THIS merge only. The standing rule is unchanged: Claude does not merge to `master` without a fresh instruction |
 | Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
 
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not
