@@ -5,6 +5,14 @@ Second preservation pass, 2026-09-18.
 
 ---
 
+## Update 2026-11-11 (latest) — on `claude/quirky-keller-axv9zp`, preview only
+
+Two approved pieces of work, NOT merged: an SEO pass (titles, structured
+data, FAQ behind About, doors `/ipv4-vs-ipv6/` and `/cidr/`), and **the
+chain engine** - the stories are playable (`js/29-chains.js`, boot moved to
+`30-boot.js`). See `APPROVAL_STATE.md`. Next in the plan: the doors from
+IPv4 into IPv6 (v3 §2) - NOT approved.
+
 ## Update 2026-11-11 (later) — this supersedes the update below
 
 **Live:** `master` is production at **https://iphere.app/** (PRs #1 and #2

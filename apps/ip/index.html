@@ -144,6 +144,9 @@
   <p id="found" hidden aria-live="polite"></p>
   <p id="guide" hidden></p>
   <p id="sight" hidden></p>
+  <!-- The tracker (29-chains): the story you are in the middle of, one
+       quiet line. Never on the first frame of a first visit. -->
+  <div id="track" hidden></div>
 </div>
 
 <!-- The annotation on the visitor's own mark, at the end of its leader. -->
@@ -252,7 +255,7 @@
 <!-- The app, in load order: classic scripts sharing one global scope. Most
      of them only declare functions, which can live in any file; order
      matters for the few statements that run at load (the landmark list in
-     03, and 29-boot, which must be last). What each one holds: MAP.md. -->
+     03, and 30-boot, which must be last). What each one holds: MAP.md. -->
 <script src="js/00-config.js"></script>
 <script src="js/01-address.js"></script>
 <script src="js/02-curve.js"></script>
@@ -282,6 +285,7 @@
 <script src="js/26-wiring.js"></script>
 <script src="js/27-teaser.js"></script>
 <script src="js/28-pullback.js"></script>
-<script src="js/29-boot.js"></script>
+<script src="js/29-chains.js"></script>
+<script src="js/30-boot.js"></script>
 </body>
 </html>

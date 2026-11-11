@@ -18,19 +18,26 @@
           "at": "the visitor's own address",
           "feels": "recognition",
           "teaches": "it is a number, and somebody agreed to it",
-          "say": "There. It exists somewhere other than here now, which is more than most of this map can say."
+          "say": "There. It exists somewhere other than here now, which is more than most of this map can say.",
+          "rule": "copied",
+          "soft": true,
+          "goal": "Copy your address"
         },
         {
           "find": "the prefix the visitor's address is announced in",
           "feels": "curiosity",
           "teaches": "somebody speaks for you",
-          "say": "Somebody stands up and says this range is theirs to speak for, and you are inside it. You have never met them."
+          "say": "Somebody stands up and says this range is theirs to speak for, and you are inside it. You have never met them.",
+          "rule": "own-block",
+          "goal": "Pull back until you can see the block you are announced in"
         },
         {
           "find": "another prefix the same network announces",
           "feels": "curiosity, widening",
           "teaches": "a network is not one range",
-          "say": "Same network, different part of the map entirely. A network is not a place. It is a list of ranges somebody is willing to answer for."
+          "say": "Same network, different part of the map entirely. A network is not a place. It is a list of ranges somebody is willing to answer for.",
+          "rule": "same-network",
+          "goal": "Find another block your own network announces"
         },
         {
           "find": "the whole of the visitor's address family",
@@ -39,7 +46,9 @@
             "v4"
           ],
           "teaches": "the size, and how little of it is left",
-          "say": "All of it. Every number there will ever be in this family, and nearly all of them are taken. It still carried everything you did today."
+          "say": "All of it. Every number there will ever be in this family, and nearly all of them are taken. It still carried everything you did today.",
+          "rule": "whole-family",
+          "goal": "Pull all the way out, to the whole of IPv4"
         },
         {
           "find": "the whole of the visitor's address family",
@@ -48,31 +57,41 @@
             "v6"
           ],
           "teaches": "the size, and how little of it has been needed",
-          "say": "All of it. Vastly more than has ever been handed out, and the part in use is a rounding error against the rest."
+          "say": "All of it. Vastly more than has ever been handed out, and the part in use is a rounding error against the rest.",
+          "rule": "whole-family",
+          "goal": "Pull all the way out, to the whole of IPv6"
         },
         {
           "find": "the nearest root server",
           "feels": "intimacy",
           "teaches": "a handful of named things hold the rest up, and people looked after them by hand",
-          "say": "Thirteen names hold up every name there is. And for years the register of which numbers had been given to whom was published, and largely kept, by one man."
+          "say": "Thirteen names hold up every name there is. And for years the register of which numbers had been given to whom was published, and largely kept, by one man.",
+          "rule": "root",
+          "goal": "Find the nearest root server"
         },
         {
           "find": "the origin network of any announced prefix",
           "feels": "unease",
           "teaches": "announcing is a claim, and every listener decides what to do with it",
-          "say": "A network can announce anything it likes. Every network decides for itself what to believe. Some of that is checked now - not all of it, and none of it was then."
+          "say": "A network can announce anything it likes. Every network decides for itself what to believe. Some of that is checked now - not all of it, and none of it was then.",
+          "rule": "other-origin",
+          "goal": "Visit a block that somebody else announces"
         },
         {
           "at": "208.65.153.0",
           "feels": "anger, or something near it",
           "teaches": "a claim meant for one country escaped",
-          "say": "In 2008 a route meant to block one site inside one country escaped. For about two hours it pulled that site's traffic across the internet to somewhere it was never going. No one meant that to happen, which is the part worth sitting with."
+          "say": "In 2008 a route meant to block one site inside one country escaped. For about two hours it pulled that site's traffic across the internet to somewhere it was never going. No one meant that to happen, which is the part worth sitting with.",
+          "rule": "at",
+          "goal": "Go to 208.65.153.0. Something happened here in 2008"
         },
         {
           "find": "the whole of the visitor's address family, again",
           "feels": "earned beauty",
           "teaches": "the same fact, read the other way",
-          "say": "Every network decides for itself what to believe. And mostly, they agree."
+          "say": "Every network decides for itself what to believe. And mostly, they agree.",
+          "rule": "whole-family",
+          "goal": "Pull all the way out, one more time"
         }
       ],
       "reveal": "No single authority tells any network which route to trust. Each one accepts, rejects or checks what it hears, and most of the time those decisions agree well enough to have carried everything you did today.",
@@ -92,13 +111,15 @@
           "find": "what actually crossed the wire to get here",
           "feels": "recognition, transformed",
           "teaches": "what a visit really reveals",
-          "say": "Everything I have shown you came from one number and a handful of public registers. Here is all of it."
+          "say": "Everything I have shown you came from one number and a handful of public registers. Here is all of it.",
+          "rule": "inward"
         },
         {
           "find": "where our sight stops",
           "feels": "the boundary",
           "teaches": "your address is not you",
-          "say": "This is where I stop being able to see. Your address says where to send the answer. It does not say who you are, and I could not tell you."
+          "say": "This is where I stop being able to see. Your address says where to send the answer. It does not say who you are, and I could not tell you.",
+          "rule": "inward"
         }
       ],
       "reveal": "An address is a delivery instruction that a great many strangers have agreed to honour. That is all it is, and it is not nothing."
@@ -113,17 +134,23 @@
         {
           "at": "192.5.21.0",
           "teaches": "the record goes back further than people expect",
-          "say": "Nineteen eighty-two. There is nothing older in the register I carry."
+          "say": "Nineteen eighty-two. There is nothing older in the register I carry.",
+          "rule": "at",
+          "goal": "Find the oldest record in the register, at 192.5.21.0"
         },
         {
           "at": "12.0.0.0",
           "teaches": "early allocations were enormous and casual",
-          "say": "Sixteen million addresses, to one organisation, in one go. The year after the oldest record there is."
+          "say": "Sixteen million addresses, to one organisation, in one go. The year after the oldest record there is.",
+          "rule": "at",
+          "goal": "Go to 12.0.0.0"
         },
         {
           "at": "9.0.0.0",
           "teaches": "it kept happening for a decade",
-          "say": "And again. They were not being careless. There was no reason yet to be careful."
+          "say": "And again. They were not being careless. There was no reason yet to be careful.",
+          "rule": "at",
+          "goal": "Go to 9.0.0.0"
         }
       ],
       "reveal": "For about ten years the internet was small enough that you could give away sixteen million addresses without anyone needing to think about it.",
@@ -144,17 +171,23 @@
         {
           "at": "240.0.0.0",
           "teaches": "space can be reserved and then never arrive",
-          "say": "A sixteenth of the whole space, kept back for an addressing idea that never arrived. Nobody has ever been given any of it."
+          "say": "A sixteenth of the whole space, kept back for an addressing idea that never arrived. Nobody has ever been given any of it.",
+          "rule": "at",
+          "goal": "Go to 240.0.0.0"
         },
         {
           "at": "192.0.2.0",
           "teaches": "some addresses exist so that writing can be safe",
-          "say": "This one exists so that writing about addresses cannot accidentally name a real one."
+          "say": "This one exists so that writing about addresses cannot accidentally name a real one.",
+          "rule": "at",
+          "goal": "Go to 192.0.2.0"
         },
         {
           "at": "2001:db8::",
           "teaches": "the same idea, made much larger the second time",
-          "say": "And the same again in IPv6, with room for every example anyone will ever need."
+          "say": "And the same again in IPv6, with room for every example anyone will ever need.",
+          "rule": "at",
+          "goal": "Go to 2001:db8::"
         }
       ],
       "reveal": "Some of this space was never meant for the public internet. Kept back for an addressing idea, or handed to writing so examples cannot collide with anything real. Different reasons, same result: a place on the map that nobody is going to.",
@@ -174,17 +207,25 @@
         {
           "at": "198.41.0.4",
           "teaches": "there is a first one and it is an ordinary-looking address",
-          "say": "A. There is nothing about this address that looks like what it does."
+          "say": "A. There is nothing about this address that looks like what it does.",
+          "rule": "at",
+          "at6": "2001:503:ba3e::2:30",
+          "goal": "Find root server A"
         },
         {
           "at": "192.203.230.10",
           "teaches": "they are separated by operator and site, not by address",
-          "say": "E. Different people, different buildings, different networks from the last one. That is the part that matters, not where they sit on this map."
+          "say": "E. Different people, different buildings, different networks from the last one. That is the part that matters, not where they sit on this map.",
+          "rule": "at",
+          "at6": "2001:500:a8::e",
+          "goal": "Find root server E"
         },
         {
           "find": "the same letter in the other family",
           "teaches": "the thirteen exist twice",
-          "say": "And the same letter again, in the other internet. Thirteen is not thirteen machines."
+          "say": "And the same letter again, in the other internet. Thirteen is not thirteen machines.",
+          "rule": "other-family",
+          "goal": "Find the same letter in the other family"
         }
       ],
       "reveal": "Thirteen letters hold up every name on the internet, and the number is small enough that people argue about it.",
@@ -206,12 +247,14 @@
         {
           "at": "18.0.0.0",
           "teaches": "a founding-era /8, and what happened to it is visible rather than asserted",
-          "say": "One of the big early ones. Look at who announces the halves of it now, and then look again."
+          "say": "One of the big early ones. Look at who announces the halves of it now, and then look again.",
+          "rule": "at"
         },
         {
           "at": "36.0.0.0",
           "teaches": "the opposite decision, and the register records the consequence",
-          "say": "This one is registered on the other side of the world now, to a registry that did not exist when it was first handed out."
+          "say": "This one is registered on the other side of the world now, to a registry that did not exist when it was first handed out.",
+          "rule": "at"
         }
       ],
       "reveal": "Once there was no more of it, address space became something you could transfer. Where a block is registered today and where it started are two different questions, and this map only answers the first.",
@@ -227,15 +270,24 @@
         {
           "find": "everything registered to Singapore",
           "teaches": "share of old space has nothing to do with size",
-          "say": "Two thirds of this was handed out before 1993. Of every country holding more than a million addresses, none has a larger share that old."
+          "say": "Two thirds of this was handed out before 1993. Of every country holding more than a million addresses, none has a larger share that old.",
+          "rule": "query-cc",
+          "cc": "SG",
+          "goal": "Ask the map for everything registered to Singapore"
         },
         {
           "find": "everything registered to North Korea",
           "teaches": "the other end of the same scale",
-          "say": "One range. A thousand addresses, for a country."
+          "say": "One range. A thousand addresses, for a country.",
+          "rule": "query-cc",
+          "cc": "KP",
+          "goal": "Now ask it for North Korea"
         }
       ],
-      "reveal": "How much of this is registered to a country says almost nothing about how large the country is, and a great deal about how early the people asking for it got there."
+      "reveal": "How much of this is registered to a country says almost nothing about how large the country is, and a great deal about how early the people asking for it got there.",
+      "only": [
+        "v4"
+      ]
     },
     {
       "id": "the-quiet-ones",
@@ -247,17 +299,23 @@
         {
           "find": "allocated before 2000, and nothing announces it",
           "teaches": "old and silent is a real and common state",
-          "say": "Somebody was given this before the century turned. There is no route to it that I can see today."
+          "say": "Somebody was given this before the century turned. There is no route to it that I can see today.",
+          "rule": "quiet",
+          "goal": "Find space handed out before 2000 that nothing announces"
         },
         {
           "find": "another, further away",
           "teaches": "it is not a one-off",
-          "say": "Another. They are not rare, once you know the shape of them."
+          "say": "Another. They are not rare, once you know the shape of them.",
+          "rule": "quiet",
+          "goal": "Find another, in a different allocation"
         },
         {
           "find": "the largest run of them nearby",
           "teaches": "the dark is not empty",
-          "say": "All of this is registered to somebody. None of it answers right now."
+          "say": "All of this is registered to somebody. None of it answers right now.",
+          "rule": "quiet",
+          "goal": "And one more"
         }
       ],
       "reveal": "Allocated a long time ago, and no route to any of it that anyone here can see today. That is all this shows, and it is enough: the dark on this map is not empty space. It is held space that has gone quiet, and there is far more of it than anybody expects."
@@ -274,16 +332,21 @@
         {
           "find": "a prefix whose registered country differs from the country its origin network is registered under",
           "teaches": "the register records paperwork, not geography",
-          "say": "Registered under one country. Announced by a network registered under another. Neither of them is lying."
+          "say": "Registered under one country. Announced by a network registered under another. Neither of them is lying.",
+          "rule": "cc-mismatch",
+          "goal": "Find a block registered in one country and announced by a network registered in another"
         },
         {
           "find": "a second one, in a different registry",
           "teaches": "it is structural, not an error",
-          "say": "Again, and nothing is wrong. This is what the two records are for."
+          "say": "Again, and nothing is wrong. This is what the two records are for.",
+          "rule": "cc-mismatch",
+          "goal": "Find another, under a different registry"
         }
       ],
       "reveal": "One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two records disagreeing, not a measurement of anywhere."
     }
   ],
-  "_grants": "Finishing a chain can teach the map a new way of being looked at. The owner's report after days of wandering: 'I go, and then nothing happens.' A line of text is not a consequence. A lens is - it changes what the whole field shows from then on, it compounds, and hour five is richer than hour one. Nothing is invented: the data is already on the device and the lens is permission to ask for it. Only chains whose lens is computable offline grant one."
+  "_grants": "Finishing a chain can teach the map a new way of being looked at. The owner's report after days of wandering: 'I go, and then nothing happens.' A line of text is not a consequence. A lens is - it changes what the whole field shows from then on, it compounds, and hour five is richer than hour one. Nothing is invented: the data is already on the device and the lens is permission to ask for it. Only chains whose lens is computable offline grant one.",
+  "_rules": "What the engine (js/29-chains.js) checks for each beat. `find` stays the human description; `rule` is the machine test, so a new chain made of existing rules is rows only. at: the place answered contains the beat's address (at6 for an IPv6 visitor; a beat in the other family is skipped). copied: the visitor copied their address. own-block: the view pulled back to the block they are announced in. same-network: arrived at another block their own network announces. whole-family: the view pulled all the way out. root: arrived at any root server. other-origin: arrived at a block announced by a network other than theirs. query-cc: asked the map for that country. quiet: arrived somewhere allocated before 2000 that nothing announces, in an allocation not already used for this line. cc-mismatch: arrived at a block whose registered country differs from its origin network's (one RIPEstat lookup by AS number), under a registry not already used for this line. other-family and inward: not reachable yet (the doors, the inward half) and skipped. soft: may be passed silently when the next beat is met. goal: the tracker's one line."
 }

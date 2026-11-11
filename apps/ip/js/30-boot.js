@@ -1,4 +1,4 @@
-/* apps/ip/js/29-boot.js — boot: wire everything up, start, and the window.__ip debug surface.
+/* apps/ip/js/30-boot.js — boot: wire everything up, start, and the window.__ip debug surface.
  * One of the files ip used to be. Read ../MAP.md first: it lists what
  * every file defines and uses. All files share one global scope and
  * load in numeric order from index.html. */
@@ -70,7 +70,7 @@ function boot() {
         'companionState', 'companionSummary', 'companionFacts',
         'about', 'aboutPanel', 'aboutClose', 'aboutBody', 'sound',
         'notebook', 'notePanel', 'noteClose', 'noteBody', 'sight',
-        'guide', 'guideBtn', 'found']);
+        'guide', 'guideBtn', 'found', 'track']);
 
   var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
   S.reduced = mq.matches;
@@ -186,6 +186,16 @@ window.__ip = {
     return { answered: n, rungs: out };
   },
   query: function (q) { setQuery(q); return S.query; },
+  /* the stories: each line's state for this visitor, and the tracked one */
+  chains: function () {
+    return { tracking: trackLine() && trackLine().id, mode: trackMode(),
+             lines: chainLines().map(function (l) {
+               var s = chainSt(l.id), p = chainProgress(l), nx = chainNext(l);
+               return { id: l.id, usable: chainUsable(l), gate: chainGateOpen(l),
+                        n: p.n, of: p.of, done: !!(s && s.done),
+                        next: nx >= 0 ? l.beats[nx].goal : null };
+             }) };
+  },
   lay: function () {
     var out = [], i, ly, fg;
     for (i = 0; i < SLOTS; i++) {

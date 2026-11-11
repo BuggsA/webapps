@@ -249,6 +249,7 @@ function setupCopy() {
       el.copy.dataset.done = '1';
       el.copy.textContent = 'Copied';
       say('Copied ' + txt);
+      afterCopied();   /* 26-wiring */
       setTimeout(function () {
         el.copy.dataset.done = ''; el.copy.textContent = 'Copy';
       }, 1800);

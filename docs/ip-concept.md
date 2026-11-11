@@ -59,6 +59,11 @@ Ask, in this order:
   and two more doors - `/ipv4-vs-ipv6/` and `/cidr/`. The first frame is
   unchanged.
 
+- **The stories, playable** (2026-11-11, asked for: *"wiring up the
+  stories"*): the chains in `content/lines.json` now run, with a one-line
+  tracker that never appears on a first visit's first frame. For the people
+  who stop; it costs the errand nothing.
+
 ## Proposed — implications not yet decided by the owner
 
 These follow from the concept. They are Claude's reading, listed so they can

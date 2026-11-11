@@ -74,7 +74,20 @@ objection — that it tracked objectives which did not exist — has expired.
 
 ---
 
-## 1. The chain engine — **next**
+## 1. The chain engine — **BUILT 2026-11-11** (owner: *"can you work on wiring up the stories"*), preview only
+
+As built: `js/29-chains.js`. Each beat carries a `rule` (the test) and a
+`goal` (the tracker's line) in `content/lines.json`; the rules are listed in
+that file's `_rules`, and the linter rejects an unknown rule or a missing
+goal. Beats a visitor cannot reach (the other family, the inward half) are
+skipped, and a chain with fewer than two reachable beats is not offered -
+so an IPv6 visitor gets four lines and an IPv4 visitor seven. Side lines
+are offered as a named destination in "From here you can see" when their
+next place is in view. Finishing a line with `grants` applies its lens at
+once. NOT VERIFIED: whether any of it is fun - that needs somebody
+wandering, as below.
+
+### What it was planned as
 
 Absorbs v2's E, F's machinery, and C's tracker.
 
