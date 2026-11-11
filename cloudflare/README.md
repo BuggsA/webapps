@@ -4,7 +4,10 @@
 kept, not maintained, not deployed. One Cloudflare Pages project per app, all
 built from this repo. **A merge to `master` is the production deploy** for
 every project; any other branch builds a `noindex` preview at
-`<branch>.<project>.pages.dev`.
+`<branch>.<project>.pages.dev` - the branch name lowercased, `/` and other
+symbols turned to `-`, and **cut to 28 characters** (so
+`claude/peaceful-feynman-p7r37j` previews at
+`claude-peaceful-feynman-p7r3.ip-5q5.pages.dev`).
 
 | Project | Root directory | Build command | Output directory |
 |---|---|---|---|
