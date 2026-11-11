@@ -164,35 +164,7 @@ function askSubject() {
 function applySubject(at, rec) {
   if (!S.home || S.aim === null || ipToText(S.aim, S.home.v) !== at) return;
   S.subject = rec;
-  /* the notebook records the ANSWER, not the asking: a place becomes a
-   * place when it says what it is, including when what it says is that
-   * nobody announces it. */
-  if (rec && (rec.status === 'ready' || rec.status === 'empty')) {
-    var key = (rec.status === 'ready' && rec.prefix) ? rec.prefix : at;
-    var seen = seenCount(key);
-    noteSite(at, rec);
-    /* A named place outranks a generic line and interrupts the cadence,
-     * because those are the ones worth hearing. Everything else waits its
-     * turn or says nothing at all. */
-    var lm = markAt(S.aim, S.home ? S.home.v : 4);
-    /* the thirteen share one pool rather than carrying twenty-six near
-     * identical lines, and the plate already names which letter */
-    var lmId = lm ? (/^Root server /.test(lm.n) ? 'landmark.root' : 'landmark.' + lm.p) : '';
-    if (lm) {
-      /* A NAMED PLACE, NEVER RECORDED BEFORE. That is the whole condition,
-       * and it is deliberately narrow: this has to stay rare or the flare
-       * stops being information. Coming back to one is not a find. */
-      if (!seen) {
-        var fg = activeField();
-        if (fg) celebrate(fg.aimX, fg.aimZ, fg.layer, lm.n);
-        else showFound(lm.n);
-      }
-      speak(lmId, 1, seen);
-    }
-    else if (rec.status === 'ready') speak('arrive.ordinary', 0, seen);
-    else if (REG && regAt(S.aim, S.home.v)) speak('arrive.unannounced', 0, seen);
-    else speak('arrive.unallocated', 0, seen);
-  }
-  rebuild();
-  announce();
+  /* what follows from an answer - the notebook, the guide, the flare, the
+   * picture, the words - is listed in one place */
+  afterSubjectResolved(at, rec);
 }

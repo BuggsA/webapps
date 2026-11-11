@@ -43,6 +43,9 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
   then only the file(s) you need. They share one global scope and load in
   numeric order; a new file needs its `<script>` tag in `index.html`, and
   `python scripts/ip-map.py` must pass. Never define one name in two files.
+  **What happens after a zoom or after a place answers is listed, in order,
+  in `js/26-wiring.js`.** A new reaction is a new line there, not a call
+  buried in `setAxis` or `applySubject`.
 - **Content is data.** The guide's lines and the quest chains live in
   `apps/ip/content/*.json`. Adding a line, a quest or a story means adding
   rows. **If you open `js/` to add a side line, it was built wrong.**

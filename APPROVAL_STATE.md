@@ -28,6 +28,7 @@ like 'xyz Tennessee'."*
 | Facts row (location, provider via edge ASN, address type) + Explore control + measured fit around the amber mark | COMPLETE in source, NOT deployed |
 | Keep WebGL2; split `ip.js` into `js/NN-name.js` + generated `MAP.md` — *"Yes lets keep it and break it up in a way that will be most token efficient later and easy to manage"* | COMPLETE, proven identical, NOT deployed |
 | Untangle axis/travel/plate — *"untangle those three files next"* | COMPLETE, proven identical, NOT deployed |
+| Wiring file — *"yes do the wiring file next"* | COMPLETE, proven identical, NOT deployed |
 | Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
 
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not

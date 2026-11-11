@@ -575,6 +575,11 @@ what every file defines, uses and is used by.
 input are separate files; the plate's sentences (`23-words`) are separate
 from writing them to the page (`24-view`); `syncDom` is a list of named
 steps in its original order. Proven identical again.
+**Wiring, same day:** `setAxis` and `applySubject` only change their own
+state, then call `afterAxisMoved` / `afterSubjectResolved` in
+`js/26-wiring.js`, which lists every reaction in its original order - one
+call each into the file that owns it. Proven identical against the
+single-file app, including first and repeat arrivals at a landmark.
 
 - **Demonstrates:** the entire instrument.
 - **Intentional:** the density of *why* comments. Many record a specific

@@ -318,3 +318,13 @@ function buildNotebook() {
     'clearing your browser data clears this too.';
   el.noteBody.appendChild(p2);
 }
+
+/* Record an answered place. Returns how many times it had been seen BEFORE
+ * this visit, which is what the guide and the flare decide on - so it is
+ * read first and written second. */
+function recordArrival(at, rec) {
+  var key = (rec.status === 'ready' && rec.prefix) ? rec.prefix : at;
+  var seen = seenCount(key);
+  noteSite(at, rec);
+  return seen;
+}

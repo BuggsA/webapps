@@ -19,23 +19,10 @@ function setAxis(v) {
   /* the low-water mark of the whole session. Recorded before the ring
    * can rebuild and return early, or a rung crossing would lose it. */
   S.been = S.been === null ? next : Math.min(S.been, next);
-  lastAxisMove = Date.now();   /* travelling, not looking. he waits. */
   S.gone = S.gone === null ? next : Math.max(S.gone, next);
-  noteDepth(next);
-  if (cursor && layerAlpha[cursor.layer === undefined ? LY.BLOCK : cursor.layer] < 0.35) {
-    cursor = null;
-  }
-  ensureData();
-  /* the ring: when the axis moves far enough that a slot has to start
-   * showing a different rung, the geometry is rebuilt. Everywhere else
-   * this is just a uniform change and costs nothing. */
-  if (S.home && rungKey() !== S.rungKey) { rebuild(); return; }
-  /* and the text moves NOW. Which state owns the plate changes
-   * continuously between rungs, not only when one is crossed, so leaving
-   * this to the frame leaves the plate naming a rung the axis has already
-   * travelled past. */
-  syncDom();
-  invalidate();
+  /* everything that follows from the move - the guide, the notebook, the
+   * cursor, data, the picture, the text - is listed in one place */
+  afterAxisMoved(next);
 }
 
 /* A deep ladder should FEEL deep, so the gesture does not simply stretch to

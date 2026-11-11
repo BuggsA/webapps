@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-27 files, 5721 lines.
+28 files, 5787 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -26,14 +26,14 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `08-gl.js` | 554 | the WebGL2 renderer: shaders, HDR, bloom, reflection |
 | `09-c2d.js` | 113 | the Canvas 2D fallback renderer |
 | `10-content.js` | 103 | loading the guide and chain content from content/*.json |
-| `11-notebook.js` | 321 | the notebook: where you have been, kept in localStorage |
+| `11-notebook.js` | 331 | the notebook: where you have been, kept in localStorage |
 | `12-celebration.js` | 93 | the celebration when something real is found |
-| `13-guide.js` | 84 | the guide: choosing and speaking a line |
+| `13-guide.js` | 117 | the guide: choosing and speaking a line |
 | `14-sound.js` | 155 | sound: the descent tone and the rest, off until asked |
 | `15-renderer.js` | 125 | choosing a renderer, driving frames, stopping when still |
-| `16-axis.js` | 79 | the scale axis: setting it, stepping it between stops, and its gain |
-| `17-pick.js` | 212 | what the pointer is on: the cursor, picking a cell, a tap |
-| `18-travel.js` | 199 | moving the aim: travel, back, Home, stepping, and asking what is there |
+| `16-axis.js` | 66 | the scale axis: setting it, stepping it between stops, and its gain |
+| `17-pick.js` | 220 | what the pointer is on: the cursor, picking a cell, a tap |
+| `18-travel.js` | 171 | moving the aim: travel, back, Home, stepping, and asking what is there |
 | `19-input.js` | 104 | input: wheel, drag, touch and keys, wired to the axis and travel |
 | `20-network.js` | 186 | whoami is elsewhere; this is RIPEstat: the network, and its shape |
 | `21-registry.js` | 278 | space.bin: every allocation the five registries made |
@@ -41,19 +41,20 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `23-words.js` | 262 | the words: what the plate and the companion say about where you are |
 | `24-view.js` | 275 | the view: syncDom writes state into the page, one named step at a time |
 | `25-answer.js` | 349 | the answer: address, facts row, Explore, Copy, About, notebook panel |
-| `26-boot.js` | 300 | boot: wire everything up, start, and the window.__ip debug surface |
+| `26-wiring.js` | 56 | what happens after the axis moves, and after a place answers |
+| `27-boot.js` | 300 | boot: wire everything up, start, and the window.__ip debug surface |
 
 ## What each file defines, uses and is used by
 
 ### `00-config.js`
 
-Palette, camera, layers and scale constants. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 08, 09, 11, 12, 14, 15, 16, 17, 20, 21, 22, 23, 24, 26.
+Palette, camera, layers and scale constants. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 08, 09, 11, 12, 14, 15, 17, 20, 21, 22, 23, 24, 27.
 
 `C` `CAM` `SCREEN_X` `FIELD` `STEP_BITS` `BASE` `ZOOM` `FOG` `FOCAL` `SLOTS` `LY` `LAYERS` `RIPE` `CACHE_TTL` `CACHE_KEY`
 
 ### `01-address.js`
 
-Small utilities, and addresses as BigInt: parsing, formatting, prefixes. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 09, 11, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26.
+Small utilities, and addresses as BigInt: parsing, formatting, prefixes. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 09, 11, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 27.
 
 `clamp` `lerp` `smooth` `rgba` `group` `parseIp4` `parseIp6` `parseIp` `parseCidr` `ipToText` `prefixUnit` `prefixGrid` `splitAddr` `setSplit` `d2xy` `xy2d`
 
@@ -65,143 +66,149 @@ The one global Hilbert curve every rung is laid out on. **Uses:** 00, 01, 05. **
 
 ### `03-landmarks.js`
 
-Named places on the map (root servers and others), resolved at load. **Uses:** 00, 01, 05, 11. **Used by:** 07, 11, 18, 23.
+Named places on the map (root servers and others), resolved at load. **Uses:** 00, 01, 05, 11. **Used by:** 07, 11, 13, 23.
 
 `MARKS` `ROOTS` `marksInField` `beenCache` `beenRanges` `beenInField` `beenCountIn` `markAt`
 
 ### `04-ladder.js`
 
-The ladder of 12-bit rungs, and the cache of public routing facts. **Uses:** 00, 01, 02, 05, 07. **Used by:** 07, 15, 16, 17, 20, 23, 24, 26.
+The ladder of 12-bit rungs, and the cache of public routing facts. **Uses:** 00, 01, 02, 05, 07. **Used by:** 07, 15, 16, 17, 20, 23, 24, 26, 27.
 
 `floorLen` `axisOfLen` `planLadder` `liveRungs` `rungKey` `fieldPrefix` `containerName` `cacheGet` `cacheSet`
 
 ### `05-state.js`
 
-S, the one state object, and the shared element/renderer handles. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26.
+S, the one state object, and the shared element/renderer handles. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27.
 
 `S` `cv` `el` `R` `grab` `say` `away`
 
 ### `06-camera.js`
 
-Matrices, projection, screen mapping, layer weights. **Uses:** 00, 01, 05, 07, 17. **Used by:** 08, 09, 14, 15, 16, 17, 18, 23, 24, 25, 26.
+Matrices, projection, screen mapping, layer weights. **Uses:** 00, 01, 05, 07, 17. **Used by:** 08, 09, 13, 14, 15, 17, 18, 23, 24, 25, 27.
 
 `mul` `persp` `look` `camBasis` `eyePos` `viewProj` `toScreen` `layerScale` `layerAlpha` `layerLight` `layerPan` `weightAt` `scaleAt` `panX` `panZ` `layers` `activeField` `activeRung`
 
 ### `07-scene.js`
 
-The chassis, the block and the fields, as renderer-agnostic geometry. **Uses:** 00, 01, 02, 03, 04, 05, 20, 21, 22. **Used by:** 04, 06, 08, 09, 10, 12, 15, 16, 17, 19, 21, 24, 26.
+The chassis, the block and the fields, as renderer-agnostic geometry. **Uses:** 00, 01, 02, 03, 04, 05, 20, 21, 22. **Used by:** 04, 06, 08, 09, 10, 12, 15, 17, 19, 21, 24, 27.
 
 `lines` `points` `pools` `surfs` `targets` `markAnchor` `blockGeom` `fieldGeoms` `cursor` `L` `P` `Pool` `Surf` `buildScene` `buildBlock` `buildSpace`
 
 ### `08-gl.js`
 
-The WebGL2 renderer: shaders, HDR, bloom, reflection. **Uses:** 00, 05, 06, 07. **Used by:** 26.
+The WebGL2 renderer: shaders, HDR, bloom, reflection. **Uses:** 00, 05, 06, 07. **Used by:** 27.
 
 `makeGL`
 
 ### `09-c2d.js`
 
-The Canvas 2D fallback renderer. **Uses:** 00, 01, 05, 06, 07. **Used by:** 26.
+The Canvas 2D fallback renderer. **Uses:** 00, 01, 05, 06, 07. **Used by:** 27.
 
 `make2D`
 
 ### `10-content.js`
 
-Loading the guide and chain content from content/*.json. **Uses:** 05, 07, 11, 13, 21. **Used by:** 13, 18, 21, 25, 26.
+Loading the guide and chain content from content/*.json. **Uses:** 05, 07, 11, 13, 21. **Used by:** 11, 13, 21, 25, 27.
 
 `CONTENT` `contentState` `loadContent` `visitorTags` `seenCount` `saidThisSession` `pickLine`
 
 ### `11-notebook.js`
 
-The notebook: where you have been, kept in localStorage. **Uses:** 00, 01, 03, 05, 21. **Used by:** 03, 10, 16, 17, 18, 23, 25.
+The notebook: where you have been, kept in localStorage. **Uses:** 00, 01, 03, 05, 10, 21. **Used by:** 03, 10, 17, 18, 23, 25, 26.
 
-`NOTE_KEY` `note` `noteBlank` `noteLoad` `noteSave` `noteCount` `noteSite` `noteHolder` `noteDepth` `noteDist` `regCCs` `allCountries` `notebookRows` `noteSites` `buildNotebook`
+`NOTE_KEY` `note` `noteBlank` `noteLoad` `noteSave` `noteCount` `noteSite` `noteHolder` `noteDepth` `noteDist` `regCCs` `allCountries` `notebookRows` `noteSites` `buildNotebook` `recordArrival`
 
 ### `12-celebration.js`
 
-The celebration when something real is found. **Uses:** 00, 05, 07, 14, 15. **Used by:** 15, 18, 26.
+The celebration when something real is found. **Uses:** 00, 05, 07, 14, 15. **Used by:** 13, 15, 27.
 
 `CEL_MS` `celBase` `cel` `celebrate` `celFrame` `showFound`
 
 ### `13-guide.js`
 
-The guide: choosing and speaking a line. **Uses:** 05, 10. **Used by:** 10, 16, 18, 21, 26.
+The guide: choosing and speaking a line. **Uses:** 03, 05, 06, 10, 12, 21. **Used by:** 10, 21, 26, 27.
 
-`GUIDE_KEY` `GENERIC_GAP` `MOVING_QUIET` `lastSpoke` `lastAxisMove` `guideTimer` `guideWanted` `setGuide` `showGuide` `speak`
+`GUIDE_KEY` `GENERIC_GAP` `MOVING_QUIET` `lastSpoke` `lastAxisMove` `guideTimer` `guideWanted` `setGuide` `showGuide` `speak` `noteAxisMoved` `greetArrival`
 
 ### `14-sound.js`
 
-Sound: the descent tone and the rest, off until asked. **Uses:** 00, 05, 06. **Used by:** 12, 15, 26.
+Sound: the descent tone and the rest, off until asked. **Uses:** 00, 05, 06. **Used by:** 12, 15, 27.
 
 `OCTAVES` `SOUND_KEY` `snd` `soundRemembered` `rememberSound` `baseHz` `soundStart` `soundFrame` `soundFrameInner` `strike` `setSound`
 
 ### `15-renderer.js`
 
-Choosing a renderer, driving frames, stopping when still. **Uses:** 00, 01, 04, 05, 06, 07, 12, 14, 17, 24. **Used by:** 12, 16, 17, 18, 19, 20, 21, 22, 25, 26.
+Choosing a renderer, driving frames, stopping when still. **Uses:** 00, 01, 04, 05, 06, 07, 12, 14, 17, 24. **Used by:** 12, 16, 17, 18, 19, 20, 21, 22, 25, 26, 27.
 
 `needsFrame` `lastT` `invalidate` `tick` `resize` `rebuild` `syncRail`
 
 ### `16-axis.js`
 
-The scale axis: setting it, stepping it between stops, and its gain. **Uses:** 00, 01, 04, 05, 06, 07, 11, 13, 15, 20, 24. **Used by:** 18, 19, 26.
+The scale axis: setting it, stepping it between stops, and its gain. **Uses:** 01, 04, 05, 15, 26. **Used by:** 18, 19, 27.
 
 `setAxis` `axisGain` `axisStops` `stepAxis` `setYaw`
 
 ### `17-pick.js`
 
-What the pointer is on: the cursor, picking a cell, a tap. **Uses:** 00, 01, 04, 05, 06, 07, 11, 15, 18, 21, 24. **Used by:** 06, 15, 19, 23, 24.
+What the pointer is on: the cursor, picking a cell, a tap. **Uses:** 00, 01, 04, 05, 06, 07, 11, 15, 18, 21, 24. **Used by:** 06, 15, 19, 23, 24, 26.
 
-`LIVE` `PICK_FLOOR` `planeHit` `cursorAt` `setCursor` `pick` `onTap`
+`LIVE` `PICK_FLOOR` `planeHit` `cursorAt` `setCursor` `pick` `onTap` `dropFadedCursor`
 
 ### `18-travel.js`
 
-Moving the aim: travel, back, Home, stepping, and asking what is there. **Uses:** 01, 03, 05, 06, 10, 11, 12, 13, 15, 16, 20, 21, 23, 24. **Used by:** 17, 19, 24, 26.
+Moving the aim: travel, back, Home, stepping, and asking what is there. **Uses:** 01, 05, 06, 11, 15, 16, 20, 23, 24, 26. **Used by:** 17, 19, 24, 27.
 
 `travelTo` `back` `goHome` `stepAim` `askTimer` `askSubject` `applySubject`
 
 ### `19-input.js`
 
-Input: wheel, drag, touch and keys, wired to the axis and travel. **Uses:** 05, 07, 15, 16, 17, 18, 23, 25. **Used by:** 26.
+Input: wheel, drag, touch and keys, wired to the axis and travel. **Uses:** 05, 07, 15, 16, 17, 18, 23, 25. **Used by:** 27.
 
 `setupAxis`
 
 ### `20-network.js`
 
-Whoami is elsewhere; this is RIPEstat: the network, and its shape. **Uses:** 00, 01, 04, 05, 15, 21, 23, 24. **Used by:** 07, 16, 18, 23, 25.
+Whoami is elsewhere; this is RIPEstat: the network, and its shape. **Uses:** 00, 01, 04, 05, 15, 21, 23, 24. **Used by:** 07, 18, 23, 25, 26.
 
 `ripe` `tidyHolder` `ensureData` `loadNet` `loadShape` `applyShape` `shapeInField` `shapeSize`
 
 ### `21-registry.js`
 
-Space.bin: every allocation the five registries made. **Uses:** 00, 01, 05, 07, 10, 13, 15, 23. **Used by:** 07, 10, 11, 17, 18, 20, 22, 23, 25, 26.
+Space.bin: every allocation the five registries made. **Uses:** 00, 01, 05, 07, 10, 13, 15, 23. **Used by:** 07, 10, 11, 13, 17, 20, 22, 23, 25, 27.
 
 `REG` `regState` `loadRegistry` `parseRegistry` `RIR_NAME` `regLine` `regIndex` `regAt` `spread` `eraLevel` `UNALLOCATED` `regInField`
 
 ### `22-query.js`
 
-Asking the map a question, and drawing the answer. **Uses:** 00, 01, 05, 15, 21, 23. **Used by:** 07, 24, 26.
+Asking the map a question, and drawing the answer. **Uses:** 00, 01, 05, 15, 21, 23. **Used by:** 07, 24, 27.
 
 `setQuery` `queryHit` `queryLabel` `queryExtent` `plateQueryable` `sightlines`
 
 ### `23-words.js`
 
-The words: what the plate and the companion say about where you are. **Uses:** 00, 01, 02, 03, 04, 05, 06, 11, 17, 20, 21. **Used by:** 18, 19, 20, 21, 22, 24.
+The words: what the plate and the companion say about where you are. **Uses:** 00, 01, 02, 03, 04, 05, 06, 11, 17, 20, 21. **Used by:** 18, 19, 20, 21, 22, 24, 26.
 
 `V4_TOTAL` `V6_64` `awayPlate` `markPlate` `cellsPhrase` `fieldMix` `rungPlate` `plateFor` `summary` `announce`
 
 ### `24-view.js`
 
-The view: syncDom writes state into the page, one named step at a time. **Uses:** 00, 01, 02, 04, 05, 06, 07, 17, 18, 22, 23, 25. **Used by:** 15, 16, 17, 18, 20, 25, 26.
+The view: syncDom writes state into the page, one named step at a time. **Uses:** 00, 01, 02, 04, 05, 06, 07, 17, 18, 22, 23, 25. **Used by:** 15, 17, 18, 20, 25, 26, 27.
 
 `syncDom` `syncHomeState` `syncPlate` `syncMark` `syncTip` `syncHint` `syncButtons` `syncRailPosition` `syncCompanion` `sightKey` `syncSight`
 
 ### `25-answer.js`
 
-The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 20, 21, 24. **Used by:** 19, 24, 26.
+The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 20, 21, 24. **Used by:** 19, 24, 27.
 
 `countryName` `placeText` `showFacts` `syncExplore` `fitTimer` `fitAnswer` `fitSoon` `nameEdgeNet` `showAddress` `loadAddress` `setupCopy` `openNote` `closeNote` `aboutHTML` `aboutOpen` `openAbout` `closeAbout`
 
-### `26-boot.js`
+### `26-wiring.js`
+
+What happens after the axis moves, and after a place answers. **Uses:** 04, 05, 11, 13, 15, 17, 20, 23, 24. **Used by:** 16, 18.
+
+`afterAxisMoved` `afterSubjectResolved`
+
+### `27-boot.js`
 
 Boot: wire everything up, start, and the window.__ip debug surface. **Uses:** 00, 01, 04, 05, 06, 07, 08, 09, 10, 12, 13, 14, 15, 16, 18, 19, 21, 22, 24, 25. **Used by:** —.
 

@@ -209,3 +209,11 @@ function onTap() {
   if (!c || !c.field || c.first === undefined) return;
   travelTo(c.first, true);
 }
+
+/* A cursor on a layer that has faded out is pointing at nothing visible:
+ * drop it rather than keep naming it. */
+function dropFadedCursor() {
+  if (cursor && layerAlpha[cursor.layer === undefined ? LY.BLOCK : cursor.layer] < 0.35) {
+    cursor = null;
+  }
+}
