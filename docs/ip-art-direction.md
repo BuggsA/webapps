@@ -288,3 +288,14 @@ not because they are settled.
 | 5 | **The outward axis stops where the data stops** | An address in no announced prefix can travel to +1 and no further; an address we never learned cannot travel outward at all. | Phase 2 | It is honest, and it also means a visitor on an unannounced address never sees the map at all. |
 | 6 | **Bounds on big collections** | 44 prefixes drawn of any number; 12 neighbours drawn of any number, chosen by RIPEstat's own `power` (how often they were observed), with the real totals always stated. | Phases 3-4 | Choosing *which* twelve is an editorial act, even when the ranking is published data. |
 | 7 | **The physical form of the scale axis** | A controlled full-viewport surface: wheel/drag/pinch move a float and snap to a state; arrows and PageUp/PageDown move state to state. | Phase 3 | The brief explicitly asks for three models to be prototyped before choosing. Only one was built. |
+
+
+## Territories (owner, 2026-11-11: approved as "Let's do all 3")
+
+Where neighbouring cells' registry records differ, a hairline. Cold, never a
+hue: a registry change is the strong line (0.36), a country change or held
+against unheld the fine one (0.16), both below landmark rims and the
+container edge, dimmed with their number. The fine grain is dropped for a
+field when it is too fragmented to enclose anything (over 320 runs). Not a
+political map: these are allocations, and the sightline that names one says
+"<country>, next door", meaning the space registered there, and no more.

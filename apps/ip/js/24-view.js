@@ -256,7 +256,7 @@ var sightKey = '';
 
 function syncSight() {
   if (!el.sight) return;
-  var f = activeField(), lines = f ? sightlines(f.f) : [];
+  var f = sightField(), lines = f ? sightlines(f) : [];
   var key = lines.map(function (l) { return l.label; }).join('|');
   if (key === sightKey) return;
   sightKey = key;

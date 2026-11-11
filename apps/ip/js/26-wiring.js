@@ -48,6 +48,7 @@ function afterSubjectResolved(at, rec) {
    * place when it says what it is, including when what it says is that
    * nobody announces it. */
   if (rec && (rec.status === 'ready' || rec.status === 'empty')) {
+    guideLeftBehind();                   /* 13-guide: the last place's line goes */
     var seen = recordArrival(at, rec);   /* 11-notebook */
     greetArrival(rec, seen);             /* 13-guide, 12-celebration */
   }
