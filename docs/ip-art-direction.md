@@ -172,6 +172,35 @@ it is a renderer colour and never a CSS one.
 brightness is already spoken for: it carries allocation age, which reference
 state R3 depends on.
 
+### OWNER DECISION, 2026-11-11 — say roughly where the address is, and say what it is
+
+The owner, on the live app: *"I don't think it is very user friendly. Looks
+mediocre and doesn't display location like 'xyz Tennessee'."*
+
+Recorded as their decision, per the standing rule that an authorized change
+to a locked section is written down with a date.
+
+**What changed.**
+
+1. **A location line under the address**, at home only: *"Near Nashville,
+   Tennessee"*, and under it the country and *"Approximate: your network's
+   location, as this site's own edge reads it. Not kept."* It comes from the
+   CDN that already serves the page (CloudFront's viewer geo headers,
+   Cloudflare's `request.cf`), returned by `whoami` alongside the address.
+   **No third party is asked**, so the founding rule — the address only from
+   our own edge — still holds.
+2. **"Your public IP address" is visible** above the number at home. It was
+   screen-reader-only, and a bare number in the dark did not say what it was.
+3. **The menu is `--cold-3`, not `--cold-4`.** Measured at about 1.8:1
+   against the ground it was close to invisible. Same role, readable shade.
+
+**What did not change.** *"No geography of any kind"* in **Banned** still
+governs the field: nothing is drawn — no map, no pin, no globe. The location
+is a line of text. It is always *Near* or *Somewhere in*, because it is where
+the network appears to be, not where the person is, and it is never
+dramatised (`PRODUCT_SOUL.md` §8.5: no "we know where you are"). It steps
+aside with the label when the answer shrinks into the HOME marker.
+
 ## Type
 
 **Archivo** (OFL, self-hosted variable, `fonts/`), and nothing else.

@@ -897,6 +897,9 @@
   var S = {
     home: null,
     source: '',
+    where: null,        /* the approximate place our own edge reads for this
+                         * connection: {city, region, regionCode, country},
+                         * any of them missing. Never asked of anyone else. */
     net: null,
     asked: {},          /* cell prefix -> what came back when we asked */
     aim: null,          /* BigInt: the address the instrument is POINTED AT.
@@ -4746,6 +4749,8 @@
     if (el.companionFacts) {
       var n = S.net, facts = [];
       if (S.home) facts.push(['Your address', S.home.text]);
+      var pt = S.home ? placeText(S.where) : null;
+      if (pt) facts.push(['Approximate location', pt.line.replace(/^Near |^Somewhere in /, '')]);
       if (n && n.status === 'ready') {
         facts.push(['Announced prefix', n.prefix]);
         facts.push(['Announced by', 'AS' + n.asn + (n.holder ? ' · ' + n.holder : '')]);
@@ -4777,8 +4782,65 @@
 
   function announce() { say(summary()); }
 
+  /* WHERE THE EDGE THINKS YOU ARE (owner's request, 2026-11-11).
+   *
+   * Both hosts' edges already work out a rough place for every connection
+   * from their own GeoIP data — CloudFront's viewer headers, Cloudflare's
+   * request.cf — and whoami hands it back with the address. Nobody else is
+   * asked, which is what keeps this inside "the address comes only from our
+   * own edge".
+   *
+   * It is the place of the NETWORK, not the person: a mobile carrier can put
+   * you a city away and a VPN a country away. So it is always "Near" or
+   * "Somewhere in", and the note under it says so plainly. It informs; it
+   * does not dramatise (PRODUCT_SOUL §8.5 - no "we know where you are").
+   * Text only: the field still draws no geography of any kind. */
+  function countryName(code) {
+    if (!code) return '';
+    try {
+      if (window.Intl && Intl.DisplayNames) {
+        return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) || code;
+      }
+    } catch (_) {}
+    return code;
+  }
+
+  function placeText(w) {
+    if (!w) return null;
+    var city = w.city || '', region = w.region || '';
+    var country = countryName(w.country);
+    /* a city-state reports itself twice, and "Zürich, Zurich" is the same
+     * name spelled two ways; neither says anything the first word did not */
+    function same(x, y) {
+      return x.localeCompare(y, 'en', { sensitivity: 'base' }) === 0;
+    }
+    if (city && region && same(city, region)) region = '';
+    if (city && country && same(city, country)) country = '';
+    if (region && country && same(region, country)) country = '';
+    var line;
+    if (city) line = 'Near ' + city + (region ? ', ' + region : '');
+    else if (region) line = 'Somewhere in ' + region;
+    else if (country) { line = 'Somewhere in ' + country; country = ''; }
+    else return null;
+    return {
+      line: line,
+      note: (country ? country + '  ·  ' : '') +
+            'Approximate: your network’s location, as this site’s own edge ' +
+            'reads it. Not kept.'
+    };
+  }
+
+  function showWhere() {
+    var t = S.home ? placeText(S.where) : null;
+    if (!el.where) return;
+    el.where.hidden = !t;
+    el.wherePlace.textContent = t ? t.line : '';
+    el.whereNote.textContent = t ? t.note : '';
+  }
+
   function showAddress() {
     if (S.home && S.aim === null) S.aim = S.home.big;
+    showWhere();
     if (S.home) {
       el.addressText.textContent = S.home.text;
       el.address.style.setProperty('--addr-chars', S.home.text.length);
@@ -4807,15 +4869,27 @@
     var fixture = new URLSearchParams(location.search).get('ip');
     if (fixture) {
       var f = parseIp(fixture);
-      if (f) { S.home = f; S.source = 'fixture'; showAddress(); return; }
+      if (f) {
+        S.home = f; S.source = 'fixture';
+        /* &where=City,Region,CC — for previewing the location line, which
+         * only a deployed edge can otherwise produce */
+        var fw = new URLSearchParams(location.search).get('where');
+        if (fw) {
+          var parts = fw.split(',');
+          S.where = { city: parts[0] || '', region: parts[1] || '',
+                      country: parts[2] || '' };
+        }
+        showAddress(); return;
+      }
     }
     var settled = false;
-    function give(addr, src) {
+    function give(addr, src, where) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       S.home = addr || null;
       S.source = addr ? src : '';
+      S.where = (addr && where && typeof where === 'object') ? where : null;
       showAddress();
     }
     var timer = setTimeout(function () { give(null, ''); }, 4000);
@@ -4826,7 +4900,7 @@
         return ct.indexOf('json') >= 0 ? r.json()
              : r.text().then(function (t) { return { ip: t.trim() }; });
       })
-      .then(function (d) { give(parseIp(d && d.ip), 'edge'); })
+      .then(function (d) { give(parseIp(d && d.ip), 'edge', d && d.where); })
       .catch(function () { give(null, ''); });
   }
 
@@ -4899,6 +4973,11 @@
       'edge, which reads your address from the connection itself. No ',
       'third-party address lookup is used at any point — your address is ',
       'never handed to someone else to find out what it is.</p>',
+      '<p>The place under your address comes from that same edge, which ',
+      'estimates a rough location for every connection it serves. It is where ',
+      'your network appears to be, not where you are: a phone carrier or a ',
+      'VPN can put it a city or a country away. It is shown to you and not ',
+      'kept.</p>',
       '<p>Only once you move outward, the block and the network are looked up ',
       'against <a href="https://stat.ripe.net/" rel="noopener">RIPEstat</a>, ',
       'the RIPE NCC’s public data service. Moving outward sends your address ',
@@ -4996,6 +5075,7 @@
   function boot() {
     cv = document.getElementById('field');
     grab(['address', 'addressText', 'copy', 'answerNote', 'live',
+          'where', 'wherePlace', 'whereNote',
           'plate', 'plateTitle', 'plateSub', 'plateNote',
           'mark', 'markFixed', 'markVary', 'markNote',
           'tipWrap', 'tipFixed', 'tipVary', 'tipMine', 'tipNote',

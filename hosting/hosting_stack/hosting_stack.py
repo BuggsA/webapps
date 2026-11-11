@@ -142,11 +142,31 @@ function handler(event) {
                 file_path="edge/ip-whoami.js"
             ),
         )
+        # CloudFront computes the viewer's approximate place from its own
+        # GeoIP data, but only hands those headers to a viewer-request
+        # function when an origin request policy lists them. The origin is
+        # still never reached; this policy exists to make them visible to
+        # ip-whoami.js. Added 2026-11-11 at the owner's request, so the page
+        # can say "Nashville, Tennessee" without asking anyone else.
+        whoami_geo = cloudfront.OriginRequestPolicy(
+            self,
+            "IpWhoamiGeo",
+            comment="apps/ip: expose CloudFront's own viewer geo headers to the whoami function",
+            header_behavior=cloudfront.OriginRequestHeaderBehavior.allow_list(
+                "CloudFront-Viewer-City",
+                "CloudFront-Viewer-Country",
+                "CloudFront-Viewer-Country-Region",
+                "CloudFront-Viewer-Country-Region-Name",
+            ),
+            query_string_behavior=cloudfront.OriginRequestQueryStringBehavior.none(),
+            cookie_behavior=cloudfront.OriginRequestCookieBehavior.none(),
+        )
         distribution.add_behavior(
             "/ip/whoami",
             origins.S3BucketOrigin.with_origin_access_control(bucket),
             viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+            origin_request_policy=whoami_geo,
             compress=False,
             function_associations=[
                 cloudfront.FunctionAssociation(

@@ -127,7 +127,19 @@ button {
   margin: 0 auto;
 }
 
+/* Visible at home (2026-11-11, owner: "not very user friendly"). A bare
+   number in the dark did not say what it was to anyone arriving cold. It is
+   a quiet caption over the plate, not a heading: sentence case, secondary
+   weight, cold blue. Away from home the HOME marker says it instead, so it
+   goes back to being for screen readers only. */
 #answerLabel {
+  font-size: clamp(13px, 1.15vw, 16px);
+  font-weight: 400;
+  color: var(--cold-2);
+  letter-spacing: .04em;
+  margin-bottom: clamp(4px, .8vw, 10px);
+}
+body:not([data-state="home"]) #answerLabel {
   position: absolute;
   width: 1px; height: 1px;
   overflow: hidden;
@@ -173,6 +185,31 @@ button {
 #copy[data-done="1"] { color: var(--amber); }
 /* display:inline-flex would otherwise beat the [hidden] default */
 #copy[hidden] { display: none; }
+
+/* Where the edge thinks the address is. Secondary type per the art
+   direction - wght 400, cold blue-white - and well below the address, which
+   stays the largest thing on screen. The note is the honesty: approximate,
+   the network's place and not the person's, not kept. */
+#where { margin: clamp(6px, 1.2vw, 14px) auto 0; }
+#where[hidden] { display: none; }
+#wherePlace {
+  color: var(--cold-1);
+  font-size: clamp(17px, 2.1vw, 28px);
+  font-weight: 400;
+  letter-spacing: .01em;
+  line-height: 1.25;
+}
+#whereNote {
+  color: var(--cold-3);
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 46ch;
+  margin: .5em auto 0;
+  text-wrap: balance;
+}
+/* the HOME marker stays a marker; the place lives in the companion and the
+   About panel once you have left */
+body:not([data-state="home"]) #where { display: none; }
 
 #answerNote {
   text-align: center;
@@ -551,7 +588,9 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
    whether the visitor has TRAVELLED, which a stylesheet cannot know. */
 #controls button[hidden] { display: none !important; }
 #controls button {
-  color: var(--cold-4);
+  /* cold-3, not cold-4: cold-4 on the ground measured about 1.8:1 and the
+     menu was close to invisible (2026-11-11). Same role, readable shade. */
+  color: var(--cold-3);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: .15em;

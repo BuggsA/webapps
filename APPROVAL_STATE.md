@@ -11,6 +11,24 @@ and **outranks any inference from conversation or plans**.
 
 ---
 
+## 2026-11-11 — owner request: location line and first-frame clarity
+
+Direct instruction: *"Could you help build and clean up my ip site? I don't
+think it is very user friendly. Looks mediocre and doesn't display location
+like 'xyz Tennessee'."*
+
+| work | status |
+|---|---|
+| Approximate location from our own edge (`where` in both whoami functions, shown under the address) | COMPLETE in source, **NOT deployed** |
+| Visible "Your public IP address" label at home | COMPLETE in source, NOT deployed |
+| Menu contrast `--cold-4` → `--cold-3` | COMPLETE in source, NOT deployed |
+| Origin request policy on `/ip/whoami` so CloudFront exposes its geo headers | COMPLETE in source, needs `deploy-hosting.ps1` |
+
+Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not
+approved by this:** territories, any redesign of the composition, palette or
+type beyond the three items above. "Clean up" is not read as licence to
+normalise the design (CLAUDE.md).
+
 ## Current operating mode — pass two, 2026-09-18
 
 **WAITING_FOR_USER.**
