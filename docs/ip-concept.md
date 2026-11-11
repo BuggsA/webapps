@@ -46,6 +46,64 @@ Ask, in this order:
 - **The first pull** (2026-11-11): the first outward gesture glides out to
   the whole address space, and "You are here" names the visitor's mark.
 
+## Why people stop — the thinking behind the stop features
+
+Agreed with the owner 2026-11-11 (*"That is good"*). People on a real
+sidewalk stop for five things, and each one maps to a feature here:
+
+| on a sidewalk | the principle | here |
+|---|---|---|
+| Cloud Gate, "the Bean" — a mirror nobody walks past | **it shows them themselves** | the amber mark, the teaser line about their own block, "You are here" |
+| a busker, already playing as you pass | **it answers before you decide to stop** | the teaser sits in the errand itself; nothing to look for |
+| the piano stairs | **trying costs nothing; the fun is the path** | the first scroll IS the pull — no button needed |
+| a shop window that changes | **it is different tomorrow** | #4, a place of the day |
+| the photo at the end | **people want to show someone** | #3, "save my spot" |
+
+### The five stop features
+
+| # | feature | status |
+|---|---|---|
+| 1 | **The teaser** — one true line about the visitor's own block | **BUILT, live 2026-11-11** |
+| 2 | **The first pull + "You are here"** | **BUILT, live 2026-11-11** |
+| 3 | **"Save my spot"** — a beautiful image of THEIR dot on the map of the internet, made to share; the IP hidden unless they choose. Every share is a new visitor, so it is also a traffic engine | proposed, **next of the five** |
+| 4 | **A place of the day** — a changing window display (Apple's 16 million addresses, the root servers, the space reserved and never used); a reason to come back and something to post | proposed |
+| 5 | **Plain words on touch** — tapping a dot says *"Comcast, Philadelphia, since 2005"*, not `73.120.32.0/20 AS7922`; the exact form one tap away | proposed |
+
+**Do not polish #1 and #2 blind.** Recommended (not decided): the owner uses
+the live site on a phone for a day and sends it to two or three people
+without explaining it — do they read the line, do they scroll? Change #1/#2
+only on what that shows. If they fall flat, fixing them comes before
+everything below, because a bad first impression undercuts all the traffic
+work.
+
+## What is next — recommended order, 2026-11-11
+
+Claude's recommendation, given to the owner and **not approved as a plan**.
+Ordered by what brings traffic, the stated goal.
+
+1. **The front door** — the custom domain (owner picks and connects it in
+   Cloudflare → ip → Custom domains; owner adds it to Google Search
+   Console), then canonical, `sitemap.xml`, share tags and image, a title
+   and description written for real searches, and `ip-5q5.pages.dev`
+   redirecting to the domain. **Waiting on the domain name.**
+2. **Speed, measured on a phone** — the address must appear first on a
+   mid-range phone on a slow connection; it now loads 30 scripts and a 3D
+   renderer, and this has never been measured. Needs no decision.
+3. **More doors** — one small, fast page per neighbouring search: *what is
+   my IPv6*, *IP lookup*, *is this IP private*, *IPv4 vs IPv6*. Where most
+   new traffic would come from.
+4. **"Save my spot"** (#3 above).
+5. **The tally** — a privacy-respecting count of visits that go past the
+   home screen, so whether people stop is known, not guessed. Not approved;
+   it needs the owner's explicit yes (`PRODUCT_SOUL.md` §8.6, "no analytics
+   that identify" — this would identify no one).
+6. **Small-phone crowding** — on an iPhone SE, at the widest view, the
+   guide's line and the suggestions cover the lower third of the map.
+
+**Superseded, not deleted:** territories and the atlas of famous places.
+They were answers to "the map has nowhere to go", from before the concept
+was "a beautiful sidewalk". Revisit only if the owner asks.
+
 ## Proposed — implications not yet decided by the owner
 
 These follow from the concept. They are Claude's reading, listed so they can

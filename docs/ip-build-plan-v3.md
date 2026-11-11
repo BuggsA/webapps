@@ -12,6 +12,11 @@ That was correct and it means the phase letters no longer line up.
 
 ---
 
+> **SUPERSEDED 2026-11-11 for ordering.** The concept is now "a beautiful
+> sidewalk, built for traffic" and the order of work lives in
+> `docs/ip-concept.md`, "What is next". The section below and the chain-engine
+> plan are history; territories are no longer the next step.
+
 ## THE DIRECTION — owner, 2026-11-11
 
 > *"It should be an exploration type of thing but it should be useful first

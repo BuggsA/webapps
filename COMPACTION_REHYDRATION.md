@@ -11,11 +11,12 @@ Second preservation pass, 2026-09-18.
 the errand (your IP, fast) always wins; exploring is optional and costs the
 errand nothing. Its "Proposed" section is NOT approved.
 
-**Standing direction from the owner: useful first, then exploration.** The
-useful layer is built on branch `claude/sleepy-tesla-kv7qqd`, not deployed
-(see `docs/ip-build-plan-v3.md`, "THE DIRECTION"). **Next is NOT
-approved.** Recommended next: make the map show where to go (territories,
-sightlines from the first frame) — ask before building it.
+**WHAT IS NEXT: `docs/ip-concept.md`, "What is next".** Everything up to the
+teaser and "You are here" is merged and LIVE (PR BuggsA/webapps#1,
+2026-11-11). Recommended order: the domain and search basics (waiting on
+the owner's domain), speed on a phone, more doors, "save my spot", the
+tally (not approved), small-phone crowding. **None of it is approved until
+the owner says so.** Territories are SUPERSEDED, not next.
 
 **Hosting is Cloudflare Pages only** (owner, 2026-11-11). AWS is dormant.
 Production deploys when the owner merges to `master`; never push there.
