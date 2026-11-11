@@ -13,8 +13,8 @@ ever been pushed" and "waiting on territories" notes below are history.
 
 **Approved, "Let's do all 3":** (1) the errand, early - DONE; (2) the doors
 `/ipv6/` `/isp/` `/private/` - DONE; both on `claude/peaceful-feynman-p7r37j`,
-preview only. (3) **territories + sightlines from the first frame - built on the
-branch, preview only, waiting for the owner to look.** `regBorders` in
+preview only. (3) **territories + sightlines from the first frame - merged to
+`master` (live) on the owner's "merge", 2026-11-11.** `regBorders` in
 `js/21-registry.js`, drawn in `buildSpace`; `sightField` and the border
 sightlines in `js/22-query.js`; `guideLeftBehind` in the wiring. Cloudflare Web Analytics is an approved exception.
 
