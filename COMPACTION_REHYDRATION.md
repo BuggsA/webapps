@@ -10,7 +10,7 @@ Second preservation pass, 2026-09-18.
 Two approved pieces of work, NOT merged: an SEO pass (titles, structured
 data, FAQ behind About, doors `/ipv4-vs-ipv6/` and `/cidr/`), and **the
 chain engine** - the stories are playable (`js/29-chains.js`, boot moved to
-`31-boot.js`). See `APPROVAL_STATE.md`. Next in the plan: the doors from
+`32-boot.js`). See `APPROVAL_STATE.md`. Next in the plan: the doors from
 IPv4 into IPv6 (v3 §2) - NOT approved.
 
 ## Update 2026-11-11 (later) — this supersedes the update below

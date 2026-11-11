@@ -68,8 +68,12 @@ function buildScene() {
    * is somewhere else and this goes cold. */
   var lit = S.home ? 1 : 0.22;
   var atHome = S.home && S.aim !== null && S.aim === S.home.big;
-  P([0,0.004,0], atHome ? C.amber : C.coldHi, 1.7*lit, 5.5, LY.HOME, 99);
-  Pool(0, 0, 0.15, atHome ? C.amber : C.coldHi, 0.16*lit, LY.HOME);
+  /* S.redact (31-share): a card's picture is drawn without the visitor's
+   * own mark, because where amber sits says where they are. Not on screen. */
+  if (!(atHome && S.redact)) {
+    P([0,0.004,0], atHome ? C.amber : C.coldHi, 1.7*lit, 5.5, LY.HOME, 99);
+    Pool(0, 0, 0.15, atHome ? C.amber : C.coldHi, 0.16*lit, LY.HOME);
+  }
 
   if (S.subject && S.subject.status === 'ready') buildBlock();
 
@@ -157,7 +161,7 @@ function buildBlock() {
   blockGeom = { x0:x0, z0:z0, cw:cw, cd:cd, cols:g.cols, rows:g.rows,
                 H0:H0, W:W, D:D, per:g.per, unit:g.unit, cell:g.cell };
 
-  if (g.cell >= 0) {
+  if (g.cell >= 0 && !S.redact) {   /* 31-share: no home mark on a card */
     var li = g.cell % g.cols, lj = Math.floor(g.cell / g.cols);
     var mx = SCREEN_X(x0 + li*cw), mz = z0 + lj*cd;
     P([mx, H0 + 0.004, mz], C.amber, 2.1, 7, BL, 99);
@@ -272,7 +276,7 @@ function buildSpace(layer, f, rung) {
 
   /* HOME, wherever it falls in this container — and nowhere at all once
    * the visitor has travelled out of it. Amber is only ever you. */
-  if (f.homeIdx >= 0 && f.homeIdx !== f.idx) {
+  if (f.homeIdx >= 0 && f.homeIdx !== f.idx && !S.redact) {   /* 31-share */
     px = wx(lay.gx[f.homeIdx]); pz = wz(lay.gy[f.homeIdx]);
     P([px, 0.010, pz], C.amber, 2.4, 7.5, layer, 98);
     Pool(px, pz, 0.085, C.amber, 0.30, layer);
@@ -282,8 +286,10 @@ function buildSpace(layer, f, rung) {
    * your own address, cold once you have gone somewhere. */
   var mx = wx(lay.gx[f.idx]), mz = wz(lay.gy[f.idx]);
   var own = f.idx === f.homeIdx;
-  P([mx, 0.010, mz], own ? C.amber : C.coldHi, 2.4, 7.5, layer, 99);
-  Pool(mx, mz, 0.085, own ? C.amber : C.coldHi, 0.30, layer);
+  if (!(own && S.redact)) {   /* 31-share */
+    P([mx, 0.010, mz], own ? C.amber : C.coldHi, 2.4, 7.5, layer, 99);
+    Pool(mx, mz, 0.085, own ? C.amber : C.coldHi, 0.30, layer);
+  }
   if (!own) {
     var br = step * 1.7;
     var b0=[mx-br,0.006,mz-br], b1=[mx+br,0.006,mz-br];

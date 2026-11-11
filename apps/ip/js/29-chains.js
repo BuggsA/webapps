@@ -528,6 +528,8 @@ function syncTrack() {
     dn.className = 'beat';
     dn.textContent = 'Complete. The reveal is in your notebook.';
     el.track.appendChild(dn);
+    el.track.appendChild(trackBtn('Share this story', 'beat ask',
+      function () { openShare(shareStoryItem(l)); }, 'Share it as a card and a link'));   /* 31-share */
   }
 
   if (mode !== 'full') return;
@@ -580,6 +582,9 @@ function notebookLines(into) {
       var sp = document.createElement('span');
       sp.textContent = l.reveal;
       p.appendChild(sp);
+      p.appendChild(document.createElement('br'));
+      p.appendChild(trackBtn('Share this story', 'ask',
+        (function (line) { return function () { openShare(shareStoryItem(line)); }; })(l)));   /* 31-share */
     } else {
       var nx = chainNext(l);
       if (nx >= 0) {

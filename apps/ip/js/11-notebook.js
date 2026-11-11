@@ -266,6 +266,12 @@ function buildNotebook() {
     el.noteBody.appendChild(p2);
     return;
   }
+  /* 31-share: the brag sheet, as a card */
+  var shb = document.createElement('button');
+  shb.type = 'button'; shb.className = 'ask shareNote';
+  shb.textContent = 'Share your notebook';
+  shb.onclick = function () { openShare(shareNotebookItem()); };
+  p2 = document.createElement('p'); p2.appendChild(shb); el.noteBody.appendChild(p2);
   for (i = 0; i < rows.length; i++) {
     h2 = document.createElement('h3');
     h2.textContent = rows[i][0];

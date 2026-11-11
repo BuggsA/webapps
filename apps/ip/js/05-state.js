@@ -39,6 +39,8 @@ var S = {
                        * a container is outlined because the visitor went
                        * there, not because it happens to contain them. */
   renderFail: '',     /* why there is no picture, if there is no picture */
+  redact: false,      /* true only while a share card's picture is drawn:
+                       * the visitor's own mark is left out (31-share) */
   query: null,        /* what the visitor asked the map to show, if anything */
   pickAxis: null,     /* the zoom the last choice was made at; the frame
                        * slides onto that choice as you go in from here */

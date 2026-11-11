@@ -20,6 +20,7 @@ function syncDom() {
   syncPlate();
   syncSight();
   syncTrack();         /* 29-chains: what you are in the middle of */
+  syncShare();         /* 31-share: "Share this place", away only */
   syncMark(w);
   syncHere();          /* 28-pullback: "You are here" at the floor */
   syncTip();
