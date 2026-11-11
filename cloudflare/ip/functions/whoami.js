@@ -1,6 +1,7 @@
 /* Cloudflare Pages Function: GET /whoami
  *
- * The Cloudflare twin of hosting/edge/ip-whoami.js (the CloudFront Function
+ * THE address endpoint (Cloudflare Pages is the only host, 2026-11-11).
+ * Written as the twin of hosting/edge/ip-whoami.js (the CloudFront Function
  * that answers /ip/whoami on AWS). Same contract, same allowlist, so the page
  * cannot tell which host it is on:
  *
@@ -10,7 +11,10 @@
  *
  * Never cached (the answer differs per visitor), never stored, and no
  * access-control-allow-origin: it answers the page that asked and nobody
- * else's page. Keep the two files in step if the contract changes.
+ * else's page. The AWS twin is dormant: change this one, not both.
+ *
+ * `where` (2026-11-11, owner's request): the approximate place the edge
+ * already knows for this connection. See `where()` below.
  */
 
 /* Request headers echoed back to the visitor who sent them. Nothing is
@@ -44,6 +48,47 @@ function clean(s) {
   return out.length > 400 ? out.substring(0, 400) : out;
 }
 
+/* Place names are allowed to be non-ASCII (Zürich, São Paulo, Kraków), so
+ * they get a gentler clean than the echoed headers: control characters out,
+ * length capped, nothing else touched. JSON.stringify does the escaping. */
+function cleanPlace(s) {
+  if (!s) return '';
+  const out = String(s).replace(/[\u0000-\u001f\u007f]/g, '').trim();
+  return out.length > 80 ? out.substring(0, 80) : out;
+}
+
+/* Where the edge thinks this connection comes from. Cloudflare works this
+ * out for every request from its own GeoIP data (`request.cf`); nobody else
+ * is asked. It is the location of the visitor's NETWORK, which can be a
+ * city away, or a country away on a VPN, so the page calls it approximate.
+ * A field Cloudflare did not fill in is left out rather than guessed. */
+function where(cf) {
+  if (!cf) return null;
+  const w = {};
+  const city = cleanPlace(cf.city);
+  const region = cleanPlace(cf.region);
+  const regionCode = cleanPlace(cf.regionCode);
+  const country = cleanPlace(cf.country);
+  if (city) w.city = city;
+  if (region) w.region = region;
+  if (regionCode) w.regionCode = regionCode;
+  if (country && country !== 'XX' && country !== 'T1') w.country = country;
+  return Object.keys(w).length ? w : null;
+}
+
+/* The network this connection arrives from: its AS number, and the name
+ * Cloudflare's own data gives it ("Comcast Cable", "Deutsche Telekom AG").
+ * Same edge, same request; nobody else is asked. */
+function net(cf) {
+  if (!cf) return null;
+  const n = {};
+  const asn = parseInt(cf.asn, 10);
+  if (asn > 0) n.asn = asn;
+  const org = cleanPlace(cf.asOrganization);
+  if (org) n.org = org;
+  return Object.keys(n).length ? n : null;
+}
+
 const COMMON = {
   'cache-control': 'no-store, private',
   'x-content-type-options': 'nosniff',
@@ -68,6 +113,8 @@ export function onRequestGet({ request }) {
   }
   const body = JSON.stringify({
     ip: clean(ip),
+    where: where(request.cf),
+    net: net(request.cf),
     headers,
     note: 'Seen for this response. Not kept.',
   });

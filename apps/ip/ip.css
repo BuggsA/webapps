@@ -105,7 +105,10 @@ button {
   position: fixed;
   z-index: 3;
   left: 50%;
-  top: 44%;
+  /* 38%, not 44%: since the facts row (2026-11-11) the answer is taller, and
+     at 44% the Explore control landed on the amber mark — the one mark that
+     means "you" must never be covered by text. */
+  top: 38%;
   transform: translate(-50%, -50%);
   width: calc(100% - var(--gutter) * 2);
   text-align: center;
@@ -127,7 +130,19 @@ button {
   margin: 0 auto;
 }
 
+/* Visible at home (2026-11-11, owner: "not very user friendly"). A bare
+   number in the dark did not say what it was to anyone arriving cold. It is
+   a quiet caption over the plate, not a heading: sentence case, secondary
+   weight, cold blue. Away from home the HOME marker says it instead, so it
+   goes back to being for screen readers only. */
 #answerLabel {
+  font-size: clamp(13px, 1.15vw, 16px);
+  font-weight: 400;
+  color: var(--cold-2);
+  letter-spacing: .04em;
+  margin-bottom: clamp(4px, .8vw, 10px);
+}
+body:not([data-state="home"]) #answerLabel {
   position: absolute;
   width: 1px; height: 1px;
   overflow: hidden;
@@ -173,6 +188,174 @@ button {
 #copy[data-done="1"] { color: var(--amber); }
 /* display:inline-flex would otherwise beat the [hidden] default */
 #copy[hidden] { display: none; }
+
+/* USEFUL FIRST (owner, 2026-11-11). The facts row under the address: what
+   people come to this kind of page for, before anything else. Laid out like
+   readings on an instrument - a small label over a value, columns divided by
+   hairlines - not as cards. Secondary type per the art direction: wght 400,
+   cold blue-white, and far below the address, which stays the largest thing
+   on screen. */
+#facts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: clamp(10px, 1.8vw, 22px) auto 0;
+  max-width: 820px;
+}
+#facts[hidden], #facts > div[hidden] { display: none; }
+#facts > div {
+  padding: 2px clamp(14px, 2.4vw, 30px);
+  min-width: 0;
+}
+#facts > div + div { border-left: 1px solid var(--cold-4); }
+#facts dt {
+  color: var(--cold-3);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: .45em;
+}
+#facts dd {
+  color: var(--cold-1);
+  font-size: clamp(16px, 1.7vw, 22px);
+  font-weight: 400;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+#facts dd.sub {
+  color: var(--cold-2);
+  font-size: 12px;
+  margin-top: .3em;
+  letter-spacing: .02em;
+}
+#facts dd.sub:empty { display: none; }
+#whereNote {
+  color: var(--cold-3);
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 54ch;
+  margin: 1em auto 0;
+  text-wrap: balance;
+}
+#whereNote[hidden] { display: none; }
+
+/* THE TEASER (2026-11-11). One true line about the visitor's own block,
+   the hook that makes someone on their way past stop. Cream: it is what
+   they are being told. Its height is reserved from the first paint - one
+   line, two on a phone - so neither the address nor Copy moves when it
+   arrives a moment later. It fades in, because it arrives after the answer
+   and should not look like the answer flickering. */
+#teaser {
+  color: var(--cream);
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.45;
+  max-width: 52ch;
+  min-height: 1.45em;
+  margin: clamp(12px, 1.8vw, 20px) auto 0;
+  text-wrap: balance;
+  opacity: 0;
+  transition: opacity .6s linear;
+}
+#teaser.on { opacity: 1; }
+body:not([data-state="home"]) #teaser { display: none; }
+
+/* "You are here", above the visitor's own mark at the floor of the space,
+   with a hairline down to it. Amber is the visitor's colour, and this names
+   the visitor. */
+#here {
+  position: fixed;
+  z-index: 3;
+  transform: translate(-50%, calc(-100% - 12px));
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  max-width: min(320px, 80vw);
+}
+#here::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -11px;
+  width: 1px;
+  height: 9px;
+  background: var(--amber);
+  opacity: .7;
+}
+#hereTitle {
+  color: var(--amber);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+#hereNote {
+  color: var(--cold-2);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: .35em;
+  text-wrap: balance;
+}
+
+/* The doorway. A text control with a hairline under it - no pill, no fill,
+   no arrow icon (all banned). It names what is on the other side. */
+#explore { margin-top: clamp(14px, 2.4vw, 28px); }
+#explore[hidden] { display: none; }
+#exploreBtn {
+  color: var(--cream);
+  font-size: clamp(13px, 1.1vw, 15px);
+  letter-spacing: .06em;
+  min-height: 44px;
+  padding: 0 4px;
+  border-bottom: 1px solid var(--cold-3);
+  transition: color .2s linear, border-color .2s linear;
+}
+#exploreBtn:hover { color: var(--amber-pale); border-color: var(--amber-pale); }
+#exploreHow {
+  color: var(--cold-3);
+  font-size: 12px;
+  margin-top: .5em;
+}
+#exploreHow:empty { display: none; }
+
+/* Set by fitAnswer() when the answer would reach the amber mark: the
+   secondary lines go first, before anything has to move. */
+#answer.tight #facts dd.sub,
+#answer.tight #whereNote,
+#answer.tight #exploreHow { display: none; }
+#answer.tight #facts { margin-top: 8px; }
+#answer.tight #explore { margin-top: 8px; }
+
+/* On a phone the three readings stack into one column, label beside value,
+   so the address keeps the width and nothing wraps to a fifth line. */
+@media (max-width: 560px) {
+  #facts { flex-direction: column; align-items: stretch; max-width: 340px; }
+  #facts > div {
+    display: grid;
+    grid-template-columns: 9.5em 1fr;
+    column-gap: 12px;
+    text-align: left;
+    padding: 5px 0;
+  }
+  #facts > div + div { border-left: 0; border-top: 1px solid var(--cold-4); }
+  #facts dt { margin: .35em 0 0; grid-row: span 2; font-size: 10px; }
+  #facts dd { font-size: 16px; }
+  /* the secondary line of each reading goes on a phone: the column is
+     already three rows tall and the amber mark is right below it */
+  #facts dd.sub { display: none; }
+  #whereNote { margin-top: .7em; font-size: 11px; }
+  #explore { margin-top: 10px; }
+  #teaser { min-height: 2.9em; font-size: 14px; margin-top: 10px; }
+  /* a long IPv6 HOME marker ran off the right edge: let it wrap */
+  body:not([data-state="home"]) #answer { right: var(--gutter); }
+  body:not([data-state="home"]) #answerRow { width: auto; }
+}
+
+/* the HOME marker stays a marker; the facts live in the companion and the
+   About panel once you have left */
+body:not([data-state="home"]) #facts,
+body:not([data-state="home"]) #whereNote,
+body:not([data-state="home"]) #explore { display: none; }
 
 #answerNote {
   text-align: center;
@@ -551,7 +734,9 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
    whether the visitor has TRAVELLED, which a stylesheet cannot know. */
 #controls button[hidden] { display: none !important; }
 #controls button {
-  color: var(--cold-4);
+  /* cold-3, not cold-4: cold-4 on the ground measured about 1.8:1 and the
+     menu was close to invisible (2026-11-11). Same role, readable shade. */
+  color: var(--cold-3);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: .15em;
@@ -671,7 +856,11 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   #markNote { display: none; }
   #controls { right: 6px; bottom: 2px; }
   #controls button { padding: 0 8px; font-size: 10px; letter-spacing: .12em; }
-  #answer { top: 46%; }
+  /* the hint sat on top of the menu row; lift it clear (2026-11-11) */
+  #hint { bottom: 50px; }
+  /* and the "from here you can see" column sits just above the hint */
+  #below { bottom: 82px; }
+  #answer { top: 34%; }
 }
 
 @media (max-height: 460px) {

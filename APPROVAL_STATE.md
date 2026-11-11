@@ -11,6 +11,39 @@ and **outranks any inference from conversation or plans**.
 
 ---
 
+## 2026-11-11 — owner request: location line and first-frame clarity
+
+Direct instruction: *"Could you help build and clean up my ip site? I don't
+think it is very user friendly. Looks mediocre and doesn't display location
+like 'xyz Tennessee'."*
+
+| work | status |
+|---|---|
+| Approximate location from our own edge (`where` in both whoami functions, shown under the address) | COMPLETE in source, **NOT deployed** |
+| Visible "Your public IP address" label at home | COMPLETE in source, NOT deployed |
+| Menu contrast `--cold-4` → `--cold-3` | COMPLETE in source, NOT deployed |
+| Origin request policy on `/ip/whoami` so CloudFront exposes its geo headers | COMPLETE in source, needs `deploy-hosting.ps1` |
+
+| **Direction: useful first, then exploration** — *"It should be an exploration type of thing but it should be useful first before anything"*, with *"can you help fix this maybe help fix direction"* | standing direction, in `PRODUCT_SOUL.md` and `ip-build-plan-v3.md` |
+| Facts row (location, provider via edge ASN, address type) + Explore control + measured fit around the amber mark | COMPLETE in source, NOT deployed |
+| Keep WebGL2; split `ip.js` into `js/NN-name.js` + generated `MAP.md` — *"Yes lets keep it and break it up in a way that will be most token efficient later and easy to manage"* | COMPLETE, proven identical, NOT deployed |
+| Untangle axis/travel/plate — *"untangle those three files next"* | COMPLETE, proven identical, NOT deployed |
+| Wiring file — *"yes do the wiring file next"* | COMPLETE, proven identical, NOT deployed |
+| **Cloudflare Pages only; AWS dormant** — *"Can't we ignore aws for now like it doesn't exist. Build it so it is compatible for cloudflare?"* | standing decision. `_headers`, `404.html`, `robots.txt`, `space.bin.gz` added. Merging to `master` = deploy, owner only |
+| Custom domain, canonical, sitemap, share tags | **NOT done** — waiting on which domain |
+| **The concept: goal is traffic, "a beautiful sidewalk"** — owner's own words, in `docs/ip-concept.md` | **standing decision, outranks older docs.** Its "Proposed" implications are NOT approved |
+| The atlas of famous places, names over territories | proposed, superseded by stepping back — NOT approved |
+| **#1 the teaser line** and **#2 the first pull / "You are here"** — *"That is good yes can you work on those 2 first? Please try your best remembering the goal."* | COMPLETE on the branch preview, NOT merged. `content/anchors.json`, `js/27-teaser.js`, `js/28-pullback.js` |
+| #3 shareable "save my spot" image, #4 place of the day, #5 plain-words taps | proposed, NOT approved |
+| Privacy-respecting tally of whether people stop | proposed again as the way to measure #1/#2, NOT approved |
+| **Merge `claude/sleepy-tesla-kv7qqd` to `master`** (= production deploy) — *"can you do a pr and merge please?"*, 2026-11-11 | authorised for THIS merge only. The standing rule is unchanged: Claude does not merge to `master` without a fresh instruction |
+| Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
+
+Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not
+approved by this:** territories, any redesign of the composition, palette or
+type beyond the three items above. "Clean up" is not read as licence to
+normalise the design (CLAUDE.md).
+
 ## Current operating mode — pass two, 2026-09-18
 
 **WAITING_FOR_USER.**

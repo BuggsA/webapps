@@ -1,3 +1,7 @@
+> **DORMANT (owner, 2026-11-11).** Cloudflare Pages is the only host - see
+> `cloudflare/README.md`. Nothing here is maintained or deployed; it is kept,
+> not deleted. Do not prepare AWS deploy commands from it.
+
 # hosting
 
 The shared static-hosting stack. Deployed **once**, then left alone. Adding

@@ -3,7 +3,10 @@
 Your public IP address, in the first frame, on a page that asks nobody else
 for it.
 
-Fourth in the series. Lives at `https://<distribution>/ip/`.
+Fourth in the series. Lives on Cloudflare Pages at `https://ip-5q5.pages.dev/`
+(production = `master`; see `../../cloudflare/README.md`). Sections below that
+describe CloudFront and `s3 sync` are history: AWS is dormant since
+2026-11-11.
 
 ---
 

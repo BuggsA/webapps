@@ -37,7 +37,26 @@
     <p id="address"><span id="addressText">&mdash;</span></p>
     <button id="copy" type="button" aria-describedby="address">Copy</button>
   </div>
+  <!-- USEFUL FIRST (owner, 2026-11-11). The facts people come to a "what's
+       my IP" page for, read by our own edge for this visit and not kept.
+       A fact the edge did not give is left out, never guessed. -->
+  <dl id="facts" hidden>
+    <div id="factWhere" hidden><dt>Location, approx.</dt><dd id="wherePlace"></dd><dd class="sub" id="whereSub"></dd></div>
+    <div id="factNet" hidden><dt>Internet provider</dt><dd id="netName"></dd><dd class="sub" id="netSub"></dd></div>
+    <div id="factKind"><dt>Address type</dt><dd id="kindName"></dd><dd class="sub" id="kindSub"></dd></div>
+  </dl>
+  <p id="whereNote" hidden></p>
   <p id="answerNote"></p>
+  <!-- THE TEASER: one true line about the visitor's own address, from the
+       registry the site already ships (js/27-teaser.js). Its space is
+       reserved so nothing jumps when it lands. -->
+  <p id="teaser" aria-live="polite"></p>
+  <!-- The way in. At home it glides out to "You are here"; any input stops
+       the glide where it is (js/28-pullback.js). -->
+  <div id="explore" hidden>
+    <button id="exploreBtn" type="button">Explore the internet around this address</button>
+    <p id="exploreHow"></p>
+  </div>
 </div>
 
 <!-- The subject plate: what the instrument is pointed at. -->
@@ -68,6 +87,13 @@
 <div id="mark" aria-hidden="true">
   <p id="markAddr"><span id="markFixed" class="fixed"></span><span id="markVary"></span></p>
   <p id="markNote"></p>
+</div>
+
+<!-- "You are here": the visitor's own mark, named, at the floor of their
+     address family. Only at home. -->
+<div id="here" aria-hidden="true">
+  <p id="hereTitle">You are here</p>
+  <p id="hereNote"></p>
 </div>
 
 <!-- Whatever mark the pointer is nearest, named. -->
@@ -128,6 +154,39 @@
 </div>
 
 <script src="telemetry.js"></script>
-<script src="ip.js"></script>
+<!-- The app, in load order: classic scripts sharing one global scope. Most
+     of them only declare functions, which can live in any file; order
+     matters for the few statements that run at load (the landmark list in
+     03, and 29-boot, which must be last). What each one holds: MAP.md. -->
+<script src="js/00-config.js"></script>
+<script src="js/01-address.js"></script>
+<script src="js/02-curve.js"></script>
+<script src="js/03-landmarks.js"></script>
+<script src="js/04-ladder.js"></script>
+<script src="js/05-state.js"></script>
+<script src="js/06-camera.js"></script>
+<script src="js/07-scene.js"></script>
+<script src="js/08-gl.js"></script>
+<script src="js/09-c2d.js"></script>
+<script src="js/10-content.js"></script>
+<script src="js/11-notebook.js"></script>
+<script src="js/12-celebration.js"></script>
+<script src="js/13-guide.js"></script>
+<script src="js/14-sound.js"></script>
+<script src="js/15-renderer.js"></script>
+<script src="js/16-axis.js"></script>
+<script src="js/17-pick.js"></script>
+<script src="js/18-travel.js"></script>
+<script src="js/19-input.js"></script>
+<script src="js/20-network.js"></script>
+<script src="js/21-registry.js"></script>
+<script src="js/22-query.js"></script>
+<script src="js/23-words.js"></script>
+<script src="js/24-view.js"></script>
+<script src="js/25-answer.js"></script>
+<script src="js/26-wiring.js"></script>
+<script src="js/27-teaser.js"></script>
+<script src="js/28-pullback.js"></script>
+<script src="js/29-boot.js"></script>
 </body>
 </html>

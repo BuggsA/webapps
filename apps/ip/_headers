@@ -1,0 +1,26 @@
+# Cloudflare Pages response headers for apps/ip (the only host, 2026-11-11).
+# Static files only - /whoami is a Pages Function and sets its own.
+# Format: https://developers.cloudflare.com/pages/configuration/headers/
+
+# Everything: no MIME sniffing, and no Referer sent anywhere - the page talks
+# to RIPEstat once the visitor moves outward, and it has no business telling
+# RIPE which page they were on. The page asks for no device permissions.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+
+# The font files never change under the same name. If the font is ever
+# replaced, give the file a new name rather than shortening this.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The registry map: 439 KB gzipped, rebuilt rarely. A day fresh, and a week
+# of serving the cached copy while a newer one is fetched in the background.
+/data/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# The code map and readme are published with the folder; they are for
+# whoever is working on this, not for search results.
+/*.md
+  X-Robots-Tag: noindex

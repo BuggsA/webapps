@@ -12,6 +12,35 @@ That was correct and it means the phase letters no longer line up.
 
 ---
 
+## THE DIRECTION — owner, 2026-11-11
+
+> *"It should be an exploration type of thing but it should be useful first
+> before anything."*
+
+**Useful first, then exploration.** Every visit is a what's-my-IP visit
+before it is anything else. The first frame answers the questions people
+came with, in one glance, and only then offers the way in. Exploration is
+the product's depth, not a toll in front of the answer.
+
+What that means for ordering, from here:
+
+1. **The useful layer — DONE 2026-11-11, not deployed.** Address with a
+   visible label; approximate location, internet provider and address type
+   from our own edge; a plain "Explore the internet around this address"
+   control with a one-line how-to. Nothing covers the amber mark — the
+   answer measures where it is and moves out of the way.
+2. **Then: the map has to show where to go.** *This ordering is my
+   recommendation, not the owner's decision.* The diagnosis from 2026-09-18
+   still stands — the map's only destination vocabulary is brightness and
+   the sightlines are hidden for the first minute. Territories plus
+   sightlines from the first frame is still the proposed fix, and **is
+   still NOT APPROVED.** The chain engine below puts words on a map that
+   does not yet show places; I think direction comes first.
+3. Then the chain engine, the doors, the card, the inward half, the ghost
+   tier, as below.
+
+---
+
 ## Where it actually is
 
 **Live:** phases 1–4.5, A, B, and most of C. The address, the renderer, the
