@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-32 files, 7264 lines.
+33 files, 7602 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -20,13 +20,13 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `02-curve.js` | 159 | the one global Hilbert curve every rung is laid out on |
 | `03-landmarks.js` | 270 | named places on the map (root servers and others), resolved at load |
 | `04-ladder.js` | 141 | the ladder of 12-bit rungs, and the cache of public routing facts |
-| `05-state.js` | 73 | S, the one state object, and the shared element/renderer handles |
+| `05-state.js` | 75 | S, the one state object, and the shared element/renderer handles |
 | `06-camera.js` | 260 | matrices, projection, screen mapping, layer weights |
-| `07-scene.js` | 469 | the chassis, the block and the fields, as renderer-agnostic geometry |
+| `07-scene.js` | 475 | the chassis, the block and the fields, as renderer-agnostic geometry |
 | `08-gl.js` | 554 | the WebGL2 renderer: shaders, HDR, bloom, reflection |
 | `09-c2d.js` | 113 | the Canvas 2D fallback renderer |
 | `10-content.js` | 103 | loading the guide and chain content from content/*.json |
-| `11-notebook.js` | 335 | the notebook: where you have been, kept in localStorage |
+| `11-notebook.js` | 341 | the notebook: where you have been, kept in localStorage |
 | `12-celebration.js` | 93 | the celebration when something real is found |
 | `13-guide.js` | 142 | the guide: choosing and speaking a line |
 | `14-sound.js` | 155 | sound: the descent tone and the rest, off until asked |
@@ -34,31 +34,32 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `16-axis.js` | 66 | the scale axis: setting it, stepping it between stops, and its gain |
 | `17-pick.js` | 220 | what the pointer is on: the cursor, picking a cell, a tap |
 | `18-travel.js` | 171 | moving the aim: travel, back, Home, stepping, and asking what is there |
-| `19-input.js` | 153 | input: wheel, drag, touch and keys, wired to the axis and travel |
+| `19-input.js` | 154 | input: wheel, drag, touch and keys, wired to the axis and travel |
 | `20-network.js` | 187 | whoami is elsewhere; this is RIPEstat: the network, and its shape |
 | `21-registry.js` | 360 | space.bin: every allocation the five registries made |
 | `22-query.js` | 321 | asking the map a question, and drawing the answer |
 | `23-words.js` | 262 | the words: what the plate and the companion say about where you are |
-| `24-view.js` | 282 | the view: syncDom writes state into the page, one named step at a time |
+| `24-view.js` | 283 | the view: syncDom writes state into the page, one named step at a time |
 | `25-answer.js` | 383 | the answer: address, facts row, Explore, Copy, About, notebook panel |
 | `26-wiring.js` | 104 | what happens after the axis moves, and after a place answers |
 | `27-teaser.js` | 82 | the teaser: one true line about the visitor's own address, to make them stop |
 | `28-pullback.js` | 156 | the first pull: one gesture from home glides out to "You are here" |
-| `29-chains.js` | 614 | the stories: chains from content/lines.json, the tracker, and earned lenses |
+| `29-chains.js` | 619 | the stories: chains from content/lines.json, the tracker, and earned lenses |
 | `30-inward.js` | 229 | the inward half: what this visit told the site, what stayed on the device, and where sight stops |
-| `31-boot.js` | 312 | boot: wire everything up, start, and the window.__ip debug surface |
+| `31-share.js` | 314 | sharing: a place, a finished story or the notebook, as a link and as a card image; and the offer a shared link makes on arrival |
+| `32-boot.js` | 315 | boot: wire everything up, start, and the window.__ip debug surface |
 
 ## What each file defines, uses and is used by
 
 ### `00-config.js`
 
-Palette, camera, layers and scale constants. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 08, 09, 11, 12, 14, 15, 17, 20, 21, 22, 23, 24, 29, 31.
+Palette, camera, layers and scale constants. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 08, 09, 11, 12, 14, 15, 17, 20, 21, 22, 23, 24, 29, 32.
 
 `C` `CAM` `SCREEN_X` `FIELD` `STEP_BITS` `BASE` `ZOOM` `FOG` `FOCAL` `SLOTS` `LY` `LAYERS` `RIPE` `CACHE_TTL` `CACHE_KEY`
 
 ### `01-address.js`
 
-Small utilities, and addresses as BigInt: parsing, formatting, prefixes. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 09, 11, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 28, 29, 31.
+Small utilities, and addresses as BigInt: parsing, formatting, prefixes. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 09, 11, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 28, 29, 31, 32.
 
 `clamp` `lerp` `smooth` `rgba` `group` `parseIp4` `parseIp6` `parseIp` `parseCidr` `ipToText` `prefixUnit` `prefixGrid` `splitAddr` `setSplit` `d2xy` `xy2d`
 
@@ -70,85 +71,85 @@ The one global Hilbert curve every rung is laid out on. **Uses:** 00, 01, 05. **
 
 ### `03-landmarks.js`
 
-Named places on the map (root servers and others), resolved at load. **Uses:** 00, 01, 05, 11. **Used by:** 07, 11, 13, 22, 23, 29.
+Named places on the map (root servers and others), resolved at load. **Uses:** 00, 01, 05, 11. **Used by:** 07, 11, 13, 22, 23, 29, 31.
 
 `MARKS` `ROOTS` `marksInField` `beenCache` `beenRanges` `beenInField` `beenCountIn` `markAt`
 
 ### `04-ladder.js`
 
-The ladder of 12-bit rungs, and the cache of public routing facts. **Uses:** 00, 01, 02, 05, 07. **Used by:** 07, 15, 16, 17, 20, 23, 24, 26, 28, 31.
+The ladder of 12-bit rungs, and the cache of public routing facts. **Uses:** 00, 01, 02, 05, 07. **Used by:** 07, 15, 16, 17, 20, 23, 24, 26, 28, 32.
 
 `floorLen` `axisOfLen` `planLadder` `liveRungs` `rungKey` `fieldPrefix` `containerName` `cacheGet` `cacheSet`
 
 ### `05-state.js`
 
-S, the one state object, and the shared element/renderer handles. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31.
+S, the one state object, and the shared element/renderer handles. **Uses:** —. **Used by:** 02, 03, 04, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32.
 
 `S` `cv` `el` `R` `grab` `say` `away`
 
 ### `06-camera.js`
 
-Matrices, projection, screen mapping, layer weights. **Uses:** 00, 01, 05, 07, 17. **Used by:** 08, 09, 13, 14, 15, 17, 18, 22, 23, 24, 25, 28, 29, 31.
+Matrices, projection, screen mapping, layer weights. **Uses:** 00, 01, 05, 07, 17. **Used by:** 08, 09, 13, 14, 15, 17, 18, 22, 23, 24, 25, 28, 29, 31, 32.
 
 `mul` `persp` `look` `camBasis` `eyePos` `viewProj` `toScreen` `layerScale` `layerAlpha` `layerLight` `layerPan` `weightAt` `scaleAt` `panX` `panZ` `layers` `activeField` `activeRung`
 
 ### `07-scene.js`
 
-The chassis, the block and the fields, as renderer-agnostic geometry. **Uses:** 00, 01, 02, 03, 04, 05, 20, 21, 22. **Used by:** 04, 06, 08, 09, 10, 12, 15, 17, 19, 21, 22, 24, 31.
+The chassis, the block and the fields, as renderer-agnostic geometry. **Uses:** 00, 01, 02, 03, 04, 05, 20, 21, 22. **Used by:** 04, 06, 08, 09, 10, 12, 15, 17, 19, 21, 22, 24, 31, 32.
 
 `lines` `points` `pools` `surfs` `targets` `markAnchor` `blockGeom` `fieldGeoms` `cursor` `L` `P` `Pool` `Surf` `buildScene` `buildBlock` `buildSpace`
 
 ### `08-gl.js`
 
-The WebGL2 renderer: shaders, HDR, bloom, reflection. **Uses:** 00, 05, 06, 07. **Used by:** 31.
+The WebGL2 renderer: shaders, HDR, bloom, reflection. **Uses:** 00, 05, 06, 07. **Used by:** 32.
 
 `makeGL`
 
 ### `09-c2d.js`
 
-The Canvas 2D fallback renderer. **Uses:** 00, 01, 05, 06, 07. **Used by:** 31.
+The Canvas 2D fallback renderer. **Uses:** 00, 01, 05, 06, 07. **Used by:** 32.
 
 `make2D`
 
 ### `10-content.js`
 
-Loading the guide and chain content from content/*.json. **Uses:** 05, 07, 11, 13, 21. **Used by:** 11, 13, 21, 25, 29, 31.
+Loading the guide and chain content from content/*.json. **Uses:** 05, 07, 11, 13, 21. **Used by:** 11, 13, 21, 25, 29, 31, 32.
 
 `CONTENT` `contentState` `loadContent` `visitorTags` `seenCount` `saidThisSession` `pickLine`
 
 ### `11-notebook.js`
 
-The notebook: where you have been, kept in localStorage. **Uses:** 00, 01, 03, 05, 10, 21, 29. **Used by:** 03, 10, 17, 18, 23, 25, 26, 29, 30.
+The notebook: where you have been, kept in localStorage. **Uses:** 00, 01, 03, 05, 10, 21, 29, 31. **Used by:** 03, 10, 17, 18, 23, 25, 26, 29, 30, 31.
 
 `NOTE_KEY` `note` `noteBlank` `noteLoad` `noteSave` `noteCount` `noteSite` `noteHolder` `noteDepth` `noteDist` `regCCs` `allCountries` `notebookRows` `noteSites` `buildNotebook` `recordArrival`
 
 ### `12-celebration.js`
 
-The celebration when something real is found. **Uses:** 00, 05, 07, 14, 15. **Used by:** 13, 15, 29, 31.
+The celebration when something real is found. **Uses:** 00, 05, 07, 14, 15. **Used by:** 13, 15, 29, 32.
 
 `CEL_MS` `celBase` `cel` `celebrate` `celFrame` `showFound`
 
 ### `13-guide.js`
 
-The guide: choosing and speaking a line. **Uses:** 03, 05, 06, 10, 12, 21. **Used by:** 10, 26, 29, 31.
+The guide: choosing and speaking a line. **Uses:** 03, 05, 06, 10, 12, 21. **Used by:** 10, 26, 29, 32.
 
 `GUIDE_KEY` `GENERIC_GAP` `MOVING_QUIET` `lastSpoke` `lastAxisMove` `guideTimer` `guideWanted` `setGuide` `showGuide` `guideLeftBehind` `speak` `noteAxisMoved` `greetArrival` `registryOpenSaid` `sayRegistryOpen`
 
 ### `14-sound.js`
 
-Sound: the descent tone and the rest, off until asked. **Uses:** 00, 05, 06. **Used by:** 12, 15, 29, 31.
+Sound: the descent tone and the rest, off until asked. **Uses:** 00, 05, 06. **Used by:** 12, 15, 29, 32.
 
 `OCTAVES` `SOUND_KEY` `snd` `soundRemembered` `rememberSound` `baseHz` `soundStart` `soundFrame` `soundFrameInner` `strike` `setSound`
 
 ### `15-renderer.js`
 
-Choosing a renderer, driving frames, stopping when still. **Uses:** 00, 01, 04, 05, 06, 07, 12, 14, 17, 24. **Used by:** 12, 16, 17, 18, 19, 20, 22, 25, 26, 31.
+Choosing a renderer, driving frames, stopping when still. **Uses:** 00, 01, 04, 05, 06, 07, 12, 14, 17, 24. **Used by:** 12, 16, 17, 18, 19, 20, 22, 25, 26, 31, 32.
 
 `needsFrame` `lastT` `invalidate` `tick` `resize` `rebuild` `syncRail`
 
 ### `16-axis.js`
 
-The scale axis: setting it, stepping it between stops, and its gain. **Uses:** 01, 04, 05, 15, 26. **Used by:** 18, 19, 28, 31.
+The scale axis: setting it, stepping it between stops, and its gain. **Uses:** 01, 04, 05, 15, 26. **Used by:** 18, 19, 28, 32.
 
 `setAxis` `axisGain` `axisStops` `stepAxis` `setYaw`
 
@@ -160,13 +161,13 @@ What the pointer is on: the cursor, picking a cell, a tap. **Uses:** 00, 01, 04,
 
 ### `18-travel.js`
 
-Moving the aim: travel, back, Home, stepping, and asking what is there. **Uses:** 01, 05, 06, 11, 15, 16, 20, 23, 24, 26. **Used by:** 17, 19, 24, 25, 29, 31.
+Moving the aim: travel, back, Home, stepping, and asking what is there. **Uses:** 01, 05, 06, 11, 15, 16, 20, 23, 24, 26. **Used by:** 17, 19, 24, 25, 29, 31, 32.
 
 `travelTo` `back` `goHome` `stepAim` `askTimer` `askSubject` `applySubject`
 
 ### `19-input.js`
 
-Input: wheel, drag, touch and keys, wired to the axis and travel. **Uses:** 05, 07, 15, 16, 17, 18, 23, 25, 28, 30. **Used by:** 31.
+Input: wheel, drag, touch and keys, wired to the axis and travel. **Uses:** 05, 07, 15, 16, 17, 18, 23, 25, 28, 30, 31. **Used by:** 32.
 
 `setupAxis`
 
@@ -178,13 +179,13 @@ Whoami is elsewhere; this is RIPEstat: the network, and its shape. **Uses:** 00,
 
 ### `21-registry.js`
 
-Space.bin: every allocation the five registries made. **Uses:** 00, 01, 05, 07, 10, 26. **Used by:** 07, 10, 11, 13, 17, 20, 22, 23, 25, 27, 29, 31.
+Space.bin: every allocation the five registries made. **Uses:** 00, 01, 05, 07, 10, 26. **Used by:** 07, 10, 11, 13, 17, 20, 22, 23, 25, 27, 29, 31, 32.
 
 `REG` `regState` `loadRegistry` `fetchSpace` `parseRegistry` `RIR_NAME` `regLine` `regIndex` `regAt` `spread` `eraLevel` `UNALLOCATED` `regInField` `regBorders` `BORDER_FINE_MAX`
 
 ### `22-query.js`
 
-Asking the map a question, and drawing the answer. **Uses:** 00, 01, 02, 03, 05, 06, 07, 15, 21, 23, 25, 26, 29. **Used by:** 07, 24, 29, 31.
+Asking the map a question, and drawing the answer. **Uses:** 00, 01, 02, 03, 05, 06, 07, 15, 21, 23, 25, 26, 29, 31. **Used by:** 07, 24, 29, 32.
 
 `setQuery` `queryHit` `queryLabel` `queryExtent` `plateQueryable` `sightlines` `sightHome` `sightField`
 
@@ -196,13 +197,13 @@ The words: what the plate and the companion say about where you are. **Uses:** 0
 
 ### `24-view.js`
 
-The view: syncDom writes state into the page, one named step at a time. **Uses:** 00, 01, 02, 04, 05, 06, 07, 17, 18, 22, 23, 25, 28, 29. **Used by:** 15, 17, 18, 20, 25, 26, 29, 31.
+The view: syncDom writes state into the page, one named step at a time. **Uses:** 00, 01, 02, 04, 05, 06, 07, 17, 18, 22, 23, 25, 28, 29, 31. **Used by:** 15, 17, 18, 20, 25, 26, 29, 31, 32.
 
 `syncDom` `syncHomeState` `syncPlate` `syncMark` `syncTip` `syncHint` `syncButtons` `syncRailPosition` `syncCompanion` `sightKey` `syncSight`
 
 ### `25-answer.js`
 
-The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 18, 20, 21, 23, 24, 26, 27. **Used by:** 19, 22, 24, 27, 30, 31.
+The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 18, 20, 21, 23, 24, 26, 27. **Used by:** 19, 22, 24, 27, 30, 31, 32.
 
 `countryName` `placeText` `showFacts` `syncExplore` `fitTimer` `fitAnswer` `fitSoon` `nameEdgeNet` `botTitle` `showAddress` `loadAddress` `setupHomeMarker` `setupCopy` `openNote` `closeNote` `aboutHTML` `aboutOpen` `openAbout` `closeAbout`
 
@@ -220,24 +221,30 @@ The teaser: one true line about the visitor's own address, to make them stop. **
 
 ### `28-pullback.js`
 
-The first pull: one gesture from home glides out to "You are here". **Uses:** 01, 04, 05, 06, 16, 23. **Used by:** 19, 24, 31.
+The first pull: one gesture from home glides out to "You are here". **Uses:** 01, 04, 05, 06, 16, 23. **Used by:** 19, 24, 31, 32.
 
 `pull` `pulledOnce` `pullEligible` `startPull` `pullFrame` `stopPull` `pullWheel` `setupPull` `syncHere` `explorePressed`
 
 ### `29-chains.js`
 
-The stories: chains from content/lines.json, the tracker, and earned lenses. **Uses:** 00, 01, 03, 05, 06, 10, 11, 12, 13, 14, 18, 20, 21, 22, 24, 30. **Used by:** 11, 22, 24, 26, 30, 31.
+The stories: chains from content/lines.json, the tracker, and earned lenses. **Uses:** 00, 01, 03, 05, 06, 10, 11, 12, 13, 14, 18, 20, 21, 22, 24, 30, 31. **Used by:** 11, 22, 24, 26, 30, 31, 32.
 
 `TRACK_KEY` `chainTimer` `trackFlash` `trackKey` `homeShapeAt` `chainLines` `chainSt` `tagsHave` `beatAddr` `sameNetTarget` `nearestRoot` `beatLive` `liveBeats` `chainUsable` `chainGateOpen` `chainNext` `chainProgress` `chainOpen` `beatMet` `atIn` `chainMark` `chainEvent` `chainSay` `chainsOnArrival` `chainsAfterAxis` `chainsAfterCopy` `chainsAfterQuery` `beatTarget` `goTarget` `chainSights` `lensQuery` `lensesEarned` `trackMode` `setTrackMode` `trackLine` `pinLine` `trackBtn` `syncTrack` `notebookLines`
 
 ### `30-inward.js`
 
-The inward half: what this visit told the site, what stayed on the device, and where sight stops. **Uses:** 05, 11, 25, 26, 29. **Used by:** 19, 26, 29, 31.
+The inward half: what this visit told the site, what stayed on the device, and where sight stops. **Uses:** 05, 11, 25, 26, 29. **Used by:** 19, 26, 29, 32.
 
 `inwardOpen` `inwardSeen` `inwardRow` `inwardBrowser` `inwardLanguages` `inwardHTML` `openInward` `closeInward` `setupInward`
 
-### `31-boot.js`
+### `31-share.js`
 
-Boot: wire everything up, start, and the window.__ip debug surface. **Uses:** 00, 01, 04, 05, 06, 07, 08, 09, 10, 12, 13, 14, 15, 16, 18, 19, 21, 22, 24, 25, 28, 29, 30. **Used by:** —.
+Sharing: a place, a finished story or the notebook, as a link and as a card image; and the offer a shared link makes on arrival. **Uses:** 01, 03, 05, 06, 07, 10, 11, 15, 18, 21, 24, 25, 28, 29. **Used by:** 11, 19, 22, 24, 29, 32.
+
+`SHARE_ORIGIN` `shareItem` `shareBlobUrl` `sharedOffer` `shareUrl` `firstSentence` `sharePlaceItem` `shareStoryItem` `shareNotebookItem` `cardWrap` `cardStill` `renderCard` `openShare` `closeShare` `shareFlash` `setupShare` `syncShare` `readSharedLink` `sharedSights`
+
+### `32-boot.js`
+
+Boot: wire everything up, start, and the window.__ip debug surface. **Uses:** 00, 01, 04, 05, 06, 07, 08, 09, 10, 12, 13, 14, 15, 16, 18, 19, 21, 22, 24, 25, 28, 29, 30, 31. **Used by:** —.
 
 `pickRenderer` `boot`

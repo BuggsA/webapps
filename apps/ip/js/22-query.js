@@ -266,7 +266,7 @@ function sightlines(f) {
   /* A STORY ON THE HORIZON first (29-chains): the next place in the line
    * being followed, or a line not yet started whose first place is in
    * view. A direction, which is the thing the map was missing. */
-  out = chainSights(f).concat(out);
+  out = sharedSights().concat(chainSights(f)).concat(out);   /* 31-share first: somebody sent it */
   /* one suggestion per place: two labels pointing at the same cell is one
    * destination dressed as two */
   var seen = {};

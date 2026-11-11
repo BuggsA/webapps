@@ -132,7 +132,13 @@ the strongest single moment in the product that is not yet built.
 **Exit:** an IPv4 visitor who finds NAT64 steps onto a 10.42-step axis at the
 point corresponding to where they were standing, and can walk back.
 
-## 3. The card — v2's G
+## 3. The card — v2's G — **BUILT 2026-11-11** (owner: *"can you work on making it sharable?"*), preview only
+
+As built: `js/31-share.js`. Cards for a place, a finished story and the
+notebook; links `?at=` and `?line=` that offer the place or story to the
+recipient after their own address. Redaction is on and cannot be turned
+off: no address of the visitor's, no amber mark, no "N addresses from
+yours". NOT built: per-link preview images (needs a Pages Function).
 
 The notebook exported as an image. Every input already exists.
 

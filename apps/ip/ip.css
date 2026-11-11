@@ -838,7 +838,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 
 /* ── ABOUT ───────────────────────────────────────────────────────────── */
 
-#aboutPanel, #notePanel, #inwardPanel {
+#aboutPanel, #notePanel, #inwardPanel, #sharePanel {
   position: fixed;
   inset: 0;
   z-index: 6;
@@ -847,7 +847,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   display: grid;
   place-items: start center;
 }
-#aboutPanel[hidden], #notePanel[hidden], #inwardPanel[hidden] { display: none; }
+#aboutPanel[hidden], #notePanel[hidden], #inwardPanel[hidden], #sharePanel[hidden] { display: none; }
 
 /* The notebook reuses the About panel's frame: same width, same rhythm, same
    way out. It is a second page of the same book, not a new kind of surface. */
@@ -866,12 +866,12 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 }
 #noteBody ul.sites li:first-child { border-top: 0; }
 
-#aboutInner, #noteInner, #inwardInner {
+#aboutInner, #noteInner, #inwardInner, #shareInner {
   width: min(62ch, calc(100% - var(--gutter) * 2));
   padding: clamp(40px, 9vh, 96px) 0;
   position: relative;
 }
-#aboutClose, #noteClose, #inwardClose {
+#aboutClose, #noteClose, #inwardClose, #shareClose {
   position: absolute;
   right: 0;
   top: clamp(16px, 4vh, 40px);
@@ -883,7 +883,7 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   min-height: 44px;
   min-width: 44px;
 }
-#aboutClose:hover, #noteClose:hover, #inwardClose:hover { color: var(--cream); }
+#aboutClose:hover, #noteClose:hover, #inwardClose:hover, #shareClose:hover { color: var(--cream); }
 
 #aboutBody h2, #noteBody h2, #inwardBody h2 {
   color: var(--cream);
@@ -975,6 +975,36 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
 #inwardBody dd .sub { display: block; color: var(--cold-2); font-size: 13px; margin-top: 3px; line-height: 1.5; }
 #inwardBody p.said, #inwardBody p.reveal { color: var(--cream); font-weight: 340; }
 #inwardEdge { margin-top: 2.4em; padding-top: 1.2em; border-top: 1px solid var(--cold-3); }
+
+/* SHARING (31-share). The plate's one control, quiet until wanted; the
+   panel is the same book as About, with the card itself as its picture. */
+#sharePlace {
+  pointer-events: auto; margin-top: .9em; color: var(--cold-2);
+  font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase;
+  border-bottom: 1px dotted var(--cold-3); padding: 6px 1px; min-height: 36px;
+}
+#sharePlace:hover { color: var(--cream); border-bottom-color: var(--cream); }
+#sharePlace[hidden] { display: none; }
+#shareTitle {
+  color: var(--cream); font-size: clamp(22px, 3vw, 32px); font-weight: 260;
+  font-stretch: 106%; margin: 0 0 .6em;
+}
+#shareWarn { color: var(--cream); font-size: 14px; line-height: 1.5; margin: 0 0 1em; }
+#shareImg {
+  display: block; width: 100%; height: auto; aspect-ratio: 1200 / 630;
+  background: #0b1018; border: 1px solid var(--cold-4);
+}
+#sharePanel .shareNote { color: var(--cold-3); font-size: 13px; margin: .9em 0 0; }
+#sharePanel .shareLink { color: var(--cold-1); font-size: 14px; margin: .3em 0 0; overflow-wrap: anywhere; }
+#sharePanel .shareRow { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 1.2em; }
+#sharePanel .shareRow button, #sharePanel .shareRow a {
+  color: var(--cream); font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+  text-decoration: none; border-bottom: 1px solid var(--cold-3); padding: 10px 0; min-height: 44px;
+  display: inline-flex; align-items: center; box-sizing: border-box;
+}
+#sharePanel .shareRow [hidden] { display: none; }
+#sharePanel .shareRow button:hover, #sharePanel .shareRow a:hover { border-color: var(--cream); }
+#noteBody button.shareNote { letter-spacing: .1em; text-transform: uppercase; font-size: 12px; }
 
 /* ── SMALL SCREENS ───────────────────────────────────────────────────── */
 

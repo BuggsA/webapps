@@ -123,10 +123,13 @@
 </script>
 
 <!-- The subject plate: what the instrument is pointed at. -->
-<div id="plate" aria-hidden="true">
-  <p id="plateTitle"></p>
-  <p id="plateSub"></p>
-  <p id="plateNote"></p>
+<div id="plate">
+  <p id="plateTitle" aria-hidden="true"></p>
+  <p id="plateSub" aria-hidden="true"></p>
+  <p id="plateNote" aria-hidden="true"></p>
+  <!-- Sharing (31-share): away from home only. The words above are for the
+       eye; the companion carries them for assistive technology. -->
+  <button id="sharePlace" type="button" hidden>Share this place</button>
 </div>
 
 <!-- What he says. Never in front of the address, never where it can cover the
@@ -244,6 +247,25 @@
   </div>
 </div>
 
+<!-- Sharing (31-share): a card image and a link, for a place, a finished
+     story or the notebook. Nothing on the card or in the link is the
+     visitor's own address. -->
+<div id="sharePanel" hidden>
+  <div id="shareInner">
+    <button id="shareClose" type="button">Close</button>
+    <h2 id="shareTitle">Share</h2>
+    <p id="shareWarn" hidden></p>
+    <img id="shareImg" alt="The card that will be shared" width="1200" height="630">
+    <p class="shareNote">No IP address of yours is on the card or in the link.</p>
+    <p id="shareLink" class="shareLink"></p>
+    <p class="shareRow">
+      <button id="shareNative" type="button" hidden>Share…</button>
+      <button id="shareCopy" type="button">Copy link</button>
+      <a id="shareSave" href="#" download="iphere.png">Save image</a>
+    </p>
+  </div>
+</div>
+
 <!-- The inward half (30-inward): what this visit told the site, what
      stayed on the device, and where this site's sight stops. -->
 <div id="inwardPanel" hidden>
@@ -266,7 +288,7 @@
 <!-- The app, in load order: classic scripts sharing one global scope. Most
      of them only declare functions, which can live in any file; order
      matters for the few statements that run at load (the landmark list in
-     03, and 31-boot, which must be last). What each one holds: MAP.md. -->
+     03, and 32-boot, which must be last). What each one holds: MAP.md. -->
 <script src="js/00-config.js"></script>
 <script src="js/01-address.js"></script>
 <script src="js/02-curve.js"></script>
@@ -298,6 +320,7 @@
 <script src="js/28-pullback.js"></script>
 <script src="js/29-chains.js"></script>
 <script src="js/30-inward.js"></script>
-<script src="js/31-boot.js"></script>
+<script src="js/31-share.js"></script>
+<script src="js/32-boot.js"></script>
 </body>
 </html>
