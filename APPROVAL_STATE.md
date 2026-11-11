@@ -36,6 +36,7 @@ like 'xyz Tennessee'."*
 | **#1 the teaser line** and **#2 the first pull / "You are here"** — *"That is good yes can you work on those 2 first? Please try your best remembering the goal."* | COMPLETE on the branch preview, NOT merged. `content/anchors.json`, `js/27-teaser.js`, `js/28-pullback.js` |
 | #3 shareable "save my spot" image, #4 place of the day, #5 plain-words taps | proposed, NOT approved |
 | Privacy-respecting tally of whether people stop | proposed again as the way to measure #1/#2, NOT approved |
+| **Merge `claude/sleepy-tesla-kv7qqd` to `master`** (= production deploy) — *"can you do a pr and merge please?"*, 2026-11-11 | authorised for THIS merge only. The standing rule is unchanged: Claude does not merge to `master` without a fresh instruction |
 | Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
 
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not
