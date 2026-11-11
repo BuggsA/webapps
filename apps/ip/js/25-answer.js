@@ -213,12 +213,13 @@ function loadAddress() {
     }
   }
   var settled = false;
-  function give(addr, src, where, net) {
+  function give(addr, src, where, net, sent) {
     if (settled) return;
     settled = true;
     clearTimeout(timer);
     S.home = addr || null;
     S.source = addr ? src : '';
+    S.sent = (addr && sent && typeof sent === 'object') ? sent : null;
     S.where = (addr && where && typeof where === 'object') ? where : null;
     S.edgeNet = (addr && net && typeof net === 'object' &&
                  (net.asn > 0 || net.org))
@@ -237,7 +238,7 @@ function loadAddress() {
       return ct.indexOf('json') >= 0 ? r.json()
            : r.text().then(function (t) { return { ip: t.trim() }; });
     }))
-    .then(function (d) { give(parseIp(d && d.ip), 'edge', d && d.where, d && d.net); })
+    .then(function (d) { give(parseIp(d && d.ip), 'edge', d && d.where, d && d.net, d && d.headers); })
     .catch(function () { give(null, ''); });
 }
 

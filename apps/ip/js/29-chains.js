@@ -102,7 +102,7 @@ function nearestRoot() {
 
 /* Can this visitor ever meet this beat? */
 function beatLive(b) {
-  if (!S.home || !b.rule || b.rule === 'other-family' || b.rule === 'inward') return false;
+  if (!S.home || !b.rule || b.rule === 'other-family') return false;
   if (b.only && !tagsHave(b.only)) return false;
   if (b.rule === 'at') return beatAddr(b) !== null;
   if (b.rule === 'same-network') return sameNetTarget() !== false;
@@ -190,15 +190,21 @@ function beatMet(b, ev, l) {
              !(s && s.k.indexOf('q' + regIndex(ev.big, v)) >= 0);
     case 'cc-mismatch':
       return ev.kind === 'mismatch' && !(s && s.k.indexOf('r' + ev.rir) >= 0);
+    case 'inward-open':
+      return ev.kind === 'inward-open';
+    case 'inward-edge':
+      return ev.kind === 'inward-edge';
   }
   return false;
 }
 
 /* Is the place that answered the beat's place? Exactly; or inside the
- * block that answered; or in the same cell of the rung it was chosen at,
- * so long as cells there are no bigger than a /8 of IPv4 or a /32 of IPv6
- * - pointing at "somewhere near 12.0.0.0" from the whole of IPv4 is not
- * having found it. */
+ * block that answered; or inside the named place the beat's address is
+ * (anywhere in 240.0.0.0/4 is that place); or in the same cell of the rung
+ * it was chosen at, so long as cells there are no bigger than a /16 of
+ * IPv4 or a /48 of IPv6. Found 2026-11-11: with /8-sized cells, picking
+ * 192.0.2.0 from the whole of IPv4 also "found" 192.5.21.0 for another
+ * story, because the two share one cell up there. */
 function atIn(target, big, rec) {
   if (target === null || big === undefined) return false;
   if (big === target) return true;
@@ -206,10 +212,12 @@ function atIn(target, big, rec) {
     var h = BigInt(rec.cidr.bits - rec.cidr.len);
     if ((big >> h) === (target >> h)) return true;
   }
+  var m = S.home ? markAt(target, S.home.v) : null;
+  if (m && m.len < m.bits && big >= m.net && big <= m.last) return true;
   var r = activeRung();
   if (r && r.f && S.home) {
     var cellLen = S.home.bits - Number(r.f.cellShift);
-    if (cellLen >= (S.home.v === 4 ? 8 : 32)) {
+    if (cellLen >= (S.home.v === 4 ? 16 : 48)) {
       return (big >> r.f.cellShift) === (target >> r.f.cellShift);
     }
   }
@@ -342,6 +350,7 @@ function beatTarget(b) {
     case 'root': var rt = nearestRoot(); return rt === null ? null : { addr: rt };
     case 'same-network': var sn = sameNetTarget(); return sn ? { addr: sn } : null;
     case 'query-cc': return { query: { kind: 'cc', value: b.cc } };
+    case 'inward-open': return { open: 'inward' };
   }
   return null;
 }
@@ -350,6 +359,7 @@ function goTarget(t) {
   if (!t) return;
   if (t.addr !== undefined) travelTo(t.addr, true);
   else if (t.query) setQuery(t.query);
+  else if (t.open === 'inward') openInward();   /* 30-inward */
 }
 
 /* STORIES ON THE HORIZON, for 22-query's "From here you can see". The
@@ -510,7 +520,7 @@ function syncTrack() {
   if (bi >= 0) {
     var b = l.beats[bi], t = beatTarget(b), g;
     if (t) g = trackBtn(b.goal, 'beat ask', function () { goTarget(t); },
-                        t.query ? 'Ask the map' : 'Go there');
+                        t.query ? 'Ask the map' : t.open ? 'Open it' : 'Go there');
     else { g = document.createElement('span'); g.className = 'beat'; g.textContent = b.goal; }
     el.track.appendChild(g);
   } else {

@@ -140,7 +140,8 @@ function setupAxis() {
       case 'Home': e.preventDefault(); S.yaw = 0; goHome(); break;
       case 'End': e.preventDefault(); setAxis(S.maxAxis); break;
       case 'Escape':
-        if (!el.aboutPanel.hidden) closeAbout();
+        if (inwardOpen) closeInward();
+        else if (!el.aboutPanel.hidden) closeAbout();
         else if (el.notePanel && !el.notePanel.hidden) closeNote();
         else goHome();
         break;

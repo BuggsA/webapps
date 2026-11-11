@@ -18,7 +18,7 @@
           "at": "the visitor's own address",
           "feels": "recognition",
           "teaches": "it is a number, and somebody agreed to it",
-          "say": "There. It exists somewhere other than here now, which is more than most of this map can say.",
+          "say": "Copied. That number is how the whole internet finds you right now: every reply to everything you do today is addressed to it.",
           "rule": "copied",
           "soft": true,
           "goal": "Copy your address"
@@ -27,17 +27,17 @@
           "find": "the prefix the visitor's address is announced in",
           "feels": "curiosity",
           "teaches": "somebody speaks for you",
-          "say": "Somebody stands up and says this range is theirs to speak for, and you are inside it. You have never met them.",
+          "say": "This is the block your address belongs to. Your internet provider tells the rest of the internet: send anything for these addresses to me. You are one of them.",
           "rule": "own-block",
-          "goal": "Pull back until you can see the block you are announced in"
+          "goal": "Zoom out until you can see the block of addresses yours belongs to"
         },
         {
           "find": "another prefix the same network announces",
           "feels": "curiosity, widening",
           "teaches": "a network is not one range",
-          "say": "Same network, different part of the map entirely. A network is not a place. It is a list of ranges somebody is willing to answer for.",
+          "say": "Same provider, a completely different part of the map. Providers do not own one neat neighbourhood. They collect blocks wherever they can get them, and answer for all of them.",
           "rule": "same-network",
-          "goal": "Find another block your own network announces"
+          "goal": "Find another block that belongs to your internet provider"
         },
         {
           "find": "the whole of the visitor's address family",
@@ -46,9 +46,9 @@
             "v4"
           ],
           "teaches": "the size, and how little of it is left",
-          "say": "All of it. Every number there will ever be in this family, and nearly all of them are taken. It still carried everything you did today.",
+          "say": "All of it: every IPv4 address there will ever be, about 4.3 billion. That is fewer than there are people. Nearly all of them are taken, and it still carried everything you did today.",
           "rule": "whole-family",
-          "goal": "Pull all the way out, to the whole of IPv4"
+          "goal": "Zoom all the way out, to every IPv4 address there is"
         },
         {
           "find": "the whole of the visitor's address family",
@@ -57,33 +57,33 @@
             "v6"
           ],
           "teaches": "the size, and how little of it has been needed",
-          "say": "All of it. Vastly more than has ever been handed out, and the part in use is a rounding error against the rest.",
+          "say": "All of IPv6: enough for every grain of sand on Earth to have trillions of addresses of its own. Less than a thousandth of the usable part has been handed out so far.",
           "rule": "whole-family",
-          "goal": "Pull all the way out, to the whole of IPv6"
+          "goal": "Zoom all the way out, to all of IPv6"
         },
         {
           "find": "the nearest root server",
           "feels": "intimacy",
           "teaches": "a handful of named things hold the rest up, and people looked after them by hand",
-          "say": "Thirteen names hold up every name there is. And for years the register of which numbers had been given to whom was published, and largely kept, by one man.",
+          "say": "Every time you type a website’s name, the lookup starts, in principle, at a root server like this one. Thirteen names hold up every name on the internet. And for years the list of who had been given which numbers was kept largely by one man, Jon Postel.",
           "rule": "root",
-          "goal": "Find the nearest root server"
+          "goal": "Find the nearest root server, where looking up a website name begins"
         },
         {
           "find": "the origin network of any announced prefix",
           "feels": "unease",
           "teaches": "announcing is a claim, and every listener decides what to do with it",
-          "say": "A network can announce anything it likes. Every network decides for itself what to believe. Some of that is checked now - not all of it, and none of it was then.",
+          "say": "Anyone running a network can tell the rest: these addresses are mine. There is no referee. Every network decides for itself what to believe. Some of those claims are checked now. In 2008, none were.",
           "rule": "other-origin",
-          "goal": "Visit a block that somebody else announces"
+          "goal": "Visit a block run by some other network"
         },
         {
           "at": "208.65.153.0",
           "feels": "anger, or something near it",
           "teaches": "a claim meant for one country escaped",
-          "say": "In 2008 a route meant to block one site inside one country escaped. For about two hours it pulled that site's traffic across the internet to somewhere it was never going. No one meant that to happen, which is the part worth sitting with.",
+          "say": "In February 2008, Pakistan ordered YouTube blocked. Pakistan Telecom did it by claiming YouTube’s addresses as its own, and the claim leaked out to the world. For about two hours, a lot of the world trying to reach YouTube was sent to Pakistan instead, and got nothing. Nobody meant it to happen.",
           "rule": "at",
-          "goal": "Go to 208.65.153.0. Something happened here in 2008"
+          "goal": "Go to 208.65.153.0: YouTube, February 2008"
         },
         {
           "find": "the whole of the visitor's address family, again",
@@ -91,11 +91,11 @@
           "teaches": "the same fact, read the other way",
           "say": "Every network decides for itself what to believe. And mostly, they agree.",
           "rule": "whole-family",
-          "goal": "Pull all the way out, one more time"
+          "goal": "Zoom all the way out one more time"
         }
       ],
-      "reveal": "No single authority tells any network which route to trust. Each one accepts, rejects or checks what it hears, and most of the time those decisions agree well enough to have carried everything you did today.",
-      "_verified": "208.65.153.0 is present in space.bin as ARIN / US / 2006. The 2008 incident is sourced in docs/ip-story-research.md; RIPE's own analysis states it could not determine how many sites were affected, so the beat says traffic was pulled across the internet and does NOT claim universal failure. 'Some of that is checked now' is deliberately unquantified - origin validation is real, widely deployed and nowhere near universal, and any number would be wrong within a year."
+      "reveal": "No one is in charge of the internet’s map. Tens of thousands of networks each decide whose claims to believe, and most of the time they agree well enough to have carried everything you did today.",
+      "_verified": "Rewritten 2026-11-11 for the average person, not a networking person (owner: 'If not interesting to the normal human it is likely noise'). Beats 6 and 8 still share 'Every network decides for itself what to believe' verbatim (see _reframe). 2008: RIPE NCC RIS case study 'YouTube Hijacking' - Pakistan Telecom (AS17557) announced 208.65.153.0/24 from 18:47 UTC on 24 Feb 2008, propagated by PCCW (AS3491), withdrawn 21:01 UTC: about two hours. RIPE could not measure how much of the internet was affected, so the beat says 'a lot of the world', never 'all'. The Pakistani government's order to block YouTube is widely reported (RIPE, CircleID, APNIC's ISP column 2008-03). 4.3 billion < world population (8+ billion). Under a thousandth of 2000::/3 handed out: 0.0925%, computed from space.bin by scripts/ip-build-door-stats.py. 2^128 / ~7.5e18 grains of sand is ~4.5e19 each, so 'trillions' understates and is true. Jon Postel ran IANA's number assignments until his death in 1998. 'Tens of thousands of networks': RIPE RIS sees over 70,000 originating AS numbers (scripts/ip-build-asn-field.py source). 'In 2008, none were': route origin validation (RPKI) began deployment after 2011."
     },
     {
       "id": "the-boundary",
@@ -104,22 +104,23 @@
       "needs": [
         "the-main-line"
       ],
-      "provisional": "Needs the inward half - phase H - which does not exist. The beats are written so the spine is settled and the side chains have something to point at, but nothing here can be built or locked yet.",
-      "_note": "The plan's beats 6 and 7. The instrument turns around, and the product ends where it should. Fear appeal is the cheapest win available here and taking it would make this a worse product: show how little was kept and let the relief be the payoff.",
+      "_note": "The plan's beats 6 and 7. The instrument turns around, and the product ends where it should. Fear appeal is the cheapest win available here and taking it would make this a worse product: show how little was kept and let the relief be the payoff. Unblocked 2026-11-11 by a small inward half (js/30-inward.js): what arrived with the visit, what stayed on the device, why it matters, and where sight stops.",
       "beats": [
         {
           "find": "what actually crossed the wire to get here",
           "feels": "recognition, transformed",
           "teaches": "what a visit really reveals",
           "say": "Everything I have shown you came from one number and a handful of public registers. Here is all of it.",
-          "rule": "inward"
+          "rule": "inward-open",
+          "goal": "See what your visit told this site"
         },
         {
           "find": "where our sight stops",
           "feels": "the boundary",
           "teaches": "your address is not you",
           "say": "This is where I stop being able to see. Your address says where to send the answer. It does not say who you are, and I could not tell you.",
-          "rule": "inward"
+          "rule": "inward-edge",
+          "goal": "Read to where this site stops being able to see"
         }
       ],
       "reveal": "An address is a delivery instruction that a great many strangers have agreed to honour. That is all it is, and it is not nothing."
@@ -166,35 +167,49 @@
       "kind": "side",
       "title": "Set aside",
       "needs": [],
-      "_verified": "All three are landmarks already in MARKS and are RFC facts, not lookups. On the date, which is contested: RFC 791 (1981-09) defined the class E range as reserved, while the IANA special-purpose registry records 1989-08 for its own entry. Those are two different events. The landmark line names 1981, which is the reservation rather than the registry record, and this chain names no date at all. Our own space.bin independently shows the range unallocated.",
+      "_verified": "Rewritten 2026-11-11 for the average person, not a networking person (owner: 'If not interesting to the normal human it is likely noise'). 127.0.0.0/8 loopback: RFC 1122, 16,777,216 addresses; ::1 the single IPv6 loopback, RFC 4291. 192.0.2.0/24 and 2001:db8::/32 are documentation-only (RFC 5737, RFC 3849), the same idea as the 555-01xx numbers US films use. 240.0.0.0/4: 268,435,456 addresses, reserved 'for future use' since the 1980s (RFC 988, 1986, after RFC 791); RFC 3330 records it reserved; still reserved, with an IETF draft (draft-schoen-intarea-unicast-240) unadopted. Equipment that refuses it: RIPE address-policy list and RIPE 88 'Reclaiming 240/4'. 'Billions': 268M x ~$15-20 per address (IPv4Center, CircleID, 2025-26). All four places are landmarks in MARKS.",
       "beats": [
         {
-          "at": "240.0.0.0",
-          "teaches": "space can be reserved and then never arrive",
-          "say": "A sixteenth of the whole space, kept back for an addressing idea that never arrived. Nobody has ever been given any of it.",
+          "at": "127.0.0.1",
+          "only": [
+            "v4"
+          ],
           "rule": "at",
-          "goal": "Go to 240.0.0.0"
+          "goal": "Go to 127.0.0.1, the address that means “this computer”",
+          "teaches": "some addresses mean here, not somewhere",
+          "say": "127.0.0.1 means “this computer”. Whatever device you are on, this address leads straight back to itself. There is an old joke about it: there’s no place like 127.0.0.1. Sixteen million addresses are set aside to mean nothing but “here”."
+        },
+        {
+          "at": "::1",
+          "only": [
+            "v6"
+          ],
+          "rule": "at",
+          "goal": "Go to ::1, the address that means “this computer”",
+          "teaches": "some addresses mean here, not somewhere",
+          "say": "::1 means “this computer”. Whatever device you are on, this address leads straight back to itself. IPv4 spends sixteen million addresses on meaning “here”. IPv6 spends exactly one."
         },
         {
           "at": "192.0.2.0",
-          "teaches": "some addresses exist so that writing can be safe",
-          "say": "This one exists so that writing about addresses cannot accidentally name a real one.",
+          "at6": "2001:db8::",
           "rule": "at",
-          "goal": "Go to 192.0.2.0"
+          "goal": "Go to the internet’s 555 numbers",
+          "teaches": "space reserved so that examples cannot hit anything real",
+          "say": "These are the internet’s 555 numbers. Films use fake 555 phone numbers so nobody real gets called by mistake. Manuals and textbooks use addresses from here, so no real computer is ever reached by mistake."
         },
         {
-          "at": "2001:db8::",
-          "teaches": "the same idea, made much larger the second time",
-          "say": "And the same again in IPv6, with room for every example anyone will ever need.",
+          "at": "240.0.0.0",
           "rule": "at",
-          "goal": "Go to 2001:db8::"
+          "goal": "Go to 240.0.0.0, the biggest empty stretch on the map",
+          "teaches": "space kept back for a future that arrived without it",
+          "say": "A sixteenth of all IPv4, 268 million addresses, kept back in the 1980s “for future use”. The future came and the world ran out of addresses, and these still sit empty: too much equipment treats them as off-limits. At today’s prices they would be worth billions."
         }
       ],
-      "reveal": "Some of this space was never meant for the public internet. Kept back for an addressing idea, or handed to writing so examples cannot collide with anything real. Different reasons, same result: a place on the map that nobody is going to.",
+      "reveal": "Not every address is for the internet. Some mean “this computer”, some exist only for examples, and one huge stretch was saved for a future that arrived without it. The world ran short of addresses while these sat set aside.",
       "grants": {
         "kind": "marks",
         "label": "Set-aside space",
-        "say": "Every place like these, everywhere, whenever you want them."
+        "say": "Now you can ask the map to light up every place like these at once."
       }
     },
     {
@@ -202,37 +217,38 @@
       "kind": "side",
       "title": "The thirteen",
       "needs": [],
-      "_verified": "Root addresses come from the IANA root hints, already in MARKS, both families.",
+      "_verified": "Rewritten 2026-11-11 for the average person, not a networking person (owner: 'If not interesting to the normal human it is likely noise'). Operators from IANA's root server list (iana.org/domains/root/servers), checked 2026-11-11: A and J Verisign; B USC-ISI and D University of Maryland (two universities); E NASA Ames; G US DoD; H US Army Research Lab; I Netnod (Sweden); K RIPE NCC (Amsterdam); M WIDE Project (Japan); C Cogent; F ISC; L ICANN - twelve organisations. Verisign runs .com. 'About two thousand machines': root-servers.org showed 2,048 operational instances on 2026-11-11; ICANN's RSSAC FAQ says more than 1,500. The old third beat (the same letter in the other family) needed the doors and is replaced by K.",
       "beats": [
         {
           "at": "198.41.0.4",
-          "teaches": "there is a first one and it is an ordinary-looking address",
-          "say": "A. There is nothing about this address that looks like what it does.",
-          "rule": "at",
           "at6": "2001:503:ba3e::2:30",
-          "goal": "Find root server A"
+          "rule": "at",
+          "goal": "Find root server A",
+          "teaches": "what a root server is for",
+          "say": "Root server A. When you type a website’s name, finding it starts, in principle, with a server like this, which points the way to .com, .org and every other ending. A is run by Verisign, the company that also runs .com."
         },
         {
           "at": "192.203.230.10",
-          "teaches": "they are separated by operator and site, not by address",
-          "say": "E. Different people, different buildings, different networks from the last one. That is the part that matters, not where they sit on this map.",
-          "rule": "at",
           "at6": "2001:500:a8::e",
-          "goal": "Find root server E"
+          "rule": "at",
+          "goal": "Find root server E",
+          "teaches": "the thirteen are deliberately run by different hands",
+          "say": "Root server E is run by NASA. Others are run by the US Army, two universities, a Swedish organisation and a Japanese research project: twelve organisations, deliberately different, so that no single failure can take the internet’s names down."
         },
         {
-          "find": "the same letter in the other family",
-          "teaches": "the thirteen exist twice",
-          "say": "And the same letter again, in the other internet. Thirteen is not thirteen machines.",
-          "rule": "other-family",
-          "goal": "Find the same letter in the other family"
+          "at": "193.0.14.129",
+          "at6": "2001:7fd::1",
+          "rule": "at",
+          "goal": "Find root server K",
+          "teaches": "thirteen is a number of names, not machines",
+          "say": "K is run from Amsterdam. And “thirteen servers” is only thirteen names: each one is really many copies spread around the world, about two thousand machines in all, and your lookups go to whichever copy is nearest."
         }
       ],
-      "reveal": "Thirteen letters hold up every name on the internet, and the number is small enough that people argue about it.",
+      "reveal": "Thirteen names, twelve organisations and about two thousand machines hold up every website name you have ever typed. It works because nobody owns all of it.",
       "grants": {
         "kind": "roots",
         "label": "The thirteen",
-        "say": "All twenty-six of them, in both families, from anywhere you happen to be standing."
+        "say": "Now you can ask the map to light up all thirteen at once, wherever you are standing."
       }
     },
     {
@@ -242,23 +258,32 @@
       "needs": [
         "oldest-hands"
       ],
-      "_verified": "36.0.0.0 reads APNIC / CN / 2011 in space.bin, which is consistent with the block having been returned and reissued. 18.0.0.0 reads ARIN / US / 1994. No holder is named by any line here; the plate names them from the live lookup.",
+      "_verified": "Checked 2026-11-11. LIVE (RIPEstat network-info): 18.0.0.0/16 announced by AS3, MIT; 18.200.0.0/16 and 18.130.0.0/16 by AS16509, Amazon; 36.0.0.0 not announced. space.bin: 36.0.0.0/8 is APNIC, all of it handed out in 2011, about 70% registered to China (CN), the rest ID, JP, TW, NP. MIT's sale: Network World, 'MIT selling 8 million coveted IPv4 addresses; Amazon a buyer' (2017); Internet Society blog, 'MIT goes on IPv4 selling spree' (May 2017) - sale proceeds to fund MIT's network upgrade. Stanford: IANA IPv4 address-space registry history, 36/8 Stanford, returned to IANA as reserved 2000-07, allocated to APNIC 2010-10 (NANOG and APNIC announcements, October 2010; Geoff Huston's 36/8 study). Stanford's stated reason was not found, so no line gives one. Price: IPv4Center 2025 report, average $27.75 per address over 2025; CircleID and IPv4Center put early-2026 averages near $20; /16-sized blocks traded below $15. 'Hundreds of millions of dollars' for 16.8 million addresses holds at any of these ($250M at $15). No line names an exact figure, because the price moves.",
       "beats": [
         {
           "at": "18.0.0.0",
-          "teaches": "a founding-era /8, and what happened to it is visible rather than asserted",
-          "say": "One of the big early ones. Look at who announces the halves of it now, and then look again.",
-          "rule": "at"
+          "rule": "at",
+          "goal": "Go to 18.0.0.0, one of the first blocks ever handed out",
+          "teaches": "a founding-era block, held by one university",
+          "say": "MIT's. Sixteen million addresses, given to one university back when the internet was a research project. MIT still answers for this end of it."
+        },
+        {
+          "at": "18.200.0.0",
+          "rule": "at",
+          "goal": "Now go to the other half: 18.200.0.0",
+          "teaches": "addresses became property, and were sold",
+          "say": "Same block, and Amazon answers here. In 2017 MIT sold millions of addresses it was not using, and spent the money on its own network. Addresses had run out, so they had become worth buying."
         },
         {
           "at": "36.0.0.0",
-          "teaches": "the opposite decision, and the register records the consequence",
-          "say": "This one is registered on the other side of the world now, to a registry that did not exist when it was first handed out.",
-          "rule": "at"
+          "rule": "at",
+          "goal": "Go to 36.0.0.0, the block that was given back",
+          "teaches": "the opposite decision, and where the space went",
+          "say": "This was Stanford's, all sixteen million. In 2000 Stanford handed the whole block back, for nothing. Ten years later it was given out again, across Asia, most of it to networks in China."
         }
       ],
-      "reveal": "Once there was no more of it, address space became something you could transfer. Where a block is registered today and where it started are two different questions, and this map only answers the first.",
-      "provisional": "The RETURN is not verified. space.bin shows 36.0.0.0 registered to CN under APNIC in 2011, which is consistent with a block having been given back and reissued and is not evidence that it was. Either a real historical source arrives or this chain does not ship. The beats are written so it can be decided rather than forgotten."
+      "reveal": "Once there were no more addresses, the old ones became property. One university sold millions of its spare ones; another gave its whole block away, which at today's prices of around twenty dollars an address would be worth hundreds of millions of dollars. Where a block is registered today says very little about where it started.",
+      "_note": "Rewritten 2026-11-11 for an ordinary reader (owner: 'If not interesting to the normal human it is likely noise. Not your average networking person, but the average person'). The hook is money and generosity, which everyone understands: one university sold its spare addresses, another gave them away. The old draft's claim that 36/8 went to 'a registry that did not exist when it was first handed out' was dropped: the register dates Stanford's block 1993, the year APNIC began, and nothing found says otherwise."
     },
     {
       "id": "small-countries",
@@ -299,33 +324,37 @@
         {
           "find": "allocated before 2000, and nothing announces it",
           "teaches": "old and silent is a real and common state",
-          "say": "Somebody was given this before the century turned. There is no route to it that I can see today.",
+          "say": "Somebody was given these addresses before 2000, and today nothing on the internet leads here. They are not empty. They belong to someone. They have gone quiet.",
           "rule": "quiet",
-          "goal": "Find space handed out before 2000 that nothing announces"
+          "goal": "Find addresses given out before 2000 that the internet cannot reach today"
         },
         {
           "find": "another, further away",
           "teaches": "it is not a one-off",
-          "say": "Another. They are not rare, once you know the shape of them.",
+          "say": "Another, from a different handout. Not a fluke, then.",
           "rule": "quiet",
-          "goal": "Find another, in a different allocation"
+          "goal": "Find another, from a different handout"
         },
         {
-          "find": "the largest run of them nearby",
-          "teaches": "the dark is not empty",
-          "say": "All of this is registered to somebody. None of it answers right now.",
-          "rule": "quiet",
-          "goal": "And one more"
+          "at": "11.0.0.0",
+          "rule": "at",
+          "goal": "Go to 11.0.0.0, which was quiet for decades",
+          "teaches": "quiet is not forgotten",
+          "say": "This is the Pentagon’s, and much of its space sat dormant for decades. On 20 January 2021, minutes after a new US president was sworn in, a company nobody had heard of began announcing it to the world: 175 million addresses by April. The Pentagon later said it had arranged it, to see who was using its addresses. Today it announces them itself."
         }
       ],
-      "reveal": "Allocated a long time ago, and no route to any of it that anyone here can see today. That is all this shows, and it is enough: the dark on this map is not empty space. It is held space that has gone quiet, and there is far more of it than anybody expects."
+      "reveal": "Some of the dark on this map is not empty. It was handed out decades ago and went quiet: still taken, but not answering. And quiet does not mean forgotten. In 2021, 175 million of the Pentagon’s quiet addresses woke up overnight.",
+      "only": [
+        "v4"
+      ],
+      "_verified": "Rewritten 2026-11-11 for the average person, not a networking person (owner: 'If not interesting to the normal human it is likely noise'). The 2021 story: Doug Madory (Kentik) traced the first announcement by AS8003 (Global Resource Systems LLC, Plantation, Florida) to 16:57 UTC on 20 Jan 2021, minutes after the inauguration; 56 million addresses by late January, 175 million by mid-April; the Pentagon's Defense Digital Service called it a pilot to assess and prevent unauthorised use (AP / Washington Post, April 2021; SecurityWeek, SiliconANGLE); in September 2021 the announcements moved to DoD's own operations. LIVE 2026-11-11 (RIPEstat): 11.0.0.0/24, 21.0.0.0/8, 22.0.0.0/16, 26/8, 28/8, 30/8 announced by AS749 (DoD Network Information Center). IPv4 only: IPv6 allocations before 2000 are too rare to find."
     },
     {
       "id": "map-is-wrong",
       "kind": "side",
       "title": "Where the map is wrong",
       "needs": [
-        "the-quiet-ones"
+        "the-main-line"
       ],
       "_note": "Gated for a real reason, not an arbitrary one: a block announced from the wrong continent is not STRANGE until you have watched an ordinary network's footprint stay where it was put. Entirely computed - it needs live routing data we do not ship.",
       "beats": [
@@ -334,7 +363,7 @@
           "teaches": "the register records paperwork, not geography",
           "say": "Registered under one country. Announced by a network registered under another. Neither of them is lying.",
           "rule": "cc-mismatch",
-          "goal": "Find a block registered in one country and announced by a network registered in another"
+          "goal": "Find a block registered in one country but run by a network registered in another"
         },
         {
           "find": "a second one, in a different registry",
@@ -344,9 +373,10 @@
           "goal": "Find another, under a different registry"
         }
       ],
-      "reveal": "One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two records disagreeing, not a measurement of anywhere."
+      "reveal": "One record says which country the paperwork was filed under. The other says which network is announcing it. People read the first as a map of where the machines are, and it was never that - and this is two records disagreeing, not a measurement of anywhere.",
+      "_gate": "Was gated on the-quiet-ones, which is now IPv4 only and would have locked IPv6 visitors out forever. The plan's own reason for the gate is 'a network is not one range', which is beat 3 of the main line, so the main line is the gate."
     }
   ],
   "_grants": "Finishing a chain can teach the map a new way of being looked at. The owner's report after days of wandering: 'I go, and then nothing happens.' A line of text is not a consequence. A lens is - it changes what the whole field shows from then on, it compounds, and hour five is richer than hour one. Nothing is invented: the data is already on the device and the lens is permission to ask for it. Only chains whose lens is computable offline grant one.",
-  "_rules": "What the engine (js/29-chains.js) checks for each beat. `find` stays the human description; `rule` is the machine test, so a new chain made of existing rules is rows only. at: the place answered contains the beat's address (at6 for an IPv6 visitor; a beat in the other family is skipped). copied: the visitor copied their address. own-block: the view pulled back to the block they are announced in. same-network: arrived at another block their own network announces. whole-family: the view pulled all the way out. root: arrived at any root server. other-origin: arrived at a block announced by a network other than theirs. query-cc: asked the map for that country. quiet: arrived somewhere allocated before 2000 that nothing announces, in an allocation not already used for this line. cc-mismatch: arrived at a block whose registered country differs from its origin network's (one RIPEstat lookup by AS number), under a registry not already used for this line. other-family and inward: not reachable yet (the doors, the inward half) and skipped. soft: may be passed silently when the next beat is met. goal: the tracker's one line."
+  "_rules": "What the engine (js/29-chains.js) checks for each beat. `find` stays the human description; `rule` is the machine test, so a new chain made of existing rules is rows only. at: the place answered contains the beat's address (at6 for an IPv6 visitor; a beat in the other family is skipped). copied: the visitor copied their address. own-block: the view pulled back to the block they are announced in. same-network: arrived at another block their own network announces. whole-family: the view pulled all the way out. root: arrived at any root server. other-origin: arrived at a block announced by a network other than theirs. query-cc: asked the map for that country. quiet: arrived somewhere allocated before 2000 that nothing announces, in an allocation not already used for this line. cc-mismatch: arrived at a block whose registered country differs from its origin network's (one RIPEstat lookup by AS number), under a registry not already used for this line. inward-open: opened 'What your visit told this site'. inward-edge: read down to where this site's sight stops. other-family: not reachable yet (the doors) and skipped. soft: may be passed silently when the next beat is met. goal: the tracker's one line."
 }

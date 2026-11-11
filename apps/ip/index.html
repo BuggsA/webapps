@@ -232,6 +232,8 @@
     </section>
     <!-- The doors (owner, 2026-11-11): one small page per search people
          make. Plain links in the page itself, so search engines find them. -->
+    <!-- The inward half (30-inward): for everyone, not only the story. -->
+    <p id="aboutInwardRow"><button id="aboutInward" type="button">What did my visit tell this site?</button></p>
     <nav id="aboutDoors" aria-label="More answers">
       <a href="/ipv6/">My IPv6 address</a>
       <a href="/isp/">My internet provider</a>
@@ -239,6 +241,15 @@
       <a href="/ipv4-vs-ipv6/">IPv4 vs IPv6</a>
       <a href="/cidr/">CIDR calculator</a>
     </nav>
+  </div>
+</div>
+
+<!-- The inward half (30-inward): what this visit told the site, what
+     stayed on the device, and where this site's sight stops. -->
+<div id="inwardPanel" hidden>
+  <div id="inwardInner">
+    <button id="inwardClose" type="button">Close</button>
+    <div id="inwardBody"></div>
   </div>
 </div>
 
@@ -255,7 +266,7 @@
 <!-- The app, in load order: classic scripts sharing one global scope. Most
      of them only declare functions, which can live in any file; order
      matters for the few statements that run at load (the landmark list in
-     03, and 30-boot, which must be last). What each one holds: MAP.md. -->
+     03, and 31-boot, which must be last). What each one holds: MAP.md. -->
 <script src="js/00-config.js"></script>
 <script src="js/01-address.js"></script>
 <script src="js/02-curve.js"></script>
@@ -286,6 +297,7 @@
 <script src="js/27-teaser.js"></script>
 <script src="js/28-pullback.js"></script>
 <script src="js/29-chains.js"></script>
-<script src="js/30-boot.js"></script>
+<script src="js/30-inward.js"></script>
+<script src="js/31-boot.js"></script>
 </body>
 </html>

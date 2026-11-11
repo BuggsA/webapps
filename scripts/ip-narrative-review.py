@@ -123,8 +123,8 @@ def lint(guide, chains):
     # never fire - PRODUCT_SOUL 8.11 - and nothing else would notice.
     known = {"at", "copied", "own-block", "whole-family", "same-network", "root",
              "other-origin", "query-cc", "quiet", "cc-mismatch",
-             "other-family", "inward"}
-    unreachable = {"other-family", "inward"}
+             "other-family", "inward-open", "inward-edge"}
+    unreachable = {"other-family"}
     for c in chains["lines"]:
         if c.get("provisional"):
             continue
