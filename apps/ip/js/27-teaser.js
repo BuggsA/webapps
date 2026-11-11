@@ -29,7 +29,7 @@ var anchorsState = '';   /* '' | 'loading' | 'ready' | 'none' */
 function loadAnchors() {
   if (anchorsState) return;
   anchorsState = 'loading';
-  fetch('content/anchors.json', { cache: 'force-cache' })
+  fetch('content/anchors.json?v=' + contentV(), { cache: 'force-cache' })
     .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
     .then(function (j) { ANCHORS = j; anchorsState = 'ready'; showTeaser(); })
     .catch(function () { anchorsState = 'none'; });

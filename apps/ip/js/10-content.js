@@ -18,14 +18,21 @@
 
 var CONTENT = null;
 
+/* The content's version, stamped onto <html data-content> by
+ * scripts/ip-map.py. force-cache below would otherwise keep yesterday's
+ * stories for as long as the browser liked. */
+function contentV() {
+  return document.documentElement.getAttribute('data-content') || '';
+}
+
 var contentState = '';
 
 function loadContent() {
   if (contentState) return;
   contentState = 'loading';
   Promise.all([
-    fetch('content/guide.json', { cache: 'force-cache' }).then(function (r) { return r.json(); }),
-    fetch('content/lines.json', { cache: 'force-cache' }).then(function (r) { return r.json(); })
+    fetch('content/guide.json?v=' + contentV(), { cache: 'force-cache' }).then(function (r) { return r.json(); }),
+    fetch('content/lines.json?v=' + contentV(), { cache: 'force-cache' }).then(function (r) { return r.json(); })
   ]).then(function (both) {
     CONTENT = { guide: both[0], chains: both[1] };
     contentState = 'ready';
