@@ -27,6 +27,7 @@ function setQuery(q) {
   S.query = q;
   rebuild();
   announce();
+  afterQuerySet();   /* 26-wiring */
 }
 
 function queryHit(k) {
@@ -54,6 +55,10 @@ function queryLabel(q) {
   if (q.kind === 'era') return q.span === 1 ? String(q.value)
                              : q.value + '–' + (q.value + q.span - 1);
   if (q.kind === 'none') return 'space nobody holds';
+  /* the earned lenses (29-chains) */
+  if (q.kind === 'before') return 'everything handed out before ' + q.value;
+  if (q.kind === 'marks') return 'every named place';
+  if (q.kind === 'roots') return 'the root servers';
   return '';
 }
 
@@ -61,6 +66,13 @@ function queryLabel(q) {
  * no size is just a colour. Counted in addresses, once, when it is set. */
 function queryExtent(q, v) {
   if (!REG || !q) return '';
+  /* landmarks are not registry rows: counted from the list itself */
+  if (q.kind === 'marks' || q.kind === 'roots') {
+    var nm = MARKS.filter(function (m) {
+      return m.v === v && (q.kind === 'marks' || /^Root server /.test(m.n));
+    }).length;
+    return nm + (nm === 1 ? ' place' : ' places') + ' in IPv' + v;
+  }
   var n = v === 4 ? REG.n4 : REG.n6;
   var keys = v === 4 ? REG.k4 : REG.k6;
   var lo = v === 4 ? REG.lo4 : REG.lo6;
@@ -251,6 +263,10 @@ function sightlines(f) {
                  addr: at(bestAt) });
     }
   }
+  /* A STORY ON THE HORIZON first (29-chains): the next place in the line
+   * being followed, or a line not yet started whose first place is in
+   * view. A direction, which is the thing the map was missing. */
+  out = chainSights(f).concat(out);
   /* one suggestion per place: two labels pointing at the same cell is one
    * destination dressed as two */
   var seen = {};

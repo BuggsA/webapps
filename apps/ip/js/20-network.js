@@ -66,6 +66,7 @@ function loadNet() {
     S.net = { status: 'ready', prefix: prefix, cidr: cidr, asn: asn, holder: '' };
     if (!away()) { S.subject = S.net; loadShape(asn); }
     rebuild(); announce();
+    afterHomeNetwork();   /* 26-wiring */
     return ripe('as-overview', 'AS' + asn).then(function (o) {
       var h = tidyHolder(o && o.holder);
       if (h && S.net && S.net.asn === asn) { S.net.holder = h; syncDom(); announce(); }

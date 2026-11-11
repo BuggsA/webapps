@@ -30,7 +30,10 @@ var note = null;
 
 function noteBlank() {
   return { v: 1, first: 0, last: 0, sites: {}, firstSite: '', nets: {},
-           ccs: {}, deepest: 0, oldest: 0, dist: 0 };
+           ccs: {}, deepest: 0, oldest: 0, dist: 0,
+           /* 29-chains: progress through the stories, the lenses they
+            * granted, and the line the tracker is pinned to */
+           lines: {}, lens: {}, pin: '' };
 }
 
 function noteLoad() {
@@ -279,6 +282,7 @@ function buildNotebook() {
     }
     el.noteBody.appendChild(p2);
   }
+  notebookLines(el.noteBody);   /* 29-chains */
   var got = noteSites(30);
   if (got.rows.length) {
     h2 = document.createElement('h3');

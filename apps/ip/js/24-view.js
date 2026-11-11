@@ -19,6 +19,7 @@ function syncDom() {
   syncHomeState();
   syncPlate();
   syncSight();
+  syncTrack();         /* 29-chains: what you are in the middle of */
   syncMark(w);
   syncHere();          /* 28-pullback: "You are here" at the floor */
   syncTip();
@@ -272,8 +273,9 @@ function syncSight() {
     b.type = 'button';
     b.className = 'ask';
     b.textContent = l.label;
-    b.title = 'Go there';
-    b.onclick = function () { travelTo(l.addr, true); };
+    b.title = l.story ? 'A story starts here' : 'Go there';
+    if (l.story) b.classList.add('story');
+    b.onclick = l.go || function () { travelTo(l.addr, true); };
     el.sight.appendChild(b);
   });
 }

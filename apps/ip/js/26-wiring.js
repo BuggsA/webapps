@@ -28,6 +28,7 @@ function afterAxisMoved(next) {
   dropFadedCursor();   /* 17-pick: nothing invisible stays named */
   ensureData();        /* 20-network, 21-registry: fetch once the visitor leaves */
   sayRegistryOpen();   /* 13-guide: once, on the first move out, if it has landed */
+  chainsAfterAxis();   /* 29-chains: "pull back to your block", "the whole family" */
   /* the ring: when the axis moves far enough that a slot has to start
    * showing a different rung, the geometry is rebuilt. Everywhere else
    * this is just a uniform change and costs nothing. A rebuild syncs the
@@ -50,7 +51,9 @@ function afterSubjectResolved(at, rec) {
   if (rec && (rec.status === 'ready' || rec.status === 'empty')) {
     guideLeftBehind();                   /* 13-guide: the last place's line goes */
     var seen = recordArrival(at, rec);   /* 11-notebook */
-    greetArrival(rec, seen);             /* 13-guide, 12-celebration */
+    /* 29-chains: a story beat met here outranks the ordinary greeting -
+     * it brings its own flare and its own line */
+    if (!chainsOnArrival(at, rec)) greetArrival(rec, seen);   /* 13-guide, 12-celebration */
   }
   rebuild();           /* 07-scene: the picture */
   announce();          /* 23-words: the words, for assistive technology */
@@ -63,4 +66,22 @@ function afterRegistryLoaded() {
   announce();          /* 23-words */
   showTeaser();        /* 27-teaser: the line about their own block */
   sayRegistryOpen();   /* 13-guide: only if they have already moved out */
+}
+
+/* After the visitor copies their address (25-answer). The errand, done -
+ * and the first beat of the main line. */
+function afterCopied() {
+  chainsAfterCopy();   /* 29-chains */
+}
+
+/* After the map is asked a question (22-query: setQuery). */
+function afterQuerySet() {
+  chainsAfterQuery();  /* 29-chains: "everything registered to Singapore" */
+}
+
+/* After the visitor's own network answers (20-network: loadNet). It is
+ * asked for on the first move out, so the move that should have met "pull
+ * back to your block" usually arrives before the block is known. */
+function afterHomeNetwork() {
+  chainsAfterAxis();   /* 29-chains */
 }

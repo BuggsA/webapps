@@ -230,7 +230,9 @@ function buildSpace(layer, f, rung) {
       continue;
     }
     if (lm[i]) {
-      P([px, 0.006, pz], C.coldHi, lm[i].i, lm[i].s, layer, 0);
+      /* the earned "roots" lens (29-chains) asks for the thirteen alone */
+      var lmDim = S.query && S.query.kind === 'roots' && !/^Root server /.test(lm[i].m.n);
+      P([px, 0.006, pz], C.coldHi, lmDim ? lm[i].i * 0.25 : lm[i].i, lm[i].s, layer, 0);
       continue;
     }
     /* three honest states: unasked, asked-and-announced, asked-and-empty.

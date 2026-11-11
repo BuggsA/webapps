@@ -666,6 +666,77 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   font-weight: 500;
 }
 
+/* THE TRACKER (29-chains, 2026-11-11). The story you are in the middle of:
+   one quiet line under the sightlines, cold like structure, with the goal
+   in cream because it is the one thing here that is somebody telling you
+   something to do. Crossing off is the loud moment: the struck goal
+   flares cream and settles to cold, and stays - crossed-off is kept. */
+#track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2em;
+  font-size: var(--ui);
+  line-height: 1.5;
+  color: var(--cold-2);
+  text-align: center;
+  padding-top: .55em;
+  border-top: 1px solid rgba(92,127,168,.22);
+  width: auto !important;
+  max-width: 100%;
+}
+#track[hidden] { display: none; }
+#track button { pointer-events: auto; color: inherit; font: inherit; }
+#track .lead {
+  color: var(--cold-3);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 2px;
+}
+#track .lead:hover { color: var(--cold-1); }
+#track .beat { color: var(--cream); font-weight: 340; text-wrap: balance; }
+#track button.beat {
+  border-bottom: 1px dotted var(--cold-3);
+  padding: 2px 1px;
+}
+#track button.beat:hover { border-bottom-color: var(--cream); }
+#track s.beat.done {
+  color: var(--cold-3);
+  font-weight: 300;
+  text-decoration-thickness: 1px;
+}
+#track s.beat.now { animation: crossed 2.4s ease-out forwards; }
+@keyframes crossed {
+  0%   { color: var(--cream); text-decoration-color: transparent; }
+  25%  { color: var(--cream); text-decoration-color: var(--cream); }
+  100% { color: var(--cold-3); text-decoration-color: var(--cold-3); }
+}
+#track.flash .lead { color: var(--cream); }
+#track .other, #track .lens {
+  font-size: 12px;
+  color: var(--cold-2);
+  border-bottom: 1px dotted var(--cold-4);
+}
+#track .other:hover, #track .lens:hover { color: var(--cold-1); }
+#track .lens { color: var(--cold-1); }
+#track .hide {
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--cold-3);
+  padding: 6px 2px 0;
+}
+#track .hide:hover { color: var(--cold-1); }
+/* a story on the horizon reads as a destination with a name, not a fact */
+#sight button.story { color: var(--cream); }
+@media (prefers-reduced-motion: reduce) {
+  #track s.beat.now { animation: none; }
+}
+#noteBody p.dim { color: var(--cold-3); }
+#noteBody button.ask { color: var(--cream); border-bottom: 1px dotted var(--cold-3); font: inherit; }
+
 #railTrack i.been {
   background: rgba(150,186,228,.92);
 }
@@ -847,6 +918,24 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   margin-top: 2.6em;
 }
 #aboutBody .plate p { font-size: 12px; color: var(--cold-3); }
+/* The questions people search for (2026-11-11), set exactly like the About
+   text above them: the same book, a later page. */
+#aboutFaq { margin-top: 2.6em; padding-top: 1.4em; border-top: 1px solid var(--cold-4); }
+#aboutFaq h2 {
+  color: var(--cream); font-size: clamp(22px, 3vw, 32px); font-weight: 260;
+  font-stretch: 106%; margin: 0 0 .5em; letter-spacing: -.004em;
+}
+#aboutFaq h3 {
+  color: var(--cold-1); font-size: var(--ui); font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase; margin: 1.8em 0 .4em;
+}
+#aboutFaq p {
+  color: var(--cold-2); font-size: clamp(14px, 1.45vw, 16px);
+  line-height: 1.62; margin: .55em 0;
+}
+#aboutFaq .mono-i { color: var(--cold-1); letter-spacing: .02em; }
+#aboutFaq a { color: var(--cream); text-decoration: none; border-bottom: 1px solid var(--cold-4); }
+#aboutFaq a:hover { border-color: var(--cream); }
 /* The doors, at the foot of About: plain links to the small pages. */
 #aboutDoors {
   display: flex; flex-wrap: wrap; gap: 6px 22px;

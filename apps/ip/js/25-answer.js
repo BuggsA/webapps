@@ -151,6 +151,17 @@ function nameEdgeNet() {
   }).catch(function () {});
 }
 
+/* SEARCH (2026-11-11). The tab shows the visitor their own address - but a
+ * search engine renders this page too, gets ITS OWN address back from
+ * whoami, and may take the rewritten title as the page's title: a result
+ * reading "66.249.66.1 — what's my IP" for everybody. A crawler keeps the
+ * title index.html was written with. The page and the answer are the same
+ * for it as for anyone; only the tab text is spared. */
+function botTitle() {
+  return /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|lighthouse|headless/i
+    .test(navigator.userAgent || '');
+}
+
 function showAddress() {
   if (S.home && S.aim === null) S.aim = S.home.big;
   showFacts();
@@ -162,7 +173,7 @@ function showAddress() {
     el.address.classList.remove('is-pending');
     el.answerNote.textContent = '';
     el.copy.hidden = false;
-    document.title = S.home.text + ' — what’s my IP';
+    if (!botTitle()) document.title = S.home.text + ' — what’s my IP address';
     /* The cold open, once the address is up and never before it. It fires
      * at rank 1 so the cadence does not swallow the one line that has to
      * land. Content is deferred, so it only speaks if it is already here -
@@ -238,6 +249,7 @@ function setupCopy() {
       el.copy.dataset.done = '1';
       el.copy.textContent = 'Copied';
       say('Copied ' + txt);
+      afterCopied();   /* 26-wiring */
       setTimeout(function () {
         el.copy.dataset.done = ''; el.copy.textContent = 'Copy';
       }, 1800);

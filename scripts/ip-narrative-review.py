@@ -118,6 +118,27 @@ def lint(guide, chains):
         if c.get("provisional"):
             bad.append("PROVISIONAL, not a defect: %s - %s" % (c["id"], c["provisional"]))
 
+    # every shipped beat names a rule the engine knows, and a goal for the
+    # tracker (js/29-chains.js beatMet). A misspelt rule is a beat that can
+    # never fire - PRODUCT_SOUL 8.11 - and nothing else would notice.
+    known = {"at", "copied", "own-block", "whole-family", "same-network", "root",
+             "other-origin", "query-cc", "quiet", "cc-mismatch",
+             "other-family", "inward"}
+    unreachable = {"other-family", "inward"}
+    for c in chains["lines"]:
+        if c.get("provisional"):
+            continue
+        for i, b in enumerate(c["beats"], 1):
+            r = b.get("rule")
+            if r not in known:
+                bad.append("%s beat %d: rule %r is not one the engine knows" % (c["id"], i, r))
+            elif r not in unreachable and not b.get("goal"):
+                bad.append("%s beat %d has no goal - the tracker would be blank" % (c["id"], i))
+            if r == "at" and "at" not in b:
+                bad.append("%s beat %d: rule at with no address" % (c["id"], i))
+            if r == "query-cc" and not b.get("cc"):
+                bad.append("%s beat %d: rule query-cc with no cc" % (c["id"], i))
+
     return bad
 
 
