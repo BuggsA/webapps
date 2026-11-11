@@ -34,7 +34,11 @@ What that means for ordering, from here:
    on `claude/peaceful-feynman-p7r37j`.)*
 2. **Then: the map has to show where to go.** **APPROVED 2026-11-11** (owner:
    *"Let's do all 3"*) - territories and sightlines from the first frame.
-   Next phase; not started. The diagnosis from 2026-09-18
+   **BUILT 2026-11-11 on the branch, preview only.** Borders where the
+   registry changes (strong) or the country, or held/unheld (fine, dropped
+   when too fragmented to read); sightlines from home onward, with "<country>,
+   next door" and "where <registry> begins" from across the nearest border,
+   never a country or registry already stood in. The diagnosis from 2026-09-18
    still stands — the map's only destination vocabulary is brightness and
    the sightlines are hidden for the first minute. Territories plus
    sightlines from the first frame is the fix. The chain engine below puts words on a map that

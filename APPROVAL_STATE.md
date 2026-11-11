@@ -41,7 +41,7 @@ like 'xyz Tennessee'."*
 | **Merge `claude/peaceful-feynman-p7r37j` to `master`** (= production deploy: the errand early, the doors, About's analytics line) — *"yes merge"*, 2026-11-11 | authorised for THIS merge only. The standing rule is unchanged: Claude does not merge to `master` without a fresh instruction |
 | Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
 | **Cloudflare Web Analytics beacon** (injected by Cloudflare, not in the repo) — *"yes approved exception"*, 2026-11-11 | **APPROVED exception** to "telemetry stays dormant". About now says visits are counted by it. Nothing else in telemetry is approved |
-| **All three next steps** — *"Let's do all 3"*, 2026-11-11: (1) ask for the address before the app loads, (2) the doors - one small page per search, (3) territories + sightlines from the first frame | **APPROVED.** (1) and (2) COMPLETE, merged to `master` by the owner's instruction. (3) approved, not started: phase-gated, built after (1)+(2) are shown |
+| **All three next steps** — *"Let's do all 3"*, 2026-11-11: (1) ask for the address before the app loads, (2) the doors - one small page per search, (3) territories + sightlines from the first frame | **APPROVED.** (1) and (2) COMPLETE, merged to `master` by the owner's instruction. (3) territories + sightlines from the first frame: COMPLETE on `claude/peaceful-feynman-p7r37j`, preview only, NOT merged |
 
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not
 approved by this:** territories, any redesign of the composition, palette or

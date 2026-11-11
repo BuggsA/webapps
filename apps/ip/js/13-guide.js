@@ -66,6 +66,15 @@ function showGuide(text) {
   }
 }
 
+/* A line is about where it was said. Arrive somewhere else and it is
+ * about somewhere you are not - "That is the address this visit arrived
+ * on", still showing after a hop to Uganda, was found the day sightlines
+ * first appeared at home (2026-11-11). Whatever the arrival has to say is
+ * said after this, by greetArrival. */
+function guideLeftBehind() {
+  if (el.guide && !el.guide.hidden) showGuide('');
+}
+
 /* rank 0 = generic and interruptible, 1 = a named place or a chain beat */
 function speak(bucketId, rank, seen) {
   if (!S.guide || contentState !== 'ready') return false;

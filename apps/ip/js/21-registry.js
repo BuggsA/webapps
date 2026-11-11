@@ -292,3 +292,68 @@ function regInField(f) {
   }
   return { level: out, key: keys };
 }
+
+/* TERRITORIES (owner, 2026-11-11: approved as "Let's do all 3").
+ *
+ * The map's whole vocabulary of destinations used to be brightness: one
+ * dot, four thousand times. But every cell already carries a registry and
+ * a country, and where two neighbouring cells differ the data itself has
+ * drawn a border. Nothing here is invented - the line is exactly where the
+ * registries' records change hands.
+ *
+ * Two strengths, no hue (three colour roles only, and this is not a
+ * political map - these are administrative allocations, not territory in
+ * any sense a state would recognise):
+ *   2 - one REGISTRY against another. Continent-sized shapes at the
+ *       widest view, and the rarest line, so the strongest.
+ *   1 - the same registry, a different COUNTRY; or held against unheld.
+ *       The finer grain inside. Held-against-unheld is already visible as
+ *       light against dark, so it does not get the strong line.
+ * When the fine grain is too fragmented to read as shapes (measured: 838
+ * short runs across all of IPv4) it is dropped for that field - a border
+ * is only worth drawing if it encloses something the eye can point at.
+ *
+ * Returned in grid units, already merged into straight runs, so a border
+ * along a whole side of a block is one hairline and not sixty-four - the
+ * renderer pays per line, and the eye reads a run as an edge. */
+function regBorders(f) {
+  if (!REG || !f || !f.reg || !f.lay || !f.lay.inv) return [];
+  var key = f.reg.key, inv = f.lay.inv, out = [];
+  function kind(a, b) {
+    var ka = key[a], kb = key[b];
+    if (ka === kb) return 0;
+    if (ka < 0 || kb < 0) return 1;
+    if (REG.rir[ka] !== REG.rir[kb]) return 2;
+    return REG.cc[ka] !== REG.cc[kb] ? 1 : 0;
+  }
+  var x, y, k, run, runK;
+  /* vertical edges: between (x-1, y) and (x, y), along x */
+  for (x = 1; x < FIELD; x++) {
+    run = 0; runK = 0;
+    for (y = 0; y <= FIELD; y++) {
+      k = y < FIELD ? kind(inv[y * FIELD + x - 1], inv[y * FIELD + x]) : 0;
+      if (k !== runK) {
+        if (runK) out.push([x, y - run, x, y, runK]);
+        run = 0; runK = k;
+      }
+      if (k) run++;
+    }
+  }
+  /* horizontal edges: between (x, y-1) and (x, y), along y */
+  for (y = 1; y < FIELD; y++) {
+    run = 0; runK = 0;
+    for (x = 0; x <= FIELD; x++) {
+      k = x < FIELD ? kind(inv[(y - 1) * FIELD + x], inv[y * FIELD + x]) : 0;
+      if (k !== runK) {
+        if (runK) out.push([x - run, y, x, y, runK]);
+        run = 0; runK = k;
+      }
+      if (k) run++;
+    }
+  }
+  var fine = 0, i;
+  for (i = 0; i < out.length; i++) if (out[i][4] === 1) fine++;
+  if (fine > BORDER_FINE_MAX) out = out.filter(function (r) { return r[4] === 2; });
+  return out;
+}
+var BORDER_FINE_MAX = 320;

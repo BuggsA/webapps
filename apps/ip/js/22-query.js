@@ -178,6 +178,50 @@ function sightlines(f) {
     }
   }
 
+  /* ACROSS A BORDER (territories, owner-approved 2026-11-11). The borders
+   * on the map are where the registries' records change hands, so the
+   * nearest cell on the far side of one is a real, named place you can
+   * see from here - and unlike "the oldest", it is different from almost
+   * every position, which is the variety the sightlines never had. The
+   * country is the one the holder registered in: an allocation, not a
+   * territory, and the label says no more than that. */
+  var here = f.reg ? f.reg.key[f.idx] : -1, across = [];
+  /* Countries and registries already stood in are not "across" anything:
+   * without this, Uganda offers South Africa and South Africa offers
+   * Uganda, forever - the same two-cycle been() exists to break, one level
+   * up. */
+  var stoodCc = {}, stoodRir = {}, q, r0;
+  if (REG && here >= 0) {
+    for (q = -1; q < S.trail.length; q++) {
+      r0 = regAt(q < 0 ? (S.home ? S.home.big : 0n) : S.trail[q], f.v);
+      if (r0) { stoodCc[r0.cc] = 1; stoodRir[r0.rir] = 1; }
+    }
+    stoodCc[REG.cc[here]] = 1; stoodRir[REG.rir[here]] = 1;
+  }
+  if (REG && here >= 0) {
+    var bestCc = -1, dCc = Infinity, bestRir = -1, dRir = Infinity, kj, dj;
+    for (i = 0; i < cells; i++) {
+      kj = f.reg.key[i];
+      if (kj < 0 || i === f.idx) continue;
+      if (REG.rir[kj] !== REG.rir[here]) {
+        if (stoodRir[REG.rir[kj]]) continue;
+        dj = d2(i);
+        if (dj < dRir && !been(at(i))) { dRir = dj; bestRir = i; }
+      } else if (!stoodCc[REG.cc[kj]] && /^[A-Z]{2}$/.test(REG.cc[kj])) {
+        dj = d2(i);
+        if (dj < dCc && !been(at(i))) { dCc = dj; bestCc = i; }
+      }
+    }
+    if (bestCc >= 0) {
+      across.push({ label: countryName(REG.cc[f.reg.key[bestCc]]) + ', next door',
+                    addr: at(bestCc) });
+    }
+    if (bestRir >= 0) {
+      across.push({ label: 'where ' + RIR_NAME[REG.rir[f.reg.key[bestRir]]] +
+                           ' begins', addr: at(bestRir) });
+    }
+  }
+
   if (f.reg) {
     /* the oldest thing in view. Age is the one fact every allocated cell
      * carries, and the oldest is reliably the most interesting. */
@@ -187,7 +231,10 @@ function sightlines(f) {
       var yr = REG ? REG.year[f.reg.key[i]] : 0;
       if (yr && yr < by) { by = yr; best = i; }
     }
+    /* a border first, then the oldest: variety before the same answer */
+    if (across.length) out.push(across.shift());
     if (best >= 0) out.push({ label: 'the oldest here, ' + by, addr: at(best) });
+    while (across.length) out.push(across.shift());
 
     /* the largest run nobody holds. A hole is a real feature of this
      * landscape and it is the only one that gets MORE interesting the
@@ -204,5 +251,54 @@ function sightlines(f) {
                  addr: at(bestAt) });
     }
   }
+  /* one suggestion per place: two labels pointing at the same cell is one
+   * destination dressed as two */
+  var seen = {};
+  out = out.filter(function (o) {
+    var k = String(o.addr);
+    if (seen[k]) return false;
+    seen[k] = true; return true;
+  });
   return out.slice(0, 3);
+}
+
+/* WHICH FIELD THE SIGHTLINES LOOK AT - from the very first frame.
+ *
+ * Measured 2026-09-18: hidden for the first quarter of the axis, because
+ * at home and in the block view no field is "live" yet. So: the live field
+ * if there is one; else the most visible field on screen at all; else, at
+ * home, the visitor's first rung prepared without drawing it - its layout,
+ * its landmarks and what the registries say, which is everything
+ * sightlines() reads. Cached, because home does not move. */
+var sightHome = null;
+function sightField() {
+  var g = activeField(), i, ly, bw = 0.02;
+  if (g) return g.f;
+  for (i = 0; i < SLOTS; i++) {
+    ly = LY.SLOT0 + i;
+    if (fieldGeoms[ly] && layerAlpha[ly] > bw) { bw = layerAlpha[ly]; g = fieldGeoms[ly]; }
+  }
+  if (g) return g.f;
+  if (!S.home || S.aim === null || !S.ladder || !S.ladder.length || !REG) return null;
+  var key = String(S.aim) + '/' + S.ladder.join(',');
+  if (sightHome && sightHome.key === key) return sightHome.f;
+  /* Nothing is drawn at home, so no rung is privileged: look outward
+   * through the ladder and keep the first view with three things in it.
+   * The visitor's own /20 is often one allocation end to end, and "the
+   * oldest here" alone is not a reason to go anywhere. */
+  var f, best = null, bestN = -1, j, n;
+  for (j = 0; j < S.ladder.length && j < 2; j++) {
+    f = fieldAt(S.ladder[j]);
+    if (!f) continue;
+    var refK = f.cellLen >> 1;
+    var rxy = d2xyB(refK, S.aim >> BigInt(S.home.bits - f.cellLen));
+    f.lay = rungLayout(f, refK, rxy[0], rxy[1]);
+    f.marks = marksInField(f).cells;
+    f.reg = regInField(f);
+    n = sightlines(f).length;
+    if (n > bestN) { best = f; bestN = n; }
+    if (n >= 3) break;
+  }
+  sightHome = { key: key, f: best };
+  return best;
 }

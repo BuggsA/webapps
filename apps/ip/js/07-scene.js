@@ -353,6 +353,24 @@ function buildSpace(layer, f, rung) {
     L(q2,q3,C.coldHi,ri,1.0,0.3,layer); L(q3,q0,C.coldHi,ri,1.0,0.3,layer);
   }
 
+  /* TERRITORIES: where the registries' records change hands, drawn as the
+   * hairlines the art direction already allows (21-registry.js, regBorders).
+   * Below the landmark rims and well below the container's own 0.42 edge:
+   * the shapes are the landscape, not the subject. Dimmed as their number
+   * grows - a ragged frame of short runs is many lines through the same
+   * pixels, and additive light turns that into a fog. */
+  var tb = regBorders(f), tn = tb.length, ti, tr, tI;
+  if (tn) {
+    var tScale = clamp(18 / Math.sqrt(tn), 0.55, 1);
+    for (ti = 0; ti < tn; ti++) {
+      tr = tb[ti];
+      tI = (tr[4] === 2 ? 0.36 : 0.16) * tScale;
+      L([SCREEN_X((tr[0] - lay.ox) * step), 0.0025, (tr[1] - lay.oy) * step],
+        [SCREEN_X((tr[2] - lay.ox) * step), 0.0025, (tr[3] - lay.oy) * step],
+        C.cold, tI, 1.0, tr[4] === 2 ? 0.28 : 0.18, layer);
+    }
+  }
+
   /* the boundary of the container, so the field is a THING and not a
    * texture that happens to fill the frame. In global coordinates the tile
    * spans 64 cells from its own corner, wherever the aim happens to be

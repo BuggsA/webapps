@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-30 files, 6084 lines.
+30 files, 6273 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -22,13 +22,13 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `04-ladder.js` | 141 | the ladder of 12-bit rungs, and the cache of public routing facts |
 | `05-state.js` | 71 | S, the one state object, and the shared element/renderer handles |
 | `06-camera.js` | 260 | matrices, projection, screen mapping, layer weights |
-| `07-scene.js` | 449 | the chassis, the block and the fields, as renderer-agnostic geometry |
+| `07-scene.js` | 467 | the chassis, the block and the fields, as renderer-agnostic geometry |
 | `08-gl.js` | 554 | the WebGL2 renderer: shaders, HDR, bloom, reflection |
 | `09-c2d.js` | 113 | the Canvas 2D fallback renderer |
 | `10-content.js` | 103 | loading the guide and chain content from content/*.json |
 | `11-notebook.js` | 331 | the notebook: where you have been, kept in localStorage |
 | `12-celebration.js` | 93 | the celebration when something real is found |
-| `13-guide.js` | 133 | the guide: choosing and speaking a line |
+| `13-guide.js` | 142 | the guide: choosing and speaking a line |
 | `14-sound.js` | 155 | sound: the descent tone and the rest, off until asked |
 | `15-renderer.js` | 125 | choosing a renderer, driving frames, stopping when still |
 | `16-axis.js` | 66 | the scale axis: setting it, stepping it between stops, and its gain |
@@ -36,12 +36,12 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `18-travel.js` | 171 | moving the aim: travel, back, Home, stepping, and asking what is there |
 | `19-input.js` | 110 | input: wheel, drag, touch and keys, wired to the axis and travel |
 | `20-network.js` | 186 | whoami is elsewhere; this is RIPEstat: the network, and its shape |
-| `21-registry.js` | 295 | space.bin: every allocation the five registries made |
-| `22-query.js` | 209 | asking the map a question, and drawing the answer |
+| `21-registry.js` | 360 | space.bin: every allocation the five registries made |
+| `22-query.js` | 305 | asking the map a question, and drawing the answer |
 | `23-words.js` | 262 | the words: what the plate and the companion say about where you are |
 | `24-view.js` | 280 | the view: syncDom writes state into the page, one named step at a time |
 | `25-answer.js` | 356 | the answer: address, facts row, Explore, Copy, About, notebook panel |
-| `26-wiring.js` | 66 | what happens after the axis moves, and after a place answers |
+| `26-wiring.js` | 67 | what happens after the axis moves, and after a place answers |
 | `27-teaser.js` | 82 | the teaser: one true line about the visitor's own address, to make them stop |
 | `28-pullback.js` | 155 | the first pull: one gesture from home glides out to "You are here" |
 | `29-boot.js` | 299 | boot: wire everything up, start, and the window.__ip debug surface |
@@ -62,13 +62,13 @@ Small utilities, and addresses as BigInt: parsing, formatting, prefixes. **Uses:
 
 ### `02-curve.js`
 
-The one global Hilbert curve every rung is laid out on. **Uses:** 00, 01, 05. **Used by:** 04, 07, 23, 24.
+The one global Hilbert curve every rung is laid out on. **Uses:** 00, 01, 05. **Used by:** 04, 07, 22, 23, 24.
 
 `d2xyB` `xy2dB` `rungLayout` `fieldAt` `distanceHome`
 
 ### `03-landmarks.js`
 
-Named places on the map (root servers and others), resolved at load. **Uses:** 00, 01, 05, 11. **Used by:** 07, 11, 13, 23.
+Named places on the map (root servers and others), resolved at load. **Uses:** 00, 01, 05, 11. **Used by:** 07, 11, 13, 22, 23.
 
 `MARKS` `ROOTS` `marksInField` `beenCache` `beenRanges` `beenInField` `beenCountIn` `markAt`
 
@@ -86,13 +86,13 @@ S, the one state object, and the shared element/renderer handles. **Uses:** —.
 
 ### `06-camera.js`
 
-Matrices, projection, screen mapping, layer weights. **Uses:** 00, 01, 05, 07, 17. **Used by:** 08, 09, 13, 14, 15, 17, 18, 23, 24, 25, 28, 29.
+Matrices, projection, screen mapping, layer weights. **Uses:** 00, 01, 05, 07, 17. **Used by:** 08, 09, 13, 14, 15, 17, 18, 22, 23, 24, 25, 28, 29.
 
 `mul` `persp` `look` `camBasis` `eyePos` `viewProj` `toScreen` `layerScale` `layerAlpha` `layerLight` `layerPan` `weightAt` `scaleAt` `panX` `panZ` `layers` `activeField` `activeRung`
 
 ### `07-scene.js`
 
-The chassis, the block and the fields, as renderer-agnostic geometry. **Uses:** 00, 01, 02, 03, 04, 05, 20, 21, 22. **Used by:** 04, 06, 08, 09, 10, 12, 15, 17, 19, 21, 24, 29.
+The chassis, the block and the fields, as renderer-agnostic geometry. **Uses:** 00, 01, 02, 03, 04, 05, 20, 21, 22. **Used by:** 04, 06, 08, 09, 10, 12, 15, 17, 19, 21, 22, 24, 29.
 
 `lines` `points` `pools` `surfs` `targets` `markAnchor` `blockGeom` `fieldGeoms` `cursor` `L` `P` `Pool` `Surf` `buildScene` `buildBlock` `buildSpace`
 
@@ -130,7 +130,7 @@ The celebration when something real is found. **Uses:** 00, 05, 07, 14, 15. **Us
 
 The guide: choosing and speaking a line. **Uses:** 03, 05, 06, 10, 12, 21. **Used by:** 10, 26, 29.
 
-`GUIDE_KEY` `GENERIC_GAP` `MOVING_QUIET` `lastSpoke` `lastAxisMove` `guideTimer` `guideWanted` `setGuide` `showGuide` `speak` `noteAxisMoved` `greetArrival` `registryOpenSaid` `sayRegistryOpen`
+`GUIDE_KEY` `GENERIC_GAP` `MOVING_QUIET` `lastSpoke` `lastAxisMove` `guideTimer` `guideWanted` `setGuide` `showGuide` `guideLeftBehind` `speak` `noteAxisMoved` `greetArrival` `registryOpenSaid` `sayRegistryOpen`
 
 ### `14-sound.js`
 
@@ -178,13 +178,13 @@ Whoami is elsewhere; this is RIPEstat: the network, and its shape. **Uses:** 00,
 
 Space.bin: every allocation the five registries made. **Uses:** 00, 01, 05, 07, 10, 26. **Used by:** 07, 10, 11, 13, 17, 20, 22, 23, 25, 27, 29.
 
-`REG` `regState` `loadRegistry` `fetchSpace` `parseRegistry` `RIR_NAME` `regLine` `regIndex` `regAt` `spread` `eraLevel` `UNALLOCATED` `regInField`
+`REG` `regState` `loadRegistry` `fetchSpace` `parseRegistry` `RIR_NAME` `regLine` `regIndex` `regAt` `spread` `eraLevel` `UNALLOCATED` `regInField` `regBorders` `BORDER_FINE_MAX`
 
 ### `22-query.js`
 
-Asking the map a question, and drawing the answer. **Uses:** 00, 01, 05, 15, 21, 23. **Used by:** 07, 24, 29.
+Asking the map a question, and drawing the answer. **Uses:** 00, 01, 02, 03, 05, 06, 07, 15, 21, 23, 25. **Used by:** 07, 24, 29.
 
-`setQuery` `queryHit` `queryLabel` `queryExtent` `plateQueryable` `sightlines`
+`setQuery` `queryHit` `queryLabel` `queryExtent` `plateQueryable` `sightlines` `sightHome` `sightField`
 
 ### `23-words.js`
 
@@ -200,7 +200,7 @@ The view: syncDom writes state into the page, one named step at a time. **Uses:*
 
 ### `25-answer.js`
 
-The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 20, 21, 24, 27. **Used by:** 19, 24, 27, 29.
+The answer: address, facts row, Explore, Copy, About, notebook panel. **Uses:** 01, 05, 06, 10, 11, 15, 20, 21, 24, 27. **Used by:** 19, 22, 24, 27, 29.
 
 `countryName` `placeText` `showFacts` `syncExplore` `fitTimer` `fitAnswer` `fitSoon` `nameEdgeNet` `showAddress` `loadAddress` `setupCopy` `openNote` `closeNote` `aboutHTML` `aboutOpen` `openAbout` `closeAbout`
 
