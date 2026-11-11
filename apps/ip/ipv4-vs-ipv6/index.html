@@ -1,15 +1,19 @@
 <!doctype html>
-<!-- A door (owner, 2026-11-11: "many doors", docs/ip-concept.md): one small,
-     fast page for one search, with the front page one link away.
-     Shared look and behaviour: /door/door.css, /door/door.js. -->
+<!-- A door (owner, 2026-11-11: "many doors", docs/ip-concept.md), and one of
+     the two reference pages built to be linked to (owner, 2026-11-11: "for
+     backlinks and seo"). What earns a link: the best answer to the search,
+     a permalink for every result, tables worth citing with anchors to cite
+     them by, original numbers with a date and a source, and speed - no
+     ads, no trackers, nothing in the way. Shared look and behaviour:
+     /door/door.css, /door/door.js. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#05070d">
-<title>IPv4 vs IPv6: the difference, and which one you are using — iphere</title>
-<meta name="description" content="What is the difference between IPv4 and IPv6? A plain comparison, and which of the two your connection is using right now.">
+<title>IPv4 vs IPv6: Differences, Converter and Registry Data — iphere</title>
+<meta name="description" content="IPv4 vs IPv6 compared: address size, notation, headers, equivalent addresses and the history of IPv4 running out. Convert any IPv4 address to IPv6, see which one you are using, and the real allocation numbers.">
 <link rel="canonical" href="https://iphere.app/ipv4-vs-ipv6/">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
@@ -19,15 +23,15 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="iphere">
 <meta property="og:locale" content="en_US">
-<meta property="og:title" content="IPv4 vs IPv6: the difference, and which one you are using — iphere">
-<meta property="og:description" content="What is the difference between IPv4 and IPv6? A plain comparison, and which of the two your connection is using right now.">
+<meta property="og:title" content="IPv4 vs IPv6: Differences, Converter and Registry Data — iphere">
+<meta property="og:description" content="IPv4 vs IPv6 compared: address size, notation, headers, equivalent addresses and the history of IPv4 running out. Convert any IPv4 address to IPv6, see which one you are using, and the real allocation numbers.">
 <meta property="og:url" content="https://iphere.app/ipv4-vs-ipv6/">
 <meta property="og:image" content="https://iphere.app/share.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="What's my IP - iphere.app">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "@id": "https://iphere.app/ipv4-vs-ipv6/", "url": "https://iphere.app/ipv4-vs-ipv6/", "name": "IPv4 vs IPv6: the difference, and which one you are using", "description": "What is the difference between IPv4 and IPv6? A plain comparison, and which of the two your connection is using right now.", "inLanguage": "en", "isPartOf": {"@id": "https://iphere.app/#site"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "What's my IP", "item": "https://iphere.app/"}, {"@type": "ListItem", "position": 2, "name": "IPv4 vs IPv6", "item": "https://iphere.app/ipv4-vs-ipv6/"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "@id": "https://iphere.app/ipv4-vs-ipv6/", "url": "https://iphere.app/ipv4-vs-ipv6/", "name": "IPv4 vs IPv6: Differences, Converter and Registry Data", "description": "IPv4 vs IPv6 compared: address size, notation, headers, equivalent addresses and the history of IPv4 running out. Convert any IPv4 address to IPv6, see which one you are using, and the real allocation numbers.", "inLanguage": "en", "dateModified": "2026-11-11", "isPartOf": {"@id": "https://iphere.app/#site"}, "publisher": {"@type": "Organization", "name": "iphere", "url": "https://iphere.app/"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "What's my IP", "item": "https://iphere.app/"}, {"@type": "ListItem", "position": 2, "name": "IPv4 vs IPv6", "item": "https://iphere.app/ipv4-vs-ipv6/"}]}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is the difference between IPv4 and IPv6?", "acceptedAnswer": {"@type": "Answer", "text": "IPv4 addresses are 32 bits long, so there are about 4.3 billion of them, and they have all been handed out. IPv6 addresses are 128 bits, enough for every device to have its own. IPv6 also simplifies the packet header and drops broadcast. The two are not compatible on the wire: a device needs one or the other, or both, to reach a site."}}, {"@type": "Question", "name": "Is IPv6 better than IPv4?", "acceptedAnswer": {"@type": "Answer", "text": "For the internet as a whole, yes: it removes the shortage that forced homes and phone networks behind shared addresses. For one connection, neither is reliably faster or safer. Speed depends on the route, and both carry the same encrypted traffic."}}, {"@type": "Question", "name": "Which one am I using?", "acceptedAnswer": {"@type": "Answer", "text": "The answer at the top of this page is the one this visit actually used. When your network has both, most devices try IPv6 first and fall back to IPv4 if it answers more slowly."}}, {"@type": "Question", "name": "Can an IPv4 address be written as IPv6?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, in several standard ways. ::ffff:192.0.2.1 is the IPv4-mapped form (RFC 4291), and 64:ff9b::192.0.2.1 is how an IPv6-only network reaches it through NAT64 (RFC 6052). The converter above works them out for any address."}}, {"@type": "Question", "name": "Why is IPv4 still used if it ran out?", "acceptedAnswer": {"@type": "Answer", "text": "Because almost everything already speaks it, and NAT lets many devices share one public address. Running out made IPv4 addresses expensive - they are bought and sold - rather than unusable. IPv6 grows alongside it instead of replacing it overnight."}}, {"@type": "Question", "name": "Should I turn IPv6 off?", "acceptedAnswer": {"@type": "Answer", "text": "Usually not. Modern systems are built expecting it, and turning it off can slow some connections or break features. If a particular network misbehaves over IPv6, that is a problem to fix in that network."}}]}, {"@type": "Dataset", "name": "IPv4 and IPv6 address space handed out, by registry and decade", "description": "Totals of IPv4 and IPv6 address space allocated or assigned by the five regional internet registries, by registry, by decade and by country, computed from the NRO delegated statistics.", "url": "https://iphere.app/ipv4-vs-ipv6/#by-the-numbers", "creator": {"@type": "Organization", "name": "iphere", "url": "https://iphere.app/"}, "isBasedOn": "https://www.nro.net/about/rirs/statistics/", "isAccessibleForFree": true, "keywords": ["IPv4", "IPv6", "IP address allocation", "regional internet registries", "IPv4 exhaustion"]}]}</script>
 <link rel="preload" href="/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/door/door.css">
 </head>
@@ -43,24 +47,130 @@
   <p class="copyRow"><button id="copy" class="copy" type="button" hidden>Copy</button></p>
   <p class="note">Read by this site’s own edge for this visit. Not kept, and no one else is asked.</p>
 
+  <section class="tool" aria-labelledby="convert">
+    <h2 id="convert">Convert between IPv4 and IPv6</h2>
+    <form id="check" autocomplete="off">
+      <label for="q">Any IPv4 or IPv6 address
+        <input id="q" name="q" type="text" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="192.0.2.1">
+      </label>
+      <button type="submit">Convert</button>
+    </form>
+    <p id="convNote" class="convNote"></p>
+    <dl>
+    <div id="rowMapped" hidden><dt>IPv4-mapped</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowNat64" hidden><dt>NAT64</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="row6to4" hidden><dt>6to4 prefix</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowInt" hidden><dt>As one number</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowFull" hidden><dt>Full form</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowShort" hidden><dt>Short form</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    <div id="rowEmbedded" hidden><dt>IPv4 inside</dt><dd><span class="v"></span><span class="sub"></span></dd></div>
+    </dl>
+    <p class="copyRow"><button id="share" class="copy" type="button" hidden>Copy link</button></p>
+  </section>
+
   <section class="prose">
-    <h2>IPv4 and IPv6, side by side</h2>
-    <table>
-      <tr><td>Size</td><td>IPv4: 32 bits. IPv6: 128 bits.</td></tr>
-      <tr><td>How many</td><td>IPv4: about 4.3 billion. IPv6: about 340 undecillion (3.4 × 10<sup>38</sup>).</td></tr>
-      <tr><td>Written as</td><td>IPv4: four numbers, <code>203.0.113.7</code>. IPv6: eight hexadecimal groups, with runs of zeros shortened to <code>::</code>, <code>2001:db8::7</code>.</td></tr>
-      <tr><td>Defined</td><td>IPv4: RFC 791, 1981. IPv6: RFC 2460 in 1998, now RFC 8200.</td></tr>
-      <tr><td>Private range</td><td>IPv4: <code>10/8</code>, <code>172.16/12</code>, <code>192.168/16</code>. IPv6: unique local <code>fc00::/7</code>.</td></tr>
-      <tr><td>Sharing</td><td>IPv4: usually one public address per home, shared through NAT. IPv6: usually a whole block per home, so each device can have its own.</td></tr>
+    <nav class="toc" aria-label="On this page">
+      <a href="#side-by-side">Side by side</a>
+      <a href="#equivalents">Equivalent addresses</a>
+      <a href="#timeline">How IPv4 ran out</a>
+      <a href="#by-the-numbers">By the numbers</a>
+      <a href="#questions">Questions</a>
+    </nav>
+
+    <h2 id="side-by-side">IPv4 and IPv6, side by side</h2>
+    <table class="three">
+      <thead><tr><th></th><th>IPv4</th><th>IPv6</th></tr></thead>
+      <tbody>
+      <tr><td>Address size</td><td>32 bits</td><td>128 bits</td></tr>
+      <tr><td>How many</td><td>4,294,967,296 (about 4.3 billion)</td><td>about 3.4 × 10<sup>38</sup></td></tr>
+      <tr><td>Written as</td><td>Four decimal numbers: <code>203.0.113.7</code></td><td>Eight hexadecimal groups, zeros shortened: <code>2001:db8::7</code></td></tr>
+      <tr><td>In a URL</td><td><code>http://203.0.113.7/</code></td><td>In brackets: <code>http://[2001:db8::7]/</code></td></tr>
+      <tr><td>DNS record</td><td>A</td><td>AAAA</td></tr>
+      <tr><td>Header</td><td>20 to 60 bytes, variable</td><td>40 bytes, fixed, with optional extension headers</td></tr>
+      <tr><td>Header checksum</td><td>Yes</td><td>No - left to the layers above and below</td></tr>
+      <tr><td>Fragmentation</td><td>By the sender or by routers on the way</td><td>By the sender only</td></tr>
+      <tr><td>Smallest MTU every link must carry</td><td>576 bytes to reassemble (68 to forward)</td><td>1,280 bytes</td></tr>
+      <tr><td>Finding neighbours</td><td>ARP</td><td>Neighbor Discovery (ICMPv6)</td></tr>
+      <tr><td>Getting an address</td><td>DHCP, or set by hand</td><td>SLAAC, DHCPv6, or set by hand</td></tr>
+      <tr><td>Broadcast</td><td>Yes</td><td>No - multicast instead</td></tr>
+      <tr><td>Sharing one address</td><td>Common: NAT puts a home behind one public address</td><td>Rare: each device usually gets its own</td></tr>
+      <tr><td>Defined in</td><td><a href="https://www.rfc-editor.org/rfc/rfc791" rel="noopener">RFC 791</a>, 1981</td><td><a href="https://www.rfc-editor.org/rfc/rfc1883" rel="noopener">RFC 1883</a> in 1995, then <a href="https://www.rfc-editor.org/rfc/rfc2460" rel="noopener">RFC 2460</a>, now <a href="https://www.rfc-editor.org/rfc/rfc8200" rel="noopener">RFC 8200</a> (2017)</td></tr>
+      </tbody>
     </table>
-    <h2>Why are there two?</h2>
-    <p>IPv4 was designed when 4.3 billion addresses looked like plenty. The regional registries began running out in 2011, and most have now handed out their last ordinary IPv4 blocks; the internet kept working by sharing addresses behind NAT. IPv6 was made so that every device could have an address of its own again. The two run side by side, and most networks speak both.</p>
-    <h2>Which one does my connection use?</h2>
-    <p>Each connection uses one or the other. When your network has both, most devices try IPv6 first and fall back to IPv4 if it is slower to answer. The answer at the top of this page is the one this visit actually used. <a href="/ipv6/">See your IPv6 address</a>.</p>
-    <h2>Is IPv6 faster or safer?</h2>
-    <p>Neither, by design. Speed depends on the route your traffic takes, not the address family, and both carry the same encrypted web traffic. IPv6 can be quicker where it avoids a provider’s NAT, and a home router should firewall both.</p>
-    <h2>See the whole address space</h2>
-    <p>The <a href="/">front page</a> shows your address, and lets you pull back to the block it sits in, the registry that handed it out, and all of IPv4 or IPv6 around it.</p>
+
+    <h2 id="equivalents">The same idea in both: equivalent addresses</h2>
+    <table class="three">
+      <thead><tr><th></th><th>IPv4</th><th>IPv6</th></tr></thead>
+      <tbody>
+      <tr><td>Loopback (this machine)</td><td><code>127.0.0.1</code> (all of 127.0.0.0/8)</td><td><code>::1</code></td></tr>
+      <tr><td>Unspecified / any</td><td><code>0.0.0.0</code></td><td><code>::</code></td></tr>
+      <tr><td>Default route</td><td><code>0.0.0.0/0</code></td><td><code>::/0</code></td></tr>
+      <tr><td>Private networks</td><td><code>10.0.0.0/8</code>, <code>172.16.0.0/12</code>, <code>192.168.0.0/16</code></td><td><code>fc00::/7</code> (in practice <code>fd00::/8</code>)</td></tr>
+      <tr><td>Link-local</td><td><code>169.254.0.0/16</code></td><td><code>fe80::/10</code></td></tr>
+      <tr><td>Multicast</td><td><code>224.0.0.0/4</code></td><td><code>ff00::/8</code></td></tr>
+      <tr><td>Every device on the link</td><td><code>255.255.255.255</code> (broadcast)</td><td><code>ff02::1</code> (all-nodes multicast)</td></tr>
+      <tr><td>For documentation and examples</td><td><code>192.0.2.0/24</code>, <code>198.51.100.0/24</code>, <code>203.0.113.0/24</code></td><td><code>2001:db8::/32</code>, <code>3fff::/20</code></td></tr>
+      <tr><td>Shared by a provider (CGNAT)</td><td><code>100.64.0.0/10</code></td><td>None needed</td></tr>
+      </tbody>
+    </table>
+    <p class="fine">From the IANA special-purpose address registries. <a href="/private/">Check whether any address is private</a>.</p>
+
+    <h2 id="notation">How IPv6 addresses are shortened</h2>
+    <p>Two rules, from <a href="https://www.rfc-editor.org/rfc/rfc5952" rel="noopener">RFC 5952</a>. Leading zeros in each group are dropped: <code>2001:0db8:0000:0000:0000:0000:0000:0001</code> becomes <code>2001:db8:0:0:0:0:0:1</code>. Then the longest run of all-zero groups is replaced by <code>::</code>, once: <code>2001:db8::1</code>. Letters are written in lower case. The converter above shows any address both ways.</p>
+
+    <h2 id="timeline">How IPv4 ran out</h2>
+    <table>
+      <tr><td>1981</td><td>IPv4 defined in RFC 791.</td></tr>
+      <tr><td>1993</td><td>CIDR replaces class A, B and C networks, slowing the spending of IPv4.</td></tr>
+      <tr><td>1995</td><td>IPv6 first specified, in RFC 1883.</td></tr>
+      <tr><td>1998</td><td>IPv6 revised as RFC 2460.</td></tr>
+      <tr><td>3 February 2011</td><td>IANA hands its last five /8 blocks to the five regional registries. Its free pool of IPv4 is empty.</td></tr>
+      <tr><td>15 April 2011</td><td>APNIC, the Asia-Pacific registry, reaches its final /8.</td></tr>
+      <tr><td>8 June 2011</td><td>World IPv6 Day: major sites turn IPv6 on for 24 hours.</td></tr>
+      <tr><td>6 June 2012</td><td>World IPv6 Launch: they leave it on.</td></tr>
+      <tr><td>14 September 2012</td><td>RIPE NCC, for Europe and the Middle East, reaches its final /8.</td></tr>
+      <tr><td>10 June 2014</td><td>LACNIC, for Latin America, reaches its final /10.</td></tr>
+      <tr><td>24 September 2015</td><td>ARIN, for North America, runs out of free IPv4.</td></tr>
+      <tr><td>2017</td><td>AFRINIC, for Africa, enters its exhaustion phase.</td></tr>
+      <tr><td>2017</td><td>IPv6 becomes a full Internet Standard, RFC 8200.</td></tr>
+      <tr><td>25 November 2019</td><td>RIPE NCC makes its last ordinary /22 allocation.</td></tr>
+    </table>
+
+<!-- stats:begin -->
+<!-- Written by scripts/ip-build-door-stats.py from data/space.bin. Do not edit by hand. -->
+<h2 id="by-the-numbers">By the numbers: what the registries have handed out</h2>
+<p>Computed from every allocation the five regional internet registries have published (NRO delegated statistics, snapshot of <time datetime="2026-09-16">2026-09-16</time>), the same records the <a href="/">map on the front page</a> is drawn from.</p>
+<table>
+<tr><td>IPv4 handed out</td><td>3,687,775,072 addresses: 85.9% of all IPv4, and 98.1% of everything below 224.0.0.0 - the rest of that is mostly private and reserved ranges no registry hands out. IPv4 is, for practical purposes, all spoken for.</td></tr>
+<tr><td>IPv6 handed out</td><td>496,573 blocks the size of a /32, about 0.0925% of the 2000::/3 range that all public IPv6 comes from. Put the other way: for every address handed out, about 1,080 more are still waiting.</td></tr>
+<tr><td>Countries holding IPv4</td><td>238, led by the United States (43.6%), China (9.3%), Japan (5.1%), the United Kingdom (3.8%), Germany (3.4%).</td></tr>
+</table>
+<h3>IPv4 by registry</h3>
+<table><tr><td>ARIN</td><td>1,645,591,808 addresses</td><td>44.6%</td></tr><tr><td>APNIC</td><td>889,139,520 addresses</td><td>24.1%</td></tr><tr><td>RIPE NCC</td><td>854,641,184 addresses</td><td>23.2%</td></tr><tr><td>LACNIC</td><td>182,257,664 addresses</td><td>4.9%</td></tr><tr><td>AFRINIC</td><td>116,144,896 addresses</td><td>3.1%</td></tr></table>
+<h3>IPv4 by the decade it was handed out</h3>
+<table><tr><td>Before 1990</td><td>205,607,936 addresses</td><td>5.6%</td></tr><tr><td>1990s</td><td>1,104,335,360 addresses</td><td>29.9%</td></tr><tr><td>2000s</td><td>1,314,781,568 addresses</td><td>35.7%</td></tr><tr><td>2010s</td><td>877,955,104 addresses</td><td>23.8%</td></tr><tr><td>2020s</td><td>185,095,104 addresses</td><td>5.0%</td></tr></table>
+<h3>IPv6 by registry</h3>
+<table><tr><td>RIPE NCC</td><td>182,339 /32s</td><td>36.7%</td></tr><tr><td>ARIN</td><td>144,745 /32s</td><td>29.1%</td></tr><tr><td>APNIC</td><td>140,986 /32s</td><td>28.4%</td></tr><tr><td>LACNIC</td><td>17,127 /32s</td><td>3.4%</td></tr><tr><td>AFRINIC</td><td>11,374 /32s</td><td>2.3%</td></tr></table>
+<p class="cite">Free to quote with a link to <a href="https://iphere.app/ipv4-vs-ipv6/#by-the-numbers">iphere.app/ipv4-vs-ipv6</a>. Source data: the Number Resource Organization.</p>
+<!-- stats:end -->
+
+    <h2 id="questions">Questions</h2>
+    <h3 id="difference">What is the difference between IPv4 and IPv6?</h3>
+    <p>IPv4 addresses are 32 bits long, so there are about 4.3 billion of them, and they have all been handed out. IPv6 addresses are 128 bits, enough for every device to have its own. IPv6 also simplifies the packet header and drops broadcast. The two are not compatible on the wire: a device needs one or the other, or both, to reach a site.</p>
+    <h3 id="which-better">Is IPv6 better than IPv4?</h3>
+    <p>For the internet as a whole, yes: it removes the shortage that forced homes and phone networks behind shared addresses. For one connection, neither is reliably faster or safer. Speed depends on the route, and both carry the same encrypted traffic.</p>
+    <h3 id="which-mine">Which one am I using?</h3>
+    <p>The answer at the top of this page is the one this visit actually used. When your network has both, most devices try IPv6 first and fall back to IPv4 if it answers more slowly.</p>
+    <h3 id="ipv4-in-ipv6">Can an IPv4 address be written as IPv6?</h3>
+    <p>Yes, in several standard ways. <code>::ffff:192.0.2.1</code> is the IPv4-mapped form (<a href="https://www.rfc-editor.org/rfc/rfc4291" rel="noopener">RFC 4291</a>), and <code>64:ff9b::192.0.2.1</code> is how an IPv6-only network reaches it through NAT64 (<a href="https://www.rfc-editor.org/rfc/rfc6052" rel="noopener">RFC 6052</a>). The converter above works them out for any address.</p>
+    <h3 id="why-still-ipv4">Why is IPv4 still used if it ran out?</h3>
+    <p>Because almost everything already speaks it, and NAT lets many devices share one public address. Running out made IPv4 addresses expensive - they are bought and sold - rather than unusable. IPv6 grows alongside it instead of replacing it overnight.</p>
+    <h3 id="disable-ipv6">Should I turn IPv6 off?</h3>
+    <p>Usually not. Modern systems are built expecting it, and turning it off can slow some connections or break features. If a particular network misbehaves over IPv6, that is a problem to fix in that network.</p>
+
+    <h2 id="see-also">See also</h2>
+    <p><a href="/ipv6/">What is my IPv6 address?</a> · <a href="/cidr/">CIDR and subnet calculator</a> · <a href="/">What is my IP address</a>, and the map of the whole address space around it, drawn from the same registry records.</p>
+    <p class="updated">Updated <time datetime="2026-11-11">2026-11-11</time>. Standards: <a href="https://www.rfc-editor.org/rfc/rfc791" rel="noopener">RFC 791</a> (IPv4), <a href="https://www.rfc-editor.org/rfc/rfc8200" rel="noopener">RFC 8200</a> (IPv6), <a href="https://www.rfc-editor.org/rfc/rfc4291" rel="noopener">RFC 4291</a> (IPv6 addressing), <a href="https://www.rfc-editor.org/rfc/rfc5952" rel="noopener">RFC 5952</a> (IPv6 text form), <a href="https://www.rfc-editor.org/rfc/rfc6052" rel="noopener">RFC 6052</a> (NAT64).</p>
   </section>
 </main>
 <nav class="doors" aria-label="More">

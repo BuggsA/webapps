@@ -253,26 +253,7 @@ DOORS.private = function () {
   });
 };
 
-/* IPv4 vs IPv6 (2026-11-11, from the list in docs/ip-concept.md): which of
- * the two this visit actually used, from our own edge, above a plain
- * comparison. The only fact about the visitor is the one whoami gave. */
-DOORS.vs = function () {
-  doorWhoami().then(function (d) {
-    var a = parseIp(d && d.ip);
-    if (!a) throw new Error('no address');
-    doorBig(a.v === 6 ? 'IPv6' : 'IPv4');
-    doorEl('verdict').textContent = a.v === 6
-      ? 'This visit reached us over IPv6, the newer of the two.'
-      : 'This visit reached us over IPv4. Your network may not have IPv6, or your device chose IPv4 this time.';
-    doorRow('rowAddr', a.text, 'This visit’s address');
-    doorCopy(a.text);
-    doorRow('rowNet', d.net && d.net.org, d.net && d.net.asn ? 'AS' + d.net.asn : '');
-  }).catch(function () {
-    doorBig('Not available', true);
-    doorEl('verdict').textContent =
-      'This page could not read your address from its own edge, and it will not ask anyone else for it.';
-  });
-};
+/* ── shared by the two reference doors ──────────────────────────────── */
 
 /* A count of addresses, readable at any size: exact with commas while it
  * fits in a sentence, and as a power of two once it does not. */
@@ -283,70 +264,313 @@ function doorCount(n, hostBits) {
          ' × 10^' + (s.length - 1) + ')';
 }
 
-/* CIDR calculator (2026-11-11, from the list in docs/ip-concept.md). Pure
- * arithmetic in the browser, with the same parser the app uses: nothing
- * typed here is sent anywhere. */
-DOORS.cidr = function () {
-  var form = doorEl('check'), input = doorEl('q');
-  var ROWS = ['rowFirst', 'rowLast', 'rowCount', 'rowUsable',
-              'rowMask', 'rowWild', 'rowKind'];
-  function show(text, example) {
-    var raw = String(text || '').trim().replace(/\s+/g, '');
-    if (raw.indexOf('/') < 0) {
-      var bare = parseIp(raw);
-      if (bare) raw += '/' + bare.bits;
+/* "Copy link": a result you can send is a result somebody can link to,
+ * which is the whole point of these two pages (owner, 2026-11-11: "for
+ * backlinks and seo"). Copies the canonical address with the question in
+ * it, so the link opens on the same answer. */
+function doorShare(btnId, params) {
+  var btn = doorEl(btnId);
+  if (!btn) return;
+  btn.hidden = false;
+  btn.onclick = function () {
+    var u = new URL(location.pathname, 'https://iphere.app');
+    Object.keys(params).forEach(function (k) { if (params[k]) u.searchParams.set(k, params[k]); });
+    var text = u.toString();
+    history.replaceState(null, '', location.pathname + u.search);
+    function done() {
+      btn.dataset.done = '1'; btn.textContent = 'Link copied';
+      setTimeout(function () { btn.dataset.done = ''; btn.textContent = 'Copy link'; }, 1800);
     }
-    var c = parseCidr(raw);
-    if (!c) {
-      doorBig('Not a range', true);
-      doorEl('verdict').textContent =
-        'Type an address and a prefix length, like 192.168.1.0/24 or 2001:db8::/48.';
-      ROWS.forEach(function (r) { doorRow(r, ''); });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {});
+    }
+  };
+}
+
+function hex4(n) { return Number(n).toString(16); }
+function hex4pad(n) { return ('000' + Number(n).toString(16)).slice(-4); }
+
+/* ── IPv4 vs IPv6 ─────────────────────────────────────────────────────── */
+
+/* (2026-11-11, from the list in docs/ip-concept.md.) Which of the two this
+ * visit actually used, from our own edge, above a converter and a plain
+ * comparison. The converter is v2's best unbuilt egg, as a tool: your IPv4
+ * address already exists inside IPv6, at addresses anyone can compute -
+ * pure arithmetic, defined by RFCs, nothing asked of anybody. */
+function doorConvert(text) {
+  var raw = String(text || '').trim().replace(/%.*$/, '').replace(/\/\d+$/, '');
+  var a = parseIp(raw), rows = {};
+  if (!a) return null;
+  if (a.v === 4) {
+    var hi = (a.big >> 16n) & 0xffffn, lo = a.big & 0xffffn;
+    rows.rowMapped = ['::ffff:' + a.text, '::ffff:' + hex4(hi) + ':' + hex4(lo) +
+                      ' - IPv4-mapped IPv6, how a dual-stack system writes an IPv4 peer (RFC 4291)'];
+    rows.rowNat64 = ['64:ff9b::' + a.text, '64:ff9b::' + hex4(hi) + ':' + hex4(lo) +
+                     ' - NAT64, how an IPv6-only network reaches this address (RFC 6052)'];
+    rows.row6to4 = ['2002:' + hex4(hi) + ':' + hex4(lo) + '::/48',
+                    '6to4, the old tunnelling scheme, now deprecated (RFC 3056)'];
+    rows.rowInt = [group(a.big.toString()), 'The same address as one number'];
+    return { a: a, rows: rows, title: 'IPv4' };
+  }
+  var full = [], i;
+  for (i = 7; i >= 0; i--) full.push(hex4pad((a.big >> BigInt(i * 16)) & 0xffffn));
+  rows.rowFull = [full.join(':'), 'Written out in full: eight groups of four'];
+  rows.rowShort = [a.text, 'The shortest standard form (RFC 5952)'];
+  var four = function (x) { return ipToText(x & 0xffffffffn, 4); };
+  if ((a.big >> 32n) === 0xffffn) rows.rowEmbedded = [four(a.big), 'IPv4-mapped: this IS an IPv4 address'];
+  else if ((a.big >> 32n) === (0x64ff9bn << 64n)) rows.rowEmbedded = [four(a.big), 'NAT64: the IPv4 address inside it'];
+  else if ((a.big >> 112n) === 0x2002n) rows.rowEmbedded = [four(a.big >> 80n), '6to4: the IPv4 address of the tunnel end'];
+  return { a: a, rows: rows, title: 'IPv6' };
+}
+
+DOORS.vs = function () {
+  var ALL = ['rowMapped', 'rowNat64', 'row6to4', 'rowInt', 'rowFull', 'rowShort', 'rowEmbedded'];
+  var form = doorEl('check'), input = doorEl('q');
+  function convert(text, mine) {
+    var r = doorConvert(text);
+    ALL.forEach(function (id) { doorRow(id, ''); });
+    if (!r) {
+      doorEl('convNote').textContent = 'That does not read as an IPv4 or IPv6 address. Try 192.0.2.1 or 2001:db8::1.';
       return;
     }
-    var hostBits = c.bits - c.len;
-    var size = 1n << BigInt(hostBits);
-    var last = c.net + size - 1n;
+    doorEl('convNote').textContent = (mine ? 'Your address, ' : '') + r.a.text + ', an ' + r.title +
+      ' address' + (r.a.v === 4 ? ', as it appears inside IPv6:' : ':');
+    Object.keys(r.rows).forEach(function (id) {
+      doorRow(id, r.rows[id][0], r.rows[id][1]);
+      /* an IPv6 address may only wrap after a colon, never inside a group */
+      var v = doorEl(id).querySelector('.v'), t = v.textContent;
+      if (t.indexOf(':') < 0) return;
+      v.textContent = '';
+      t.split(':').forEach(function (part, i) {
+        if (i) { v.appendChild(document.createTextNode(':')); v.appendChild(document.createElement('wbr')); }
+        v.appendChild(document.createTextNode(part));
+      });
+    });
+    doorShare('share', { q: r.a.text });
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    convert(input.value, false);
+    var u = new URL(location.href);
+    u.searchParams.set('q', input.value.trim());
+    history.replaceState(null, '', u);
+  });
+  var q = new URLSearchParams(location.search).get('q');
+  if (q) { input.value = q; convert(q, false); }
+  doorWhoami().then(function (d) {
+    var a = parseIp(d && d.ip);
+    if (!a) throw new Error('no address');
+    doorBig(a.v === 6 ? 'IPv6' : 'IPv4');
+    doorEl('verdict').textContent = a.v === 6
+      ? 'This visit reached us over IPv6, the newer of the two.'
+      : 'This visit reached us over IPv4. Your network may not have IPv6, or your device chose IPv4 this time.';
+    doorRow('rowAddr', a.text, 'This visit’s address');
+    doorCopy(a.text);
+    doorRow('rowNet', d.net && d.net.org, d.net && d.net.asn ? 'AS' + d.net.asn : '');
+    if (!q) { input.value = a.text; convert(a.text, true); }
+  }).catch(function () {
+    doorBig('Not available', true);
+    doorEl('verdict').textContent =
+      'This page could not read your address from its own edge, and it will not ask anyone else for it.';
+    if (!q) { input.value = '192.0.2.1'; convert('192.0.2.1', false); }
+  });
+};
+
+/* ── CIDR / subnet calculator ─────────────────────────────────────────── */
+
+/* (2026-11-11, from the list in docs/ip-concept.md.) Pure arithmetic in
+ * the browser, with the same parser the app uses: nothing typed here is
+ * sent anywhere. It reads the four ways people actually write a block:
+ *   192.168.1.0/24          CIDR
+ *   192.168.1.7             one address
+ *   192.168.1.0 255.255.255.0   an address and a netmask
+ *   10.0.0.0 - 10.0.3.255   a range, turned into the fewest CIDR blocks */
+
+function maskLen(text) {
+  var m = parseIp(text);
+  if (!m || m.v !== 4) return -1;
+  var x = m.big, len = 0, i;
+  for (i = 31; i >= 0; i--) {
+    if ((x >> BigInt(i)) & 1n) { if (len !== 31 - i) return -1; len++; }
+  }
+  return len;
+}
+
+/* The fewest CIDR blocks that exactly cover lo..hi. Capped: a range can
+ * need up to 2 x bits blocks, and nothing sane needs more than a page. */
+function rangeToCidrs(lo, hi, bits) {
+  var out = [];
+  while (lo <= hi && out.length < 256) {
+    var k = 0;
+    while (k < bits && ((lo >> BigInt(k)) & 1n) === 0n &&
+           lo + (1n << BigInt(k + 1)) - 1n <= hi) k++;
+    out.push({ net: lo, len: bits - k });
+    lo += 1n << BigInt(k);
+  }
+  return out;
+}
+
+function cidrInput(text) {
+  var raw = String(text || '').trim().replace(/[–—]/g, '-');
+  var m = raw.match(/^(\S+)\s*-\s*(\S+)$/);
+  if (m) {
+    var x = parseIp(m[1]), y = parseIp(m[2]);
+    if (!x || !y || x.v !== y.v) return null;
+    if (x.big > y.big) { var t = x; x = y; y = t; }
+    return { range: true, v: x.v, bits: x.bits, lo: x.big, hi: y.big,
+             list: rangeToCidrs(x.big, y.big, x.bits) };
+  }
+  m = raw.match(/^(\S+?)(?:\s+|\/)(\d+\.\d+\.\d+\.\d+)$/);
+  if (m) {
+    var len = maskLen(m[2]);
+    if (len < 0 || !parseIp(m[1])) return null;
+    raw = m[1] + '/' + len;
+  }
+  raw = raw.replace(/\s+/g, '');
+  if (raw.indexOf('/') < 0) {
+    var bare = parseIp(raw);
+    if (bare) raw += '/' + bare.bits;
+  }
+  var c = parseCidr(raw);
+  if (!c) return null;
+  return { range: false, c: c, typed: parseIp(raw.split('/')[0]), raw: raw };
+}
+
+DOORS.cidr = function () {
+  var form = doorEl('check'), input = doorEl('q'), split = doorEl('split');
+  var ROWS = ['rowFirst', 'rowLast', 'rowCount', 'rowUsable', 'rowMask', 'rowWild',
+              'rowBin', 'rowKind', 'rowBlocks'];
+  var cur = null;
+
+  function binary(c) {
+    var row = doorEl('rowBin');
+    if (c.v !== 4) { row.hidden = true; return; }
+    row.hidden = false;
+    var v = row.querySelector('.v'), bits = '', i;
+    for (i = 31; i >= 0; i--) bits += (c.net >> BigInt(i)) & 1n ? '1' : '0';
+    v.textContent = '';
+    for (i = 0; i < 32; i += 8) {
+      var oct = bits.slice(i, i + 8);
+      for (var j = 0; j < 8; j++) {
+        var sp = document.createElement('span');
+        sp.className = i + j < c.len ? 'net' : 'host';
+        sp.textContent = oct[j];
+        v.appendChild(sp);
+      }
+      if (i < 24) v.appendChild(document.createTextNode('.'));
+    }
+    row.querySelector('.sub').textContent = c.len === 32
+      ? 'All 32 bits fixed: one address'
+      : 'The first ' + c.len + ' bits are the network; the other ' + (32 - c.len) + ' are hosts';
+  }
+
+  function fillSplit(c) {
+    split.textContent = '';
+    var none = document.createElement('option');
+    none.value = ''; none.textContent = 'Split it into…';
+    split.appendChild(none);
+    for (var l = c.len + 1; l <= Math.min(c.len + 8, c.bits); l++) {
+      var o = document.createElement('option');
+      o.value = String(l);
+      o.textContent = (1 << (l - c.len)) + ' × /' + l;
+      split.appendChild(o);
+    }
+    split.parentNode.hidden = c.len >= c.bits;
+    doorEl('subnets').textContent = '';
+  }
+
+  function showSplit(len) {
+    var box = doorEl('subnets');
+    box.textContent = '';
+    if (!cur || !len) return;
+    var n = 1 << (len - cur.len), size = 1n << BigInt(cur.bits - len), i;
+    var tb = document.createElement('table');
+    for (i = 0; i < n; i++) {
+      var net = cur.net + BigInt(i) * size, tr = document.createElement('tr');
+      var a = document.createElement('td'), b = document.createElement('td');
+      a.textContent = ipToText(net, cur.v) + '/' + len;
+      b.textContent = ipToText(net, cur.v) + ' – ' + ipToText(net + size - 1n, cur.v);
+      tr.appendChild(a); tr.appendChild(b); tb.appendChild(tr);
+    }
+    box.appendChild(tb);
+  }
+
+  function show(text, example) {
+    var r = cidrInput(text);
+    ROWS.forEach(function (id) { doorRow(id, ''); });
+    cur = null;
+    if (!r) {
+      doorBig('Not a range', true);
+      doorEl('verdict').textContent =
+        'Try 192.168.1.0/24, 10.0.0.0 255.255.252.0, 10.0.0.0 - 10.0.5.255 or 2001:db8::/48.';
+      split.parentNode.hidden = true; doorEl('subnets').textContent = '';
+      doorCopy(''); return;
+    }
+    if (r.range) {
+      var bl = r.list.map(function (x) { return ipToText(x.net, r.v) + '/' + x.len; });
+      doorBig(bl.length === 1 ? bl[0] : bl.length + ' blocks', false);
+      doorEl('verdict').textContent = ipToText(r.lo, r.v) + ' – ' + ipToText(r.hi, r.v) +
+        (bl.length === 1 ? ' is exactly one CIDR block.'
+                         : ' is not one block. These are the fewest CIDR blocks that cover it exactly:');
+      doorRow('rowBlocks', bl.join('  ·  '), '');
+      doorRow('rowCount', doorCount(r.hi - r.lo + 1n, r.bits), '');
+      split.parentNode.hidden = true; doorEl('subnets').textContent = '';
+      doorCopy(bl.join(', '));
+      doorShare('share', { q: ipToText(r.lo, r.v) + ' - ' + ipToText(r.hi, r.v) });
+      return;
+    }
+    var c = r.c, hostBits = c.bits - c.len;
+    var size = 1n << BigInt(hostBits), last = c.net + size - 1n;
     var netText = ipToText(c.net, c.v) + '/' + c.len;
-    var typed = parseIp(raw.split('/')[0]);
+    cur = c;
     doorBig(netText, false);
     doorEl('verdict').textContent =
-      (example ? 'An example. Type any range above. ' : '') +
-      (typed && typed.big !== c.net
-        ? raw + ' has host bits set; the block it sits in is ' + netText + '.'
+      (example ? 'An example. Type any block, address, netmask or range above. ' : '') +
+      (r.typed && r.typed.big !== c.net
+        ? r.raw + ' has host bits set; the block it sits in is ' + netText + '.'
         : 'IPv' + c.v + ', a /' + c.len + ': ' + doorCount(size, hostBits) +
           (size === 1n ? ' address.' : ' addresses.'));
     doorRow('rowFirst', ipToText(c.net, c.v), 'The network address');
-    doorRow('rowLast', ipToText(last, c.v), '');
+    doorRow('rowLast', ipToText(last, c.v), c.v === 4 && hostBits > 1 ? 'The broadcast address' : '');
     doorRow('rowCount', doorCount(size, hostBits), '');
     if (c.v === 4) {
       var usable = hostBits === 0 ? 1n : hostBits === 1 ? 2n : size - 2n;
       doorRow('rowUsable', group(usable.toString()),
               hostBits === 1 ? 'Point-to-point link, RFC 3021'
               : hostBits === 0 ? 'A single host'
-              : 'Without the network and broadcast addresses');
-      var mask = ((1n << 32n) - 1n) ^ (size - 1n);
-      doorRow('rowMask', ipToText(mask, 4), '');
+              : ipToText(c.net + 1n, 4) + ' – ' + ipToText(last - 1n, 4));
+      doorRow('rowMask', ipToText(((1n << 32n) - 1n) ^ (size - 1n), 4), '');
       doorRow('rowWild', ipToText(size - 1n, 4), 'Used in ACLs and OSPF');
-    } else {
-      doorRow('rowUsable', '', '');
-      doorRow('rowMask', '', '');
-      doorRow('rowWild', '', '');
     }
-    var k = doorClassify({ v: c.v, big: c.net, bits: c.bits,
-                           text: ipToText(c.net, c.v) });
+    binary(c);
+    var k = doorClassify({ v: c.v, big: c.net, bits: c.bits, text: ipToText(c.net, c.v) });
     doorRow('rowKind', k.name, k.range ? k.range + (k.ref ? ', ' + k.ref : '') : k.ref);
     doorCopy(netText);
+    fillSplit(c);
+    doorShare('share', { q: netText });
   }
+
+  split.addEventListener('change', function () {
+    showSplit(+split.value);
+    var u = new URL(location.href);
+    if (split.value) u.searchParams.set('split', split.value); else u.searchParams.delete('split');
+    history.replaceState(null, '', u);
+  });
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     show(input.value, false);
     var u = new URL(location.href);
     u.searchParams.set('q', input.value.trim());
+    u.searchParams.delete('split');
     history.replaceState(null, '', u);
   });
-  var q = new URLSearchParams(location.search).get('q');
-  if (q) { input.value = q; show(q, false); return; }
+  var sp = new URLSearchParams(location.search), q = sp.get('q');
+  if (q) {
+    input.value = q; show(q, false);
+    var sl = sp.get('split');
+    if (sl && cur && split.querySelector('option[value="' + (+sl) + '"]')) { split.value = String(+sl); showSplit(+sl); }
+    return;
+  }
   input.value = '192.168.1.0/24';
   show(input.value, true);
 };

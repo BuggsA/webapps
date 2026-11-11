@@ -78,6 +78,8 @@ python scripts/ip-map.py                    # regenerate apps/ip/MAP.md AND chec
                                             # file: syntax, load order, duplicate names
 python scripts/ip-narrative-review.py       # regenerate the narrative doc AND lint it
 python scripts/ip-build-space-field.py      # rebuild apps/ip/data/space.bin
+python scripts/ip-build-door-stats.py       # rewrite the registry numbers on /ipv4-vs-ipv6/
+                                            # from space.bin - rerun after rebuilding it
 ```
 
 Local preview: `.claude/launch.json` config **`webapps`**, port 8766, served
