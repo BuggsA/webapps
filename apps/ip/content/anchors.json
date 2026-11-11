@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "_note": "The teaser line under the facts row (owner, 2026-11-11: 'Please try your best remembering the goal'). One true sentence about the visitor's OWN address, read from the registry the site already ships, sized against a year everybody knows. It is the hook that makes somebody on their way to the store stop for a second. Content is data: add an anchor by adding a row; js/27-teaser.js names none of them.",
+  "_evidence": "The year is the registry's record for the block containing the visitor's address (the date that allocation or assignment was registered) - a registry fact, known without asking anyone. The anchors are well-documented public dates; each 'event' must be true for the whole calendar year it is attached to, and must read correctly after 'the year', 'two years before' and 'a year after'. Never add an anchor you cannot source. No fear appeal: this is about the address's history, never about the visitor.",
+  "_pick": "Nearest anchor within maxGap years. An exact year wins; otherwise the nearest anchor AFTER the block's year ('N years before X' - it makes the address feel old, which is the pleasure); otherwise the nearest before.",
+  "maxGap": 4,
+  "line": {
+    "same":   "Your address comes from a block registered in {year}, the year {event}.",
+    "before": "Your address comes from a block registered in {year}, {gap} before {event}.",
+    "after":  "Your address comes from a block registered in {year}, {gap} after {event}."
+  },
+  "gaps": ["", "a year", "two years", "three years", "four years"],
+  "anchors": [
+    { "year": 1981, "event": "the system this kind of address belongs to was first published", "source": "RFC 791, Internet Protocol, September 1981" },
+    { "year": 1983, "event": "the early internet switched over to the protocols it still runs on", "source": "ARPANET TCP/IP cutover, 1 January 1983" },
+    { "year": 1985, "event": "the first .com name was registered", "source": "symbolics.com, 15 March 1985" },
+    { "year": 1989, "event": "the World Wide Web was first proposed", "source": "Tim Berners-Lee, 'Information Management: A Proposal', CERN, March 1989" },
+    { "year": 1991, "event": "the first website went online", "source": "info.cern.ch, August 1991" },
+    { "year": 1993, "event": "the first popular web browser came out", "source": "NCSA Mosaic, 1993" },
+    { "year": 1995, "event": "Amazon sold its first book", "source": "Amazon.com opened July 1995" },
+    { "year": 1998, "event": "Google was founded", "source": "Google incorporated September 1998" },
+    { "year": 2001, "event": "Wikipedia launched", "source": "Wikipedia launched 15 January 2001" },
+    { "year": 2004, "event": "Facebook launched", "source": "thefacebook.com launched February 2004" },
+    { "year": 2005, "event": "YouTube launched", "source": "YouTube founded February 2005, first video April 2005" },
+    { "year": 2007, "event": "the first iPhone went on sale", "source": "iPhone released 29 June 2007" },
+    { "year": 2010, "event": "Instagram launched", "source": "Instagram launched October 2010" },
+    { "year": 2011, "event": "the global pool of new IPv4 addresses ran out", "source": "IANA allocated its last five /8 blocks, 3 February 2011" },
+    { "year": 2015, "event": "North America ran out of new IPv4 addresses", "source": "ARIN free pool depleted, 24 September 2015" },
+    { "year": 2019, "event": "Europe ran out of new IPv4 addresses", "source": "RIPE NCC made its final /22 allocation, 25 November 2019" },
+    { "year": 2022, "event": "ChatGPT was released", "source": "OpenAI released ChatGPT, 30 November 2022" }
+  ]
+}

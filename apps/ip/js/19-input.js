@@ -11,6 +11,7 @@ function setupAxis() {
     var d = e.deltaY;
     if (e.deltaMode === 1) d *= 16;
     else if (e.deltaMode === 2) d *= S.H;
+    if (!e.ctrlKey && pullWheel(d)) return;   /* 28-pullback: the first pull */
     setAxis(S.s + (e.ctrlKey ? -d : d) * 0.0022 * axisGain());
   }, { passive: false });
 
@@ -41,7 +42,10 @@ function setupAxis() {
     /* dragging up pulls the instrument back: outward.
        dragging sideways TRAVELS, which is the point of the whole thing.
        shift-drag keeps the old behaviour of walking around the subject. */
-    if (Math.abs(dy) > 0) setAxis(S.s - dy * 0.0042 * axisGain());
+    /* the first drag upward from home is the first pull (28-pullback); the
+     * rest of that drag leaves the axis to the glide */
+    if (dy < 0 && !drag.pulled && pullEligible()) { drag.pulled = true; drag.moved += 99; startPull(); }
+    if (Math.abs(dy) > 0 && !drag.pulled) setAxis(S.s - dy * 0.0042 * axisGain());
     if (Math.abs(dxp) > 0) {
       if (e.shiftKey) setYaw(S.yaw - dxp * 0.005);
       else {
@@ -73,7 +77,9 @@ function setupAxis() {
     if (tag === 'input' || tag === 'textarea') return;
     switch (e.key) {
       case 'ArrowUp': case 'PageUp':
-        e.preventDefault(); stepAxis(1); break;
+        e.preventDefault();
+        if (pullEligible()) startPull(); else stepAxis(1);
+        break;
       case 'ArrowDown': case 'PageDown':
         e.preventDefault(); stepAxis(-1); break;
       case 'ArrowLeft':

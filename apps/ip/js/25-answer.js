@@ -155,6 +155,7 @@ function showAddress() {
   if (S.home && S.aim === null) S.aim = S.home.big;
   showFacts();
   nameEdgeNet();
+  if (S.home) preloadForTeaser();   /* 27-teaser: idle-time, after the answer is up */
   if (S.home) {
     el.addressText.textContent = S.home.text;
     el.address.style.setProperty('--addr-chars', S.home.text.length);

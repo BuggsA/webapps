@@ -38,6 +38,14 @@ Ask, in this order:
 4. **Is it only for the people who stop?** Fine, but it comes after 1–3, and
    it must cost the errand nothing.
 
+## Built for it so far
+
+- **The teaser** (2026-11-11): one true line about the visitor's own block
+  under the facts - *"Your address comes from a block registered in 2005,
+  the year YouTube launched."* Registry year + `content/anchors.json`.
+- **The first pull** (2026-11-11): the first outward gesture glides out to
+  the whole address space, and "You are here" names the visitor's mark.
+
 ## Proposed — implications not yet decided by the owner
 
 These follow from the concept. They are Claude's reading, listed so they can

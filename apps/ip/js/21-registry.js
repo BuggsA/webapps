@@ -36,13 +36,7 @@ function loadRegistry() {
     .then(function (buf) {
       REG = parseRegistry(new Uint8Array(buf));
       regState = REG ? 'ready' : 'none';
-      if (REG) {
-        rebuild(); announce();
-        /* now, and not before, the registry can say something about where
-         * they started. This has no fallback on purpose: if there is
-         * nothing interesting in the record, he says nothing. */
-        speak('open.registry', 1, 0);
-      }
+      if (REG) afterRegistryLoaded();   /* 26-wiring */
     })
     .catch(function () {
       /* the map is poorer without it and still correct. No message: the

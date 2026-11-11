@@ -138,6 +138,18 @@ which are 4,096 cells — and those are kept legible by `spread()` (§6).
 
 ### The camera belongs to the hand holding it
 
+> **OWNER DECISION, 2026-11-11 — the first pull.** Approved as *"That is
+> good yes can you work on those 2 first"*, for the sidewalk concept
+> (`docs/ip-concept.md`). The visitor's **first outward gesture from home**
+> - a scroll anywhere, a swipe up, ArrowUp, or Explore - glides the axis out
+> to the floor of their family, where "You are here" names their mark.
+> It is bounded exactly so it does not become what this rule forbids:
+> **only on the visitor's own gesture, only outward along their own axis,
+> never moves the aim or centres anything, once a visit (Explore repeats it
+> from home), and ANY input mid-glide stops it where it is.** Reduced
+> motion gets the end frame. Code and reasoning: `js/28-pullback.js`. It
+> is not a licence for anything else on this list.
+
 **This rule cost three rejected implementations. Do not violate it.**
 
 - A click sets the focus and moves **nothing**.

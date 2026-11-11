@@ -27,6 +27,7 @@ function afterAxisMoved(next) {
   noteDepth(next);     /* 11-notebook: the deepest and furthest held */
   dropFadedCursor();   /* 17-pick: nothing invisible stays named */
   ensureData();        /* 20-network, 21-registry: fetch once the visitor leaves */
+  sayRegistryOpen();   /* 13-guide: once, on the first move out, if it has landed */
   /* the ring: when the axis moves far enough that a slot has to start
    * showing a different rung, the geometry is rebuilt. Everywhere else
    * this is just a uniform change and costs nothing. A rebuild syncs the
@@ -52,4 +53,13 @@ function afterSubjectResolved(at, rec) {
   }
   rebuild();           /* 07-scene: the picture */
   announce();          /* 23-words: the words, for assistive technology */
+}
+
+/* After the registry lands (21-registry). Since 2026-11-11 that can be at
+ * home - it is fetched early for the teaser - or after the first move. */
+function afterRegistryLoaded() {
+  rebuild();           /* 07-scene: ages and countries on the fields */
+  announce();          /* 23-words */
+  showTeaser();        /* 27-teaser: the line about their own block */
+  sayRegistryOpen();   /* 13-guide: only if they have already moved out */
 }

@@ -240,6 +240,63 @@ body:not([data-state="home"]) #answerLabel {
 }
 #whereNote[hidden] { display: none; }
 
+/* THE TEASER (2026-11-11). One true line about the visitor's own block,
+   the hook that makes someone on their way past stop. Cream: it is what
+   they are being told. Its height is reserved from the first paint - one
+   line, two on a phone - so neither the address nor Copy moves when it
+   arrives a moment later. It fades in, because it arrives after the answer
+   and should not look like the answer flickering. */
+#teaser {
+  color: var(--cream);
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.45;
+  max-width: 52ch;
+  min-height: 1.45em;
+  margin: clamp(12px, 1.8vw, 20px) auto 0;
+  text-wrap: balance;
+  opacity: 0;
+  transition: opacity .6s linear;
+}
+#teaser.on { opacity: 1; }
+body:not([data-state="home"]) #teaser { display: none; }
+
+/* "You are here", above the visitor's own mark at the floor of the space,
+   with a hairline down to it. Amber is the visitor's colour, and this names
+   the visitor. */
+#here {
+  position: fixed;
+  z-index: 3;
+  transform: translate(-50%, calc(-100% - 12px));
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  max-width: min(320px, 80vw);
+}
+#here::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -11px;
+  width: 1px;
+  height: 9px;
+  background: var(--amber);
+  opacity: .7;
+}
+#hereTitle {
+  color: var(--amber);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+#hereNote {
+  color: var(--cold-2);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: .35em;
+  text-wrap: balance;
+}
+
 /* The doorway. A text control with a hairline under it - no pill, no fill,
    no arrow icon (all banned). It names what is on the other side. */
 #explore { margin-top: clamp(14px, 2.4vw, 28px); }
@@ -288,6 +345,10 @@ body:not([data-state="home"]) #answerLabel {
   #facts dd.sub { display: none; }
   #whereNote { margin-top: .7em; font-size: 11px; }
   #explore { margin-top: 10px; }
+  #teaser { min-height: 2.9em; font-size: 14px; margin-top: 10px; }
+  /* a long IPv6 HOME marker ran off the right edge: let it wrap */
+  body:not([data-state="home"]) #answer { right: var(--gutter); }
+  body:not([data-state="home"]) #answerRow { width: auto; }
 }
 
 /* the HOME marker stays a marker; the facts live in the companion and the
@@ -795,6 +856,10 @@ body[data-longtitle="1"] #plateTitle { font-size: clamp(19px, 3.2vw, 38px); }
   #markNote { display: none; }
   #controls { right: 6px; bottom: 2px; }
   #controls button { padding: 0 8px; font-size: 10px; letter-spacing: .12em; }
+  /* the hint sat on top of the menu row; lift it clear (2026-11-11) */
+  #hint { bottom: 50px; }
+  /* and the "from here you can see" column sits just above the hint */
+  #below { bottom: 82px; }
   #answer { top: 34%; }
 }
 

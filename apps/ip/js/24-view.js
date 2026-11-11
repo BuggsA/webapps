@@ -20,6 +20,7 @@ function syncDom() {
   syncPlate();
   syncSight();
   syncMark(w);
+  syncHere();          /* 28-pullback: "You are here" at the floor */
   syncTip();
   syncHint();
   syncExplore();
@@ -155,10 +156,14 @@ function syncHint() {
     } else {
       var canTravel = !!R && !!(activeField() || layerAlpha[LY.BLOCK] > LIVE);
       var show = canTravel && !S.travelled && !!S.home;
+      /* a touchscreen has no click and no hover (phones are the main road
+       * since 2026-11-11, docs/ip-concept.md) */
+      var tap = window.matchMedia && window.matchMedia('(hover: none)').matches;
       el.hint.textContent = show
         ? (cursor && cursor.field
             ? 'Click to focus here, then zoom in'
-            : 'Click any block to focus it — then zoom in on it yourself')
+            : tap ? 'Tap a block, then drag down to go in'
+                  : 'Click any block to focus it — then zoom in on it yourself')
         : '';
       el.hint.style.opacity = show ? '1' : '0';
     }

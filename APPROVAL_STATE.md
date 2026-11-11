@@ -33,6 +33,9 @@ like 'xyz Tennessee'."*
 | Custom domain, canonical, sitemap, share tags | **NOT done** — waiting on which domain |
 | **The concept: goal is traffic, "a beautiful sidewalk"** — owner's own words, in `docs/ip-concept.md` | **standing decision, outranks older docs.** Its "Proposed" implications are NOT approved |
 | The atlas of famous places, names over territories | proposed, superseded by stepping back — NOT approved |
+| **#1 the teaser line** and **#2 the first pull / "You are here"** — *"That is good yes can you work on those 2 first? Please try your best remembering the goal."* | COMPLETE on the branch preview, NOT merged. `content/anchors.json`, `js/27-teaser.js`, `js/28-pullback.js` |
+| #3 shareable "save my spot" image, #4 place of the day, #5 plain-words taps | proposed, NOT approved |
+| Privacy-respecting tally of whether people stop | proposed again as the way to measure #1/#2, NOT approved |
 | Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
 
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not

@@ -1,4 +1,4 @@
-/* apps/ip/js/27-boot.js — boot: wire everything up, start, and the window.__ip debug surface.
+/* apps/ip/js/29-boot.js — boot: wire everything up, start, and the window.__ip debug surface.
  * One of the files ip used to be. Read ../MAP.md first: it lists what
  * every file defines and uses. All files share one global scope and
  * load in numeric order from index.html. */
@@ -62,7 +62,7 @@ function boot() {
   grab(['address', 'addressText', 'copy', 'answerNote', 'live',
         'facts', 'factWhere', 'wherePlace', 'whereSub', 'factNet', 'netName',
         'netSub', 'kindName', 'kindSub', 'whereNote', 'explore', 'exploreBtn',
-        'exploreHow',
+        'exploreHow', 'teaser', 'here', 'hereNote',
         'plate', 'plateTitle', 'plateSub', 'plateNote',
         'mark', 'markFixed', 'markVary', 'markNote',
         'tipWrap', 'tipFixed', 'tipVary', 'tipMine', 'tipNote',
@@ -137,10 +137,9 @@ function boot() {
   el.goHome.addEventListener('click', goHome);
   window.addEventListener('resize', fitSoon);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSoon);
-  /* one stop outward, exactly what ArrowDown does: the press is the hand */
-  if (el.exploreBtn) el.exploreBtn.addEventListener('click', function () {
-    stepAxis(1);
-  });
+  /* the first pull from home, a stop outward anywhere else (28-pullback) */
+  if (el.exploreBtn) el.exploreBtn.addEventListener('click', explorePressed);
+  setupPull();
   if (el.goBack) el.goBack.addEventListener('click', back);
   el.about.addEventListener('click', function () {
     if (aboutOpen) closeAbout(); else openAbout();

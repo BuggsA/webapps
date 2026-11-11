@@ -47,8 +47,12 @@
   </dl>
   <p id="whereNote" hidden></p>
   <p id="answerNote"></p>
-  <!-- The way in. A press steps the axis out one stop, exactly as the arrow
-       key does: the visitor's hand moves the instrument, nothing else. -->
+  <!-- THE TEASER: one true line about the visitor's own address, from the
+       registry the site already ships (js/27-teaser.js). Its space is
+       reserved so nothing jumps when it lands. -->
+  <p id="teaser" aria-live="polite"></p>
+  <!-- The way in. At home it glides out to "You are here"; any input stops
+       the glide where it is (js/28-pullback.js). -->
   <div id="explore" hidden>
     <button id="exploreBtn" type="button">Explore the internet around this address</button>
     <p id="exploreHow"></p>
@@ -83,6 +87,13 @@
 <div id="mark" aria-hidden="true">
   <p id="markAddr"><span id="markFixed" class="fixed"></span><span id="markVary"></span></p>
   <p id="markNote"></p>
+</div>
+
+<!-- "You are here": the visitor's own mark, named, at the floor of their
+     address family. Only at home. -->
+<div id="here" aria-hidden="true">
+  <p id="hereTitle">You are here</p>
+  <p id="hereNote"></p>
 </div>
 
 <!-- Whatever mark the pointer is nearest, named. -->
@@ -146,7 +157,7 @@
 <!-- The app, in load order: classic scripts sharing one global scope. Most
      of them only declare functions, which can live in any file; order
      matters for the few statements that run at load (the landmark list in
-     03, and 27-boot, which must be last). What each one holds: MAP.md. -->
+     03, and 29-boot, which must be last). What each one holds: MAP.md. -->
 <script src="js/00-config.js"></script>
 <script src="js/01-address.js"></script>
 <script src="js/02-curve.js"></script>
@@ -174,6 +185,8 @@
 <script src="js/24-view.js"></script>
 <script src="js/25-answer.js"></script>
 <script src="js/26-wiring.js"></script>
-<script src="js/27-boot.js"></script>
+<script src="js/27-teaser.js"></script>
+<script src="js/28-pullback.js"></script>
+<script src="js/29-boot.js"></script>
 </body>
 </html>

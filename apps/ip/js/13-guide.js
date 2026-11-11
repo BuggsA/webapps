@@ -114,3 +114,19 @@ function greetArrival(rec, seen) {
   else if (REG && regAt(S.aim, S.home.v)) speak('arrive.unannounced', 0, seen);
   else speak('arrive.unallocated', 0, seen);
 }
+
+/* The registry's opening line ("You are sitting in old space...").
+ *
+ * It used to fire the moment the registry landed, and the registry only
+ * ever landed after the visitor's first move outward. Since 2026-11-11 the
+ * registry is fetched at home, for the teaser - so landing is no longer
+ * that moment, and firing then would talk over the cold open, which is the
+ * one line that has to land. So it waits for the first move out, which is
+ * when it always used to be heard. Once a visit. No fallback on purpose:
+ * if there is nothing interesting in the record, he says nothing. */
+var registryOpenSaid = false;
+function sayRegistryOpen() {
+  if (registryOpenSaid || !REG || !(S.s > 0.06 || away())) return;
+  registryOpenSaid = true;
+  speak('open.registry', 1, 0);
+}
