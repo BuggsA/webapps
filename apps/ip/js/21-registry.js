@@ -32,11 +32,7 @@ function loadRegistry() {
   loadContent();
   if (regState) return;
   regState = 'loading';
-  fetch('data/space.bin', { cache: 'force-cache' })
-    .then(function (r) {
-      if (!r.ok) throw new Error(String(r.status));
-      return r.arrayBuffer();
-    })
+  fetchSpace()
     .then(function (buf) {
       REG = parseRegistry(new Uint8Array(buf));
       regState = REG ? 'ready' : 'none';
@@ -54,6 +50,33 @@ function loadRegistry() {
        * failed. */
       regState = 'none';
     });
+}
+
+/* The file is 2.9 MB raw and 439 KB gzipped. On AWS the deploy script
+ * uploaded it pre-gzipped with Content-Encoding: gzip, so the browser
+ * unpacked it invisibly. Cloudflare Pages - the only host since 2026-11-11 -
+ * does not compress application/octet-stream and cannot be told a static
+ * file is already encoded, so the same fetch downloaded all 2.9 MB.
+ *
+ * So the page fetches space.bin.gz (written next to space.bin by
+ * scripts/ip-build-space-field.py) and unpacks it itself. Any browser
+ * without DecompressionStream, or any failure on the way, falls back to the
+ * raw file: slower, never wrong. */
+function fetchSpace() {
+  function raw() {
+    return fetch('data/space.bin', { cache: 'force-cache' }).then(function (r) {
+      if (!r.ok) throw new Error(String(r.status));
+      return r.arrayBuffer();
+    });
+  }
+  if (typeof DecompressionStream === 'undefined') return raw();
+  return fetch('data/space.bin.gz', { cache: 'force-cache' })
+    .then(function (r) {
+      if (!r.ok || !r.body) throw new Error(String(r.status));
+      return new Response(r.body.pipeThrough(new DecompressionStream('gzip')))
+        .arrayBuffer();
+    })
+    .catch(raw);
 }
 
 function parseRegistry(b) {

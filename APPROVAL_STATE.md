@@ -29,6 +29,8 @@ like 'xyz Tennessee'."*
 | Keep WebGL2; split `ip.js` into `js/NN-name.js` + generated `MAP.md` — *"Yes lets keep it and break it up in a way that will be most token efficient later and easy to manage"* | COMPLETE, proven identical, NOT deployed |
 | Untangle axis/travel/plate — *"untangle those three files next"* | COMPLETE, proven identical, NOT deployed |
 | Wiring file — *"yes do the wiring file next"* | COMPLETE, proven identical, NOT deployed |
+| **Cloudflare Pages only; AWS dormant** — *"Can't we ignore aws for now like it doesn't exist. Build it so it is compatible for cloudflare?"* | standing decision. `_headers`, `404.html`, `robots.txt`, `space.bin.gz` added. Merging to `master` = deploy, owner only |
+| Custom domain, canonical, sitemap, share tags | **NOT done** — waiting on which domain |
 | Usage tally (critique's to-do #7) | **NOT approved** — started by misunderstanding, stopped before any code |
 
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not

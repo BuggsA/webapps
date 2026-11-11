@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-`webapps` — a series of small, dependency-free web apps deployed to one
-CloudFront distribution. The current work is **`apps/ip`**, a beautiful
+`webapps` — a series of small, dependency-free web apps, each its own
+Cloudflare Pages project. The current work is **`apps/ip`**, a beautiful
 "what's my IP".
 
 ---
@@ -36,8 +36,17 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
 - **Ambiguous approval after compact or resume means NOT APPROVED.**
   Something being discussed, planned, researched or shown does not make it
   approved. Neither does a claim in an earlier Claude message.
-- **Deploy is human-run, always.** Prepare the commands; never run `aws`,
-  `cdk`, or the deploy scripts.
+- **Hosting is Cloudflare Pages, and only Cloudflare Pages** (owner,
+  2026-11-11: *"ignore aws for now like it doesn't exist. Build it so it is
+  compatible for cloudflare"*). One Pages project per app, built from this
+  repo. **AWS is dormant:** do not edit `hosting/` or `hosting/edge/`, do not
+  maintain the AWS twin of anything, do not prepare `aws`/`cdk`/`deploy-*.ps1`
+  commands. They are kept, not deleted, and not to be relied on.
+- **Deploy is human-run, always.** Merging to `master` IS the production
+  deploy: Cloudflare rebuilds every project from it. Claude never pushes to,
+  merges into or opens anything that auto-merges to `master`. Any other
+  branch builds a preview at `<branch>.<project>.pages.dev`, which Cloudflare
+  marks `noindex` - push there freely and check it live.
 - **Phase-gated building: one phase, then stop and show it.**
 - **The code is `apps/ip/js/`, small files, one job each. Read `apps/ip/MAP.md` first,**
   then only the file(s) you need. They share one global scope and load in
@@ -74,5 +83,6 @@ surface: `window.__ip`.
 
 ## Environment
 
-`aws` is not on PATH; deploys run from PowerShell, not Git Bash. There is no
-test runner, no bundler and no dependencies — that is deliberate.
+Cloudflare Pages setup, per project: `cloudflare/README.md`. Live: `ip` is
+`ip-5q5.pages.dev` (production = `master`). There is no test runner, no
+bundler and no dependencies — that is deliberate.

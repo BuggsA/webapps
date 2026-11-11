@@ -256,10 +256,16 @@ def main():
     built = int(datetime.date.today().strftime("%Y%m%d"))
     blob = pack(v4, v6, keys, built)
     verify(blob, v4, v6)
-    squeezed = gzip.compress(blob, 9)
+    # mtime=0 so the same data always produces the same bytes - a rebuild
+    # with nothing new in it should not show up as a changed file.
+    squeezed = gzip.compress(blob, 9, mtime=0)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     open(OUT, "wb").write(blob)
-    print("\nwrote %s" % os.path.relpath(OUT, REPO))
+    # Cloudflare Pages does not compress application/octet-stream, so the
+    # page fetches this pre-gzipped copy and unpacks it itself (see
+    # js/21-registry.js). space.bin stays as the fallback.
+    open(OUT + ".gz", "wb").write(squeezed)
+    print("\nwrote %s and %s.gz" % (os.path.relpath(OUT, REPO), os.path.relpath(OUT, REPO)))
     print("   raw      %9s bytes" % format(len(blob), ","))
     print("   gzipped  %9s bytes   <- what the visitor actually downloads"
           % format(len(squeezed), ","))

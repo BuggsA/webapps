@@ -616,10 +616,13 @@ single-file app, including first and repeat arrivals at a landmark.
 - **Demonstrates:** dormant by construction, `ENDPOINT = ''`.
 - **Do not casually normalize:** do not wire it to anything.
 
-### `hosting/edge/ip-whoami.js`
-- **Demonstrates:** the address read at the edge, never from a third party.
-- **Verified live 2026-09-17:** `X-Cache: FunctionGeneratedResponse from
-  cloudfront` — generated at viewer-request, never reaching the origin.
+### `cloudflare/ip/functions/whoami.js`
+- **Demonstrates:** the address read at the edge, never from a third party -
+  plus the edge's own approximate location and network (`where`, `net`).
+- **The only host since 2026-11-11** (owner). Its AWS twin,
+  `hosting/edge/ip-whoami.js`, is dormant with the rest of `hosting/`.
+- **Verified live 2026-11-11** on the branch preview: `where` and `net`
+  present, read from `request.cf`.
 
 ### `docs/ip-art-direction.md` — the locked direction
 - **Do not casually normalize:** anything in "Banned", and the thesis.

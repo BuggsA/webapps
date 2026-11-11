@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-28 files, 5787 lines.
+28 files, 5810 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -36,7 +36,7 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `18-travel.js` | 171 | moving the aim: travel, back, Home, stepping, and asking what is there |
 | `19-input.js` | 104 | input: wheel, drag, touch and keys, wired to the axis and travel |
 | `20-network.js` | 186 | whoami is elsewhere; this is RIPEstat: the network, and its shape |
-| `21-registry.js` | 278 | space.bin: every allocation the five registries made |
+| `21-registry.js` | 301 | space.bin: every allocation the five registries made |
 | `22-query.js` | 209 | asking the map a question, and drawing the answer |
 | `23-words.js` | 262 | the words: what the plate and the companion say about where you are |
 | `24-view.js` | 275 | the view: syncDom writes state into the page, one named step at a time |
@@ -176,7 +176,7 @@ Whoami is elsewhere; this is RIPEstat: the network, and its shape. **Uses:** 00,
 
 Space.bin: every allocation the five registries made. **Uses:** 00, 01, 05, 07, 10, 13, 15, 23. **Used by:** 07, 10, 11, 13, 17, 20, 22, 23, 25, 27.
 
-`REG` `regState` `loadRegistry` `parseRegistry` `RIR_NAME` `regLine` `regIndex` `regAt` `spread` `eraLevel` `UNALLOCATED` `regInField`
+`REG` `regState` `loadRegistry` `fetchSpace` `parseRegistry` `RIR_NAME` `regLine` `regIndex` `regAt` `spread` `eraLevel` `UNALLOCATED` `regInField`
 
 ### `22-query.js`
 

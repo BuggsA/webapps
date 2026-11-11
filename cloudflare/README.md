@@ -1,8 +1,10 @@
 # Cloudflare Pages
 
-A second home for the apps, alongside the AWS stack in `hosting/` (which keeps
-running). One Cloudflare Pages project per app, all built from this repo;
-every push to `master` redeploys them.
+**The only host** (owner, 2026-11-11). The AWS stack in `hosting/` is dormant:
+kept, not maintained, not deployed. One Cloudflare Pages project per app, all
+built from this repo. **A merge to `master` is the production deploy** for
+every project; any other branch builds a `noindex` preview at
+`<branch>.<project>.pages.dev`.
 
 | Project | Root directory | Build command | Output directory |
 |---|---|---|---|
@@ -25,3 +27,19 @@ Try the ip site locally (Node required):
     cd cloudflare/ip
     rm -rf public && cp -r ../../apps/ip public
     npx wrangler pages dev public
+
+## What `apps/ip` ships for Cloudflare
+
+All of these sit in `apps/ip/`, so they land at the site root:
+
+| file | why |
+|---|---|
+| `_headers` | Pages response headers: long cache for `fonts/` and `data/`, no Referer sent anywhere, `noindex` on the `.md` files. |
+| `404.html` | Without one, Pages answers **every** unknown path - including `/robots.txt` and `/sitemap.xml` - with `index.html` and a 200. Search engines read that as endless duplicate pages. |
+| `robots.txt` | Allow everything. Gains a `Sitemap:` line once the custom domain is chosen. |
+| `data/space.bin.gz` | Pages will not compress `application/octet-stream`, so the raw 2.9 MB `space.bin` was downloaded uncompressed. The page fetches this 439 KB copy and unpacks it with `DecompressionStream`; `space.bin` is the fallback. Both are written by `scripts/ip-build-space-field.py`. |
+
+`functions/whoami.js` answers `/whoami` with the address, plus `where`
+(Cloudflare's own `request.cf` city/region/country) and `net` (`request.cf`
+AS number and name). Nobody else is asked.
+

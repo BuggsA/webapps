@@ -13,6 +13,9 @@ useful layer is built on branch `claude/sleepy-tesla-kv7qqd`, not deployed
 approved.** Recommended next: make the map show where to go (territories,
 sightlines from the first frame) — ask before building it.
 
+**Hosting is Cloudflare Pages only** (owner, 2026-11-11). AWS is dormant.
+Production deploys when the owner merges to `master`; never push there.
+
 **The code moved.** `apps/ip/ip.js` is now `apps/ip/js/NN-name.js` (owner,
 2026-11-11), proven identical. Read `apps/ip/MAP.md` first.
 
@@ -91,7 +94,7 @@ The owner wandering for a day is worth more than all of them.
 ## Canonical references
 
 `apps/ip/MAP.md` → `apps/ip/js/*.js` · `ip.css` · `index.html` · **`content/guide.json`** ·
-**`content/lines.json`** · `data/space.bin` · `hosting/edge/ip-whoami.js` ·
+**`content/lines.json`** · `data/space.bin` · `cloudflare/ip/functions/whoami.js` ·
 `scripts/ip-narrative-review.py` · `docs/ip-art-direction.md` ·
 `docs/ip-build-plan-v3.md`
 

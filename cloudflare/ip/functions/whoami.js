@@ -1,6 +1,7 @@
 /* Cloudflare Pages Function: GET /whoami
  *
- * The Cloudflare twin of hosting/edge/ip-whoami.js (the CloudFront Function
+ * THE address endpoint (Cloudflare Pages is the only host, 2026-11-11).
+ * Written as the twin of hosting/edge/ip-whoami.js (the CloudFront Function
  * that answers /ip/whoami on AWS). Same contract, same allowlist, so the page
  * cannot tell which host it is on:
  *
@@ -10,7 +11,7 @@
  *
  * Never cached (the answer differs per visitor), never stored, and no
  * access-control-allow-origin: it answers the page that asked and nobody
- * else's page. Keep the two files in step if the contract changes.
+ * else's page. The AWS twin is dormant: change this one, not both.
  *
  * `where` (2026-11-11, owner's request): the approximate place the edge
  * already knows for this connection. See `where()` below.
