@@ -24,6 +24,9 @@ like 'xyz Tennessee'."*
 | Menu contrast `--cold-4` → `--cold-3` | COMPLETE in source, NOT deployed |
 | Origin request policy on `/ip/whoami` so CloudFront exposes its geo headers | COMPLETE in source, needs `deploy-hosting.ps1` |
 
+| **Direction: useful first, then exploration** — *"It should be an exploration type of thing but it should be useful first before anything"*, with *"can you help fix this maybe help fix direction"* | standing direction, in `PRODUCT_SOUL.md` and `ip-build-plan-v3.md` |
+| Facts row (location, provider via edge ASN, address type) + Explore control + measured fit around the amber mark | COMPLETE in source, NOT deployed |
+
 Recorded in `docs/ip-art-direction.md` as an owner decision. **Still not
 approved by this:** territories, any redesign of the composition, palette or
 type beyond the three items above. "Clean up" is not read as licence to

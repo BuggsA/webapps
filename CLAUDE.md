@@ -21,6 +21,9 @@ CloudFront distribution. The current work is **`apps/ip`**, a beautiful
 
 ## Rules
 
+- **Useful first, then exploration** (owner, 2026-11-11). The first frame
+  is a complete what's-my-IP answer before it is an invitation. Nothing
+  optional stands between a visitor and the facts they came for.
 - **Canonical product references outrank generic UI conventions.** When a
   familiar web pattern disagrees with `PRODUCT_SOUL.md`, the product wins.
 - **"Clean up", "modernize", "polish" and "improve" are NOT permission to

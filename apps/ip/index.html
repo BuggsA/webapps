@@ -37,13 +37,22 @@
     <p id="address"><span id="addressText">&mdash;</span></p>
     <button id="copy" type="button" aria-describedby="address">Copy</button>
   </div>
-  <!-- Roughly where that address is, as our own edge reads it. Hidden until
-       the edge says something; never guessed, never asked of anyone else. -->
-  <div id="where" hidden>
-    <p id="wherePlace"></p>
-    <p id="whereNote"></p>
-  </div>
+  <!-- USEFUL FIRST (owner, 2026-11-11). The facts people come to a "what's
+       my IP" page for, read by our own edge for this visit and not kept.
+       A fact the edge did not give is left out, never guessed. -->
+  <dl id="facts" hidden>
+    <div id="factWhere" hidden><dt>Location, approx.</dt><dd id="wherePlace"></dd><dd class="sub" id="whereSub"></dd></div>
+    <div id="factNet" hidden><dt>Internet provider</dt><dd id="netName"></dd><dd class="sub" id="netSub"></dd></div>
+    <div id="factKind"><dt>Address type</dt><dd id="kindName"></dd><dd class="sub" id="kindSub"></dd></div>
+  </dl>
+  <p id="whereNote" hidden></p>
   <p id="answerNote"></p>
+  <!-- The way in. A press steps the axis out one stop, exactly as the arrow
+       key does: the visitor's hand moves the instrument, nothing else. -->
+  <div id="explore" hidden>
+    <button id="exploreBtn" type="button">Explore the internet around this address</button>
+    <p id="exploreHow"></p>
+  </div>
 </div>
 
 <!-- The subject plate: what the instrument is pointed at. -->

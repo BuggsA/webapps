@@ -75,6 +75,19 @@ function where(cf) {
   return Object.keys(w).length ? w : null;
 }
 
+/* The network this connection arrives from: its AS number, and the name
+ * Cloudflare's own data gives it ("Comcast Cable", "Deutsche Telekom AG").
+ * Same edge, same request; nobody else is asked. */
+function net(cf) {
+  if (!cf) return null;
+  const n = {};
+  const asn = parseInt(cf.asn, 10);
+  if (asn > 0) n.asn = asn;
+  const org = cleanPlace(cf.asOrganization);
+  if (org) n.org = org;
+  return Object.keys(n).length ? n : null;
+}
+
 const COMMON = {
   'cache-control': 'no-store, private',
   'x-content-type-options': 'nosniff',
@@ -100,6 +113,7 @@ export function onRequestGet({ request }) {
   const body = JSON.stringify({
     ip: clean(ip),
     where: where(request.cf),
+    net: net(request.cf),
     headers,
     note: 'Seen for this response. Not kept.',
   });

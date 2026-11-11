@@ -95,6 +95,15 @@ function whereJson(headers) {
   return out ? '{' + out + '}' : 'null';
 }
 
+/* The network this connection arrives from. CloudFront gives the AS number
+ * only (no name); the page fills the name in by that number, never by the
+ * address. */
+function netJson(headers) {
+  var h = headers['cloudfront-viewer-asn'];
+  var asn = (h && h.value) ? parseInt(h.value, 10) : 0;
+  return asn > 0 ? '{"asn":' + asn + '}' : 'null';
+}
+
 function handler(event) {
   var req = event.request;
   var headers = req.headers || {};
@@ -123,7 +132,8 @@ function handler(event) {
     };
   }
 
-  var body = '{"ip":"' + esc(ip) + '","where":' + whereJson(headers) + ',"headers":{';
+  var body = '{"ip":"' + esc(ip) + '","where":' + whereJson(headers) +
+    ',"net":' + netJson(headers) + ',"headers":{';
   var first = true, i, name, v;
   for (i = 0; i < ECHO.length; i++) {
     name = ECHO[i];

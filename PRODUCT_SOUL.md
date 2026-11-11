@@ -34,6 +34,18 @@ It is **an instrument, not an illustration**. From `ip-art-direction.md`:
 > origin), and a subject. Moving the scale moves the instrument, not the
 > world. The subject changes; the chassis never does.
 
+### Useful first — owner, 2026-11-11
+
+> *"It should be an exploration type of thing but it should be useful first
+> before anything."*
+
+The first frame is a complete, ordinary, useful what's-my-IP answer — the
+address, labelled; roughly where; through which provider; which internet —
+and a plainly named way in. Exploration is offered, never required, and
+never stands between a visitor and the answer they came for. Every fact on
+it still comes from our own edge, says how approximate it is, and is not
+kept.
+
 ## 2. What it is supposed to feel like
 
 - **Immediate.** The address is there before anything else, always.

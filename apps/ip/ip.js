@@ -900,6 +900,9 @@
     where: null,        /* the approximate place our own edge reads for this
                          * connection: {city, region, regionCode, country},
                          * any of them missing. Never asked of anyone else. */
+    edgeNet: null,      /* the network the edge saw this visit arrive from:
+                         * {asn, org}. The name may be filled in later from
+                         * RIPEstat by the AS NUMBER, never by the address. */
     net: null,
     asked: {},          /* cell prefix -> what came back when we asked */
     aim: null,          /* BigInt: the address the instrument is POINTED AT.
@@ -4605,7 +4608,9 @@
      * existed: you can now be deep inside somebody else's network at a low
      * axis, and the address would balloon back over the middle of the frame
      * as though you had never left. Same mistake the Home button made. */
+    var wasState = document.body.dataset.state;
     document.body.dataset.state = (!away() && S.s < 0.5) ? 'home' : 'out';
+    if (document.body.dataset.state !== wasState) fitSoon();
 
     var p = plateFor();
     if (S.query) {
@@ -4715,6 +4720,7 @@
         el.hint.style.opacity = show ? '1' : '0';
       }
     }
+    syncExplore();
     if (el.goBack) el.goBack.hidden = !S.trail.length && !away();
     if (el.goHome) el.goHome.hidden = !away() && S.s < 0.5;
     el.railMark.style.top = (S.s / S.maxAxis * 100).toFixed(2) + '%';
@@ -4750,7 +4756,9 @@
       var n = S.net, facts = [];
       if (S.home) facts.push(['Your address', S.home.text]);
       var pt = S.home ? placeText(S.where) : null;
-      if (pt) facts.push(['Approximate location', pt.line.replace(/^Near |^Somewhere in /, '')]);
+      if (pt) facts.push(['Approximate location', pt.value + (pt.sub ? ', ' + pt.sub : '')]);
+      if (S.edgeNet) facts.push(['Internet provider',
+        (S.edgeNet.org || '') + (S.edgeNet.asn ? (S.edgeNet.org ? ' · ' : '') + 'AS' + S.edgeNet.asn : '')]);
       if (n && n.status === 'ready') {
         facts.push(['Announced prefix', n.prefix]);
         facts.push(['Announced by', 'AS' + n.asn + (n.holder ? ' · ' + n.holder : '')]);
@@ -4817,30 +4825,119 @@
     if (city && region && same(city, region)) region = '';
     if (city && country && same(city, country)) country = '';
     if (region && country && same(region, country)) country = '';
-    var line;
-    if (city) line = 'Near ' + city + (region ? ', ' + region : '');
-    else if (region) line = 'Somewhere in ' + region;
-    else if (country) { line = 'Somewhere in ' + country; country = ''; }
+    var value;
+    if (city) value = city + (region ? ', ' + region : '');
+    else if (region) value = region;
+    else if (country) { value = country; country = ''; }
     else return null;
-    return {
-      line: line,
-      note: (country ? country + '  ·  ' : '') +
-            'Approximate: your network’s location, as this site’s own edge ' +
-            'reads it. Not kept.'
-    };
+    return { value: value, sub: country };
   }
 
-  function showWhere() {
-    var t = S.home ? placeText(S.where) : null;
-    if (!el.where) return;
-    el.where.hidden = !t;
-    el.wherePlace.textContent = t ? t.line : '';
-    el.whereNote.textContent = t ? t.note : '';
+  /* THE FACTS ROW — useful first (owner, 2026-11-11: "It should be an
+   * exploration type of thing but it should be useful first before
+   * anything"). What a person opens a what's-my-IP page to learn, in one
+   * glance under the address: roughly where, through whom, and which
+   * internet. Every one of them is read by our own edge for this visit.
+   * A fact the edge did not give is left out, never guessed. */
+  function showFacts() {
+    if (!el.facts) return;
+    var h = S.home;
+    el.facts.hidden = !h;
+    el.whereNote.hidden = true;
+    if (!h) { el.explore.hidden = true; return; }
+
+    var t = placeText(S.where);
+    el.factWhere.hidden = !t;
+    el.wherePlace.textContent = t ? t.value : '';
+    el.whereSub.textContent = t ? t.sub : '';
+
+    var n = S.edgeNet;
+    el.factNet.hidden = !n;
+    el.netName.textContent = n ? (n.org || 'AS' + n.asn) : '';
+    el.netSub.textContent = (n && n.org && n.asn) ? 'Network AS' + n.asn : '';
+
+    el.kindName.textContent = h.v === 6 ? 'IPv6' : 'IPv4';
+    el.kindSub.textContent = h.v === 6
+      ? '128-bit · the newer, far larger internet'
+      : '32-bit · the original internet';
+
+    if (t || n) {
+      el.whereNote.hidden = false;
+      el.whereNote.textContent =
+        'Approximate, read by this site’s own edge for this visit. Not kept.';
+    }
+    syncExplore();
+    fitSoon();
+  }
+
+  /* The doorway is offered whenever there is a picture to go into. The
+   * how-to under it goes once the visitor has moved the axis themselves:
+   * after that they know, and it would only be noise. */
+  function syncExplore() {
+    if (!el.explore) return;
+    el.explore.hidden = !(S.home && R);
+    var moved = S.gone !== null && S.gone > 0.02;
+    var touch = window.matchMedia && window.matchMedia('(hover: none)').matches;
+    el.exploreHow.textContent = moved ? '' :
+      (touch ? 'or drag up to zoom out yourself'
+             : 'or scroll down, or drag up, to zoom out yourself');
+  }
+
+  /* NOTHING COVERS THE AMBER MARK. At home it sits at the world origin, so
+   * its place on screen is computed, not assumed. Percentages could not do
+   * this: a 1280x620 laptop and a 320px phone each put Explore straight
+   * through it. So measure: if the answer reaches the mark, slide it up into
+   * the empty sky first, and drop the secondary lines only if that is not
+   * enough.
+   * Called on load and resize only - never per frame, and never moves the
+   * camera; it moves text out of the camera's way. */
+  var fitTimer = 0;
+  function fitAnswer() {
+    var box = document.getElementById('answer');
+    if (!box) return;
+    box.classList.remove('tight');
+    box.style.top = '';
+    if (!R || !S.home || document.body.dataset.state !== 'home') return;
+    var sp = toScreen(viewProj(), 0, 0, 0);
+    if (!sp) return;
+    var limit = sp.y - 26;
+    /* the empty sky above the address is spent first; the secondary lines
+     * only go when there is no more sky to spend */
+    var ceiling = Math.max(16, S.H * 0.07);
+    function lift() {
+      var r = box.getBoundingClientRect();
+      var over = r.bottom - limit;
+      if (over <= 0) return true;
+      var up = Math.min(over, Math.max(0, r.top - ceiling));
+      if (up > 0) box.style.top = ((r.top + r.bottom) / 2 - up) + 'px';
+      return over - up <= 0;
+    }
+    if (lift()) return;
+    box.style.top = '';
+    box.classList.add('tight');
+    lift();
+  }
+  function fitSoon() {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitAnswer, 60);
+  }
+
+  /* An AS number with no name - CloudFront gives only the number. The name
+   * is asked of RIPEstat by that number alone; the address is not sent, so
+   * staying on the answer still sends your address to nobody. */
+  function nameEdgeNet() {
+    var n = S.edgeNet;
+    if (!n || n.org || !(n.asn > 0)) return;
+    ripe('as-overview', 'AS' + n.asn).then(function (o) {
+      var hName = tidyHolder(o && o.holder);
+      if (hName && S.edgeNet === n) { n.org = hName; showFacts(); syncDom(); }
+    }).catch(function () {});
   }
 
   function showAddress() {
     if (S.home && S.aim === null) S.aim = S.home.big;
-    showWhere();
+    showFacts();
+    nameEdgeNet();
     if (S.home) {
       el.addressText.textContent = S.home.text;
       el.address.style.setProperty('--addr-chars', S.home.text.length);
@@ -4873,23 +4970,31 @@
         S.home = f; S.source = 'fixture';
         /* &where=City,Region,CC — for previewing the location line, which
          * only a deployed edge can otherwise produce */
-        var fw = new URLSearchParams(location.search).get('where');
+        var qs = new URLSearchParams(location.search);
+        var fw = qs.get('where');
         if (fw) {
           var parts = fw.split(',');
           S.where = { city: parts[0] || '', region: parts[1] || '',
                       country: parts[2] || '' };
         }
+        /* &asn=7922&org=Comcast — the provider, likewise */
+        var fa = parseInt(qs.get('asn'), 10), fo = qs.get('org') || '';
+        if (fa > 0 || fo) S.edgeNet = { asn: fa > 0 ? fa : 0, org: fo };
         showAddress(); return;
       }
     }
     var settled = false;
-    function give(addr, src, where) {
+    function give(addr, src, where, net) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       S.home = addr || null;
       S.source = addr ? src : '';
       S.where = (addr && where && typeof where === 'object') ? where : null;
+      S.edgeNet = (addr && net && typeof net === 'object' &&
+                   (net.asn > 0 || net.org))
+        ? { asn: net.asn > 0 ? net.asn : 0, org: net.org ? String(net.org) : '' }
+        : null;
       showAddress();
     }
     var timer = setTimeout(function () { give(null, ''); }, 4000);
@@ -4900,7 +5005,7 @@
         return ct.indexOf('json') >= 0 ? r.json()
              : r.text().then(function (t) { return { ip: t.trim() }; });
       })
-      .then(function (d) { give(parseIp(d && d.ip), 'edge', d && d.where); })
+      .then(function (d) { give(parseIp(d && d.ip), 'edge', d && d.where, d && d.net); })
       .catch(function () { give(null, ''); });
   }
 
@@ -4973,11 +5078,13 @@
       'edge, which reads your address from the connection itself. No ',
       'third-party address lookup is used at any point — your address is ',
       'never handed to someone else to find out what it is.</p>',
-      '<p>The place under your address comes from that same edge, which ',
-      'estimates a rough location for every connection it serves. It is where ',
-      'your network appears to be, not where you are: a phone carrier or a ',
-      'VPN can put it a city or a country away. It is shown to you and not ',
-      'kept.</p>',
+      '<p>The location and internet provider under your address come from ',
+      'that same edge, which estimates them for every connection it serves. ',
+      'The location is where your network appears to be, not where you are: ',
+      'a phone carrier or a VPN can put it a city or a country away. Both are ',
+      'shown to you and not kept. Where the edge knows only your network’s ',
+      'number, its name is looked up by that number alone — never by your ',
+      'address.</p>',
       '<p>Only once you move outward, the block and the network are looked up ',
       'against <a href="https://stat.ripe.net/" rel="noopener">RIPEstat</a>, ',
       'the RIPE NCC’s public data service. Moving outward sends your address ',
@@ -5075,7 +5182,9 @@
   function boot() {
     cv = document.getElementById('field');
     grab(['address', 'addressText', 'copy', 'answerNote', 'live',
-          'where', 'wherePlace', 'whereNote',
+          'facts', 'factWhere', 'wherePlace', 'whereSub', 'factNet', 'netName',
+          'netSub', 'kindName', 'kindSub', 'whereNote', 'explore', 'exploreBtn',
+          'exploreHow',
           'plate', 'plateTitle', 'plateSub', 'plateNote',
           'mark', 'markFixed', 'markVary', 'markNote',
           'tipWrap', 'tipFixed', 'tipVary', 'tipMine', 'tipNote',
@@ -5148,6 +5257,12 @@
       }
     }
     el.goHome.addEventListener('click', goHome);
+    window.addEventListener('resize', fitSoon);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSoon);
+    /* one stop outward, exactly what ArrowDown does: the press is the hand */
+    if (el.exploreBtn) el.exploreBtn.addEventListener('click', function () {
+      stepAxis(1);
+    });
     if (el.goBack) el.goBack.addEventListener('click', back);
     el.about.addEventListener('click', function () {
       if (aboutOpen) closeAbout(); else openAbout();

@@ -157,6 +157,7 @@ function handler(event) {
                 "CloudFront-Viewer-Country",
                 "CloudFront-Viewer-Country-Region",
                 "CloudFront-Viewer-Country-Region-Name",
+                "CloudFront-Viewer-ASN",
             ),
             query_string_behavior=cloudfront.OriginRequestQueryStringBehavior.none(),
             cookie_behavior=cloudfront.OriginRequestCookieBehavior.none(),

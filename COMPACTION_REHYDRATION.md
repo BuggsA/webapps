@@ -5,6 +5,14 @@ Second preservation pass, 2026-09-18.
 
 ---
 
+## Update 2026-11-11 — read this before the rest
+
+**Standing direction from the owner: useful first, then exploration.** The
+useful layer is built on branch `claude/sleepy-tesla-kv7qqd`, not deployed
+(see `docs/ip-build-plan-v3.md`, "THE DIRECTION"). **Next is NOT
+approved.** Recommended next: make the map show where to go (territories,
+sightlines from the first frame) — ask before building it.
+
 ## Operating mode
 
 **WAITING_FOR_USER.** A preservation pass was requested mid-proposal. **No

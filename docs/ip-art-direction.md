@@ -194,6 +194,17 @@ to a locked section is written down with a date.
 3. **The menu is `--cold-3`, not `--cold-4`.** Measured at about 1.8:1
    against the ground it was close to invisible. Same role, readable shade.
 
+**Extended the same day**, after *"it should be useful first before
+anything"*: the single location line became a **row of three readings** —
+location (approx.), internet provider, address type — each a small
+uppercase label over a value, divided by hairlines; a stacked column on a
+phone. Under it, **"Explore the internet around this address"**, a text
+control with a hairline underline (no pill, no fill, no icon), which steps
+the axis out one stop exactly as ArrowDown does — the visitor's press moves
+the instrument, nothing moves on its own. The answer now **measures where
+the amber mark is drawn and keeps clear of it**, spending the empty sky
+first and dropping secondary lines only when there is no sky left.
+
 **What did not change.** *"No geography of any kind"* in **Banned** still
 governs the field: nothing is drawn — no map, no pin, no globe. The location
 is a line of text. It is always *Near* or *Somewhere in*, because it is where
