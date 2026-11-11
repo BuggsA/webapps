@@ -11,7 +11,7 @@ in all of them; the script fails if two files define the same name.
 it whole, and read the files it *uses* only if you need them. Grep
 `js/` for a name to find who calls it.
 
-33 files, 7616 lines.
+33 files, 7623 lines.
 
 | file | lines | what it is |
 |---|---:|---|
@@ -25,7 +25,7 @@ it whole, and read the files it *uses* only if you need them. Grep
 | `07-scene.js` | 475 | the chassis, the block and the fields, as renderer-agnostic geometry |
 | `08-gl.js` | 554 | the WebGL2 renderer: shaders, HDR, bloom, reflection |
 | `09-c2d.js` | 113 | the Canvas 2D fallback renderer |
-| `10-content.js` | 103 | loading the guide and chain content from content/*.json |
+| `10-content.js` | 110 | loading the guide and chain content from content/*.json |
 | `11-notebook.js` | 341 | the notebook: where you have been, kept in localStorage |
 | `12-celebration.js` | 93 | the celebration when something real is found |
 | `13-guide.js` | 142 | the guide: choosing and speaking a line |
@@ -113,9 +113,9 @@ The Canvas 2D fallback renderer. **Uses:** 00, 01, 05, 06, 07. **Used by:** 32.
 
 ### `10-content.js`
 
-Loading the guide and chain content from content/*.json. **Uses:** 05, 07, 11, 13, 21. **Used by:** 11, 13, 21, 25, 29, 31, 32.
+Loading the guide and chain content from content/*.json. **Uses:** 05, 07, 11, 13, 21. **Used by:** 11, 13, 21, 25, 27, 29, 31, 32.
 
-`CONTENT` `contentState` `loadContent` `visitorTags` `seenCount` `saidThisSession` `pickLine`
+`CONTENT` `contentV` `contentState` `loadContent` `visitorTags` `seenCount` `saidThisSession` `pickLine`
 
 ### `11-notebook.js`
 
@@ -215,7 +215,7 @@ What happens after the axis moves, and after a place answers. **Uses:** 04, 05, 
 
 ### `27-teaser.js`
 
-The teaser: one true line about the visitor's own address, to make them stop. **Uses:** 05, 17, 21, 25. **Used by:** 25, 26.
+The teaser: one true line about the visitor's own address, to make them stop. **Uses:** 05, 10, 17, 21, 25. **Used by:** 25, 26.
 
 `ANCHORS` `anchorsState` `loadAnchors` `preloadForTeaser` `teaserText` `showTeaser`
 

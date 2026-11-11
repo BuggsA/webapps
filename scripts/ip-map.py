@@ -28,6 +28,7 @@ What this script does, and why each part exists:
 Exit status is non-zero if any check fails.
 """
 
+import hashlib
 import os
 import re
 import subprocess
@@ -147,6 +148,56 @@ def top_level_names(lines):
     return names
 
 
+def file_hash(*paths):
+    h = hashlib.sha1()
+    for p in paths:
+        with open(p, 'rb') as f:
+            h.update(f.read())
+    return h.hexdigest()[:10]
+
+
+def stamp_versions():
+    """Every CSS and JS the pages load gets ?v=<hash of its contents>.
+
+    WHY (owner, 2026-11-11: "It not deploying correctly ... It worked [on
+    pages.dev] but not iphere.app"). Every deploy DID reach iphere.app. But
+    the iphere.app zone's Browser Cache TTL told browsers to keep CSS and JS
+    for four hours (max-age=14400) where pages.dev says max-age=0 - so a
+    phone ran the new HTML against up to four-hour-old CSS and JS, and fixes
+    looked like they had not shipped. The HTML itself is never cached, so a
+    changed file gets an address no browser has seen and is fetched fresh,
+    whatever the zone setting is. The content JSON is versioned the same
+    way, through data-content on <html> (10-content.js reads it).
+    """
+    pages = [os.path.join(APP, 'index.html')] + sorted(
+        os.path.join(APP, d, 'index.html') for d in os.listdir(APP)
+        if os.path.isfile(os.path.join(APP, d, 'index.html')))
+    q = r'(?:\?v=[0-9a-f]+)?'
+    for page in pages:
+        html = open(page, encoding='utf-8').read()
+        new = html
+
+        def asset(m):
+            pre, path, post = m.group(1), m.group(2), m.group(3)
+            disk = os.path.join(APP, path.lstrip('/'))
+            if not os.path.isfile(disk):
+                return m.group(0)
+            return '%s%s?v=%s%s' % (pre, path, file_hash(disk), post)
+        new = re.sub(r'(<script src=")((?:/?js/|/door/|)[\w./-]+\.js)' + q + r'(")', asset, new)
+        new = re.sub(r'(<link rel="stylesheet" href=")((?:/door/|)[\w./-]+\.css)' + q + r'(")', asset, new)
+        if page.endswith(os.path.join('apps', 'ip', 'index.html')):
+            content = sorted(os.path.join(APP, 'content', f)
+                             for f in os.listdir(os.path.join(APP, 'content')) if f.endswith('.json'))
+            v = file_hash(*content)
+            if 'data-content="' in new:
+                new = re.sub(r'data-content="[0-9a-f]*"', 'data-content="%s"' % v, new)
+            else:
+                new = new.replace('<html lang="en">', '<html lang="en" data-content="%s">' % v, 1)
+        if new != html:
+            open(page, 'w', encoding='utf-8').write(new)
+            print('stamped versions: %s' % os.path.relpath(page, ROOT))
+
+
 def main():
     files = sorted(f for f in os.listdir(JS) if f.endswith('.js'))
     problems = []
@@ -182,9 +233,11 @@ def main():
         if r.returncode != 0:
             problems.append('syntax: %s\n%s' % (f, r.stderr.strip()))
 
+    stamp_versions()
+
     # index.html loads exactly these, in this order
     html = open(os.path.join(APP, 'index.html'), encoding='utf-8').read()
-    tags = re.findall(r'<script src="js/([^"]+)"></script>', html)
+    tags = re.findall(r'<script src="js/([^"?]+)(?:\?v=[0-9a-f]+)?"></script>', html)
     if tags != files:
         problems.append('order: index.html loads %s but js/ holds %s' % (tags, files))
 

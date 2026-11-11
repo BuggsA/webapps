@@ -53,6 +53,20 @@ All of these sit in `apps/ip/`, so they land at the site root:
 AS number and name). Nobody else is asked.
 
 
+## Browser caching on iphere.app (found 2026-11-11)
+
+The `iphere.app` zone's **Browser Cache TTL** rewrites CSS and JS to
+`max-age=14400` (4 hours); `*.pages.dev` serves them with `max-age=0`. So a
+deploy reached iphere.app but phones kept running the old CSS and JS for up
+to four hours - "it worked on pages.dev but not iphere.app".
+
+- In the repo: `scripts/ip-map.py` stamps `?v=<content hash>` on every CSS
+  and JS link and `data-content` on `<html>`, so a changed file has a URL
+  no browser has cached. This works whatever the zone setting is.
+- In the dashboard (owner): iphere.app -> Caching -> Configuration ->
+  Browser Cache TTL -> **Respect Existing Headers**. Then `_headers` and
+  Pages decide, as they do on pages.dev.
+
 ## The custom domain: `iphere.app` (owner, 2026-11-11)
 
 The ip project's production address is **`https://iphere.app/`**; the

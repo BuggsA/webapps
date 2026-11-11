@@ -75,7 +75,11 @@ Cloudflare Pages project. The current work is **`apps/ip`**, a beautiful
 
 ```bash
 python scripts/ip-map.py                    # regenerate apps/ip/MAP.md AND check every
-                                            # file: syntax, load order, duplicate names
+                                            # file: syntax, load order, duplicate names -
+                                            # AND stamp ?v=<hash> on every CSS/JS link and
+                                            # data-content on <html>. Run it after ANY change
+                                            # to a CSS, JS or content file, or browsers on
+                                            # iphere.app keep the old one for 4 hours
 python scripts/ip-narrative-review.py       # regenerate the narrative doc AND lint it
 python scripts/ip-build-space-field.py      # rebuild apps/ip/data/space.bin
 python scripts/ip-build-door-stats.py       # rewrite the registry numbers on /ipv4-vs-ipv6/
