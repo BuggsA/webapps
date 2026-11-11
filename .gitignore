@@ -26,3 +26,7 @@ hosting/.hosting-outputs.env
 
 # NRO source cache for scripts/ip-build-space-field.py (55 MB, re-fetched)
 scripts/.nro-cache
+
+# Cloudflare Pages build output (copied from apps/ip at build time)
+cloudflare/ip/public/
+.wrangler/

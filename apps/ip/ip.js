@@ -4884,6 +4884,10 @@
   }
 
   function aboutHTML() {
+    /* The page asks for `whoami` relative to itself, so the curl line is
+     * derived the same way: /ip/whoami on AWS, /whoami on Cloudflare Pages. */
+    var whoPath = location.pathname.replace(/[^\/]*$/, '')
+      .replace(/[^A-Za-z0-9\/._~-]/g, '') + 'whoami';
     return [
       '<h2>What this page does</h2>',
       '<p>It shows your public IP address. If you move the view, it shows the ',
@@ -4909,7 +4913,7 @@
       '<h3>For scripts</h3>',
       '<p>Anything that is not asking for JSON gets the address as plain text ',
       'and nothing else:</p>',
-      '<p class="mono">curl https://<span class="dim">&lt;this host&gt;</span>/ip/whoami</p>',
+      '<p class="mono">curl https://<span class="dim">&lt;this host&gt;</span>' + whoPath + '</p>',
 
       '<div class="plate">',
       '<p>Routing data by courtesy of the RIPE NCC, from RIPEstat.</p>',
