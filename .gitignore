@@ -30,3 +30,6 @@ scripts/.nro-cache
 # Cloudflare Pages build output (copied from apps/ip at build time)
 cloudflare/ip/public/
 .wrangler/
+
+# NOAA source cache for scripts/tide-build-places.py (re-fetched by scripts/tide-fetch-places.py)
+scripts/.tide-places-cache

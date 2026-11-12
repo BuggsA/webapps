@@ -436,6 +436,7 @@ body {
 .about h2 { font-size: var(--t2); font-weight: 430; letter-spacing: -0.015em; }
 .about p { font-size: 0.95rem; color: var(--chrome); }
 .about .about-src { font-size: 0.8rem; color: var(--chrome-soft); }
+.about a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--chrome-line); }   /* the link to /tide-times/ - a hairline, not browser blue */
 .about .word { justify-self: start; }
 
 /* --- responsive ------------------------------------------------------ */

@@ -57,6 +57,16 @@ for up to fifteen days. Your place is stored in `localStorage` only and
 never sent anywhere except as the coordinates of the sea-level request.
 Telemetry (`telemetry.js`) ships dormant — `ENDPOINT = ''`.
 
+**Place pages** (`tide-times/`, 2026-11-12): one page per NOAA tidal
+station, built from NOAA data, and rebuilt every January:
+
+    python scripts/tide-fetch-places.py 2028
+    python scripts/tide-build-places.py 2028
+
+The generated `tide-times/<place>/` folders and `sitemap.xml` are output;
+edit the script, not them. `tide-times/place.js` fills in the live week.
+What could come next: `../../docs/tide-places-backlog.md`.
+
 **Hosting:** a Cloudflare Worker with static assets, no script —
 `../../cloudflare/tide/wrangler.jsonc` serves this folder as it is.
 See `../../cloudflare/README.md`.
