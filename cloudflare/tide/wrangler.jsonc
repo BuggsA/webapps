@@ -1,0 +1,28 @@
+// Tide on Cloudflare: a Worker with static assets and no script (owner,
+// 2026-11-12: "I'd prefer to use a worker"). Tide is pure static - every
+// network call it makes goes from the browser straight to Open-Meteo, NOAA
+// or BigDataCloud - so the Worker only serves files. Static asset requests
+// are free and do not count against the Workers request quota.
+//
+// The assets are served straight out of apps/tide (no copy step): the
+// directory is resolved relative to this file. apps/tide/.assetsignore keeps
+// the README off the site; apps/tide/_headers sets the response headers.
+//
+// Workers Builds settings (dashboard): root directory `cloudflare/tide`,
+// build command empty, deploy command `npx wrangler deploy`, non-production
+// branch deploy command `npx wrangler versions upload`.
+{
+  "$schema": "https://unpkg.com/wrangler@4.160.1/config-schema.json",
+  "name": "tide",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "../../apps/tide",
+    // Unknown paths answer 404, not index.html with a 200 - see
+    // cloudflare/README.md on why the ip site needed a 404 page for this.
+    "not_found_handling": "none",
+    "html_handling": "auto-trailing-slash"
+  },
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": { "enabled": true }
+}

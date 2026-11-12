@@ -57,6 +57,9 @@ for up to fifteen days. Your place is stored in `localStorage` only and
 never sent anywhere except as the coordinates of the sea-level request.
 Telemetry (`telemetry.js`) ships dormant — `ENDPOINT = ''`.
 
-**To remove:** delete `apps/tide/` and run
-`aws s3 rm s3://<bucket>/tide/ --recursive`, then drop its line from
-`hosting/site-root/index.html` and re-sync the landing page.
+**Hosting:** a Cloudflare Worker with static assets, no script —
+`../../cloudflare/tide/wrangler.jsonc` serves this folder as it is.
+See `../../cloudflare/README.md`.
+
+**To remove:** delete `apps/tide/` and `cloudflare/tide/`, and delete the
+`tide` Worker in the Cloudflare dashboard.

@@ -1,0 +1,3 @@
+# Files in apps/tide that the Cloudflare Worker (cloudflare/tide) does not
+# publish. Format is .gitignore's.
+README.md
