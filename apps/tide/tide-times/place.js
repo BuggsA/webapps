@@ -46,7 +46,7 @@
   function ft(v) { return (Math.round(v * 10) / 10).toFixed(1).replace('-0.0', '0.0') + ' ft'; }
   function span(ms) {
     var m = Math.round(ms / 60000), h = Math.floor(m / 60);
-    return h ? h + ' h ' + String(m % 60).padStart(2, '0') : (m % 60) + ' min';
+    return h ? h + ' h ' + String(m % 60).padStart(2, '0') + ' min' : (m % 60) + ' min';
   }
 
   function start() {
@@ -105,6 +105,30 @@
     }
     elSrc.textContent = source;
   }
+
+  // Water temperature: only on pages whose gauge measures it (S.wt, decided
+  // at build from NOAA). NOAA's latest reading, with its time; a reading
+  // more than six hours old says so rather than passing for now.
+  function waterTemp() {
+    var el = document.getElementById('now-temp');
+    if (!S.wt || !el) return;
+    var url = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_temperature&date=latest'
+      + '&station=' + S.id + '&units=english&time_zone=lst_ldt&format=json&application=tidehere';
+    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var d = j.data && j.data[0];
+      if (!d || d.v === '' || isNaN(+d.v)) throw new Error('no reading');
+      var f = +d.v, c = (f - 32) * 5 / 9, t = localToMs(d.t), age = Date.now() - t;
+      var when = age > 6 * 3600e3 ? 'last reading ' + fDay.format(new Date(t)) + ', ' + time(t) : 'measured ' + time(t);
+      el.innerHTML = 'Water <span class="n">' + f.toFixed(1) + ' \u00b0F</span> <span class="n" style="color:var(--chrome-soft)">('
+        + c.toFixed(1) + ' \u00b0C)</span> <span style="color:var(--chrome-soft)">\u00b7 ' + when + '</span>';
+      el.hidden = false;
+    }).catch(function () {
+      el.textContent = 'The water temperature gauge is not reporting right now.';
+      el.style.color = 'var(--chrome-soft)';
+      el.hidden = false;
+    });
+  }
+  waterTemp();
 
   var b = start();
   fromNoaa(b).then(function (t) {

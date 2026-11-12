@@ -59,6 +59,7 @@ p { margin: 0 0 1rem; }
 .now { border-top: 1px solid var(--chrome-line); padding-top: 1rem; }
 .now-state { font-size: 1.375rem; margin: 0 0 0.25rem; min-height: 2rem; }
 .now-state .n { font-size: 1.25rem; }
+.now-temp { margin: 0 0 0.25rem; }
 .now-src { font-size: 0.875rem; color: var(--chrome-soft); margin: 0 0 1.25rem; }
 
 /* the week: one row per day, its turns side by side */

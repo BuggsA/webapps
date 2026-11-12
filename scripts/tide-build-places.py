@@ -197,7 +197,12 @@ def load():
         for p in preds:
             dt = p['t']
             rows.append({'date': ymd(dt[:10]), 'time': dt[11:16], 'v': float(p['v']), 'type': p['type']})
+        try:
+            wtemp = bool(json.load(open(os.path.join(d, 'watertemp.json'))))
+        except (OSError, ValueError):
+            wtemp = False
         places.append({
+            'wtemp': wtemp,
             'id': sid, 'name': st['name'].strip(), 'state': st['state'], 'region': region,
             'lat': float(st['lat']), 'lon': float(st['lng']), 'tz': tz,
             'dat': dat, 'meta': dm, 'cons': cons, 'amp': amp, 'rows': rows,
@@ -344,16 +349,19 @@ def page(p, places, v):
     fx = facts(p, places)
     yt = year_tables(p)
     rec = records(p)
-    title_place = f'{p["name"]}, {p["state"] if len(p["state"]) == 2 else p["region"]}'
-    title = f'{title_place} tide times: today’s high & low tides | tidehere'
+    tail = p['state'] if len(p['state']) == 2 else p['region']
+    title_place = p['name'] if tail.lower() in p['name'].lower() else f'{p["name"]}, {tail}'
+    # "water temperature" is promised only where the gauge measures it
+    title = (f'{title_place} tide times & water temperature | tidehere' if p['wtemp']
+             else f'{title_place} tide times: today’s high & low tides | tidehere')
     king = p['king']
-    desc = (f'High and low tide times for {p["name"]}, {p["region"]}, from NOAA station {p["id"]}. '
+    desc = (f'High and low tide times{" and live water temperature" if p["wtemp"] else ""} for {p["name"]}, {p["region"]}, from NOAA station {p["id"]}. '
             f'{p["kind"][0].upper() + p["kind"][1:]} tides'
             + (f', {fft(p["gt_ft"])} on an average day' if p.get('gt_ft') else '')
             + (f'. Biggest tides of {YEAR}: {king[0]["date"].strftime("%b")} {king[0]["date"].day}' if king else '')
             + (f' and {king[1]["date"].strftime("%b")} {king[1]["date"].day}.' if len(king) > 1 else '.'))
     url = f'{SITE}/tide-times/{p["slug"]}/'
-    station = {'id': p['id'], 'name': p['name'], 'tz': p['tz'],
+    station = {'id': p['id'], 'name': p['name'], 'tz': p['tz'], 'wt': p['wtemp'],
                'off': round((p['dat']['MSL'] - p['dat']['MLLW']) * M2FT, 4), 'cons': p['engine']}
     ld = {'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebPage', '@id': url, 'url': url, 'name': f'{title_place} tide times',
@@ -404,6 +412,7 @@ def page(p, places, v):
 <section class="now" aria-labelledby="h-now">
 <h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
 <p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<p class="now-temp" id="now-temp" hidden></p>
 <p class="now-src" id="now-src"></p>
 <table class="week" id="week"></table>
 <noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:

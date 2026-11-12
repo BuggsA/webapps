@@ -13,6 +13,9 @@ scripts/.tide-places-cache/<id>/:
     hilo-YEAR.json a whole year of official high/low predictions, MLLW, feet,
                    local standard/daylight time - the year's biggest and
                    smallest tides are read from these, never computed
+    watertemp.json the latest water temperature reading, or {} if the gauge
+                   has none - decides whether the page offers live water
+                   temperature (and says so in its title). Delete it to recheck.
 
 All keyless and public. Files already present are not fetched again;
 delete the folder to refresh. scripts/tide-build-places.py reads the cache.
@@ -68,6 +71,16 @@ def main():
                  '&datum=MLLW&units=english&time_zone=lst_ldt&interval=hilo&format=json')
         except Exception as e:
             bad.append((sid, s['name'], str(e)[:80]))
+        wt = os.path.join(d, 'watertemp.json')
+        if not os.path.exists(wt):
+            try:
+                j = get(f'{DG}?product=water_temperature&date=latest&station={sid}'
+                        '&units=english&time_zone=lst_ldt&format=json', tries=2)
+                j = j['data'][0] if j.get('data') else {}
+            except Exception:
+                j = {}
+            with open(wt, 'w') as f:
+                json.dump(j, f)
         if n % 20 == 0:
             print(n, '/', len(sts))
     print('done;', len(bad), 'failed')
