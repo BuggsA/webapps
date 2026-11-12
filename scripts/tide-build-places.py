@@ -33,7 +33,13 @@ CACHE = os.path.join(ROOT, 'scripts', '.tide-places-cache')
 APP = os.path.join(ROOT, 'apps', 'tide')
 OUT = os.path.join(APP, 'tide-times')
 SITE = 'https://tidehere.app'
-YEAR = int(sys.argv[1]) if len(sys.argv) > 1 else datetime.date.today().year + 1
+ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
+YEAR = int(ARGS[0]) if ARGS else datetime.date.today().year + 1
+# --preview-names: apply every DRAFT entry of tide-place-names.json, print the
+# resulting titles and addresses, write nothing. For reviewing the list.
+PREVIEW_NAMES = '--preview-names' in sys.argv
+NAMES = {k: v for k, v in json.load(open(os.path.join(ROOT, 'scripts', 'tide-place-names.json'))).items()
+         if not k.startswith('_')}
 TODAY = datetime.date.today().isoformat()
 M2FT = 3.28084
 
@@ -201,9 +207,12 @@ def load():
             wtemp = bool(json.load(open(os.path.join(d, 'watertemp.json'))))
         except (OSError, ValueError):
             wtemp = False
+        noaa_name = st['name'].strip()
+        nm = NAMES.get(sid)
+        name = nm['place'] if nm and (nm.get('approved') or PREVIEW_NAMES) else noaa_name
         places.append({
-            'wtemp': wtemp,
-            'id': sid, 'name': st['name'].strip(), 'state': st['state'], 'region': region,
+            'wtemp': wtemp, 'noaa_name': noaa_name,
+            'id': sid, 'name': name, 'state': st['state'], 'region': region,
             'lat': float(st['lat']), 'lon': float(st['lng']), 'tz': tz,
             'dat': dat, 'meta': dm, 'cons': cons, 'amp': amp, 'rows': rows,
             'engine': [[c['name'], round(c['amplitude'] * M2FT, 4), c['phase_GMT']] for c in cons if c['name'] in names],
@@ -378,16 +387,35 @@ def page(p, places, v):
     yt = year_tables(p)
     rec = records(p)
     tail = p['state'] if len(p['state']) == 2 else p['region']
-    title_place = p['name'] if tail.lower() in p['name'].lower() else f'{p["name"]}, {tail}'
-    # "water temperature" is promised only where the gauge measures it
-    title = (f'{title_place} tide times & water temperature | tidehere' if p['wtemp']
-             else f'{title_place} tide times: today’s high & low tides | tidehere')
+    # whole word, exact case: a substring test read "hi" in "Hilo" as Hawaii
+    title_place = p['name'] if re.search(r'\b' + re.escape(tail) + r'\b', p['name']) else f'{p["name"]}, {tail}'
+    # Titles and descriptions: the first candidate that fits wins - Google cuts
+    # titles at ~65 characters and descriptions at ~158, and a cut one loses
+    # exactly the words that differ from page to page. "Water temperature" is
+    # promised only where the gauge measures it; "tide chart" because the page
+    # draws one and people search for it as often as for "tide times".
+    wt = p['wtemp']
+    titles = ([f'{title_place} tide times, tide chart & water temperature | tidehere',
+               f'{title_place} tide times, tide chart & water temp | tidehere',
+               f'{title_place} tide times, chart & water temp | tidehere'] if wt else []) + [
+        f'{title_place} tide times & tide chart | tidehere',
+        f'{title_place} tide times & chart | tidehere',
+        f'{title_place} tide times | tidehere',
+        f'{title_place} tide times']
+    title = next((t for t in titles if len(t) <= 65), titles[-1])
     king = p['king']
-    desc = (f'High and low tide times{" and live water temperature" if p["wtemp"] else ""} for {p["name"]}, {p["region"]}, from NOAA station {p["id"]}. '
-            f'{p["kind"][0].upper() + p["kind"][1:]} tides'
-            + (f', {fft(p["gt_ft"])} on an average day' if p.get('gt_ft') else '')
-            + (f'. Biggest tides of {YEAR}: {king[0]["date"].strftime("%b")} {king[0]["date"].day}' if king else '')
-            + (f' and {king[1]["date"].strftime("%b")} {king[1]["date"].day}.' if len(king) > 1 else '.'))
+    kind = p['kind'].split(',')[0]
+    kind = {'twice-daily': 'Two tides a day', 'mixed': 'Two unequal tides a day' if p['F'] < 1.5 else 'Mostly one tide a day',
+            'once-daily': 'One tide a day'}[kind]
+    rng = f', {fft(p["gt_ft"])} range' if p.get('gt_ft') else ''
+    kt = (f' Biggest tides of {YEAR}: {king[0]["date"].strftime("%b")} {king[0]["date"].day}'
+          + (f' and {king[1]["date"].strftime("%b")} {king[1]["date"].day}' if len(king) > 1 else '') + '.') if king else ''
+    heads = [f'{title_place} tide times today: high and low tides, tide chart{" and water temperature" if wt else ""}, from NOAA.',
+             f'{title_place} tide times today: high and low tides, tide chart{" and water temp" if wt else ""}.',
+             f'{title_place} tide times: high and low tides and tide chart.']
+    tails = [f' {kind}{rng}.{kt}', f' {kind}{rng}.', '']
+    order = [(0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (2, 1), (1, 2), (2, 2)]   # keep what is searched for first
+    desc = next((heads[h] + tails[t] for h, t in order if len(heads[h] + tails[t]) <= 158), heads[-1])
     url = f'{SITE}/tide-times/{p["slug"]}/'
     station = {'id': p['id'], 'name': p['name'], 'tz': p['tz'], 'wt': p['wtemp'],
                'off': round((p['dat']['MSL'] - p['dat']['MLLW']) * M2FT, 4), 'cons': p['engine']}
@@ -434,7 +462,7 @@ def page(p, places, v):
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#{rid}">{esc(p['region'])}</a></p>
-<h1><span class="h1-place">{esc(p['name'])}</span> <span class="h1-kind">tide times</span></h1>
+<h1><span class="h1-place">{esc(p['name'])}</span> <span class="h1-kind">tide times{(' &middot; NOAA station ' + esc(p['noaa_name'])) if p['noaa_name'] != p['name'] else ''}</span></h1>
 
 <!-- The answer first: rising or falling, the next turn and the one after,
      today's curve. Filled at once from the page's own prediction, then
@@ -446,6 +474,7 @@ def page(p, places, v):
   <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
 </div>
 <p class="now-temp" id="now-temp" hidden></p>
+<p class="cv-lab">Tide chart &middot; today</p>
 <div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
 <div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
 <div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
@@ -565,6 +594,17 @@ def sitemap(places):
 
 def main():
     places = load()
+    if PREVIEW_NAMES:
+        for p in places:
+            p['king'] = []; p['lowest'] = []
+            facts(p, places)
+        for p in sorted(places, key=lambda p: p['slug']):
+            if p['name'] != p['noaa_name']:
+                v = {'css': '', 'js': '', 'harm': ''}
+                h = page(p, places, v)
+                t = re.search(r'<title>(.*?)</title>', h).group(1)
+                print(f'{p["noaa_name"][:38]:38} -> /tide-times/{p["slug"]}/  {html.unescape(t)} ({len(html.unescape(t))})')
+        return
     v = {'css': vhash(os.path.join(OUT, 'place.css')), 'js': vhash(os.path.join(OUT, 'place.js')),
          'harm': vhash(os.path.join(APP, 'lib', 'harmonics.js'))}
     keep = {'place.css', 'place.js', 'index.html'}

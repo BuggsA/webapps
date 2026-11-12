@@ -80,7 +80,8 @@ p { margin: 0 0 1rem; }
 .now-temp .n { font-size: 1.125rem; }
 
 /* today, midnight to midnight */
-.cv { position: relative; margin-top: 0.5rem; }   /* the curve's dots are placed in % of this */
+.cv-lab { font-size: 0.8125rem; color: var(--chrome-faint); margin: 0.75rem 0 0; }
+.cv { position: relative; margin-top: 0.25rem; }   /* the curve's dots are placed in % of this */
 .curve { display: block; width: 100%; height: 6.5rem; overflow: visible; }
 .c-fill { fill: rgba(93, 127, 174, 0.22); }
 .c-line { fill: none; stroke: rgba(243, 238, 228, 0.7); stroke-width: 1.5; }
