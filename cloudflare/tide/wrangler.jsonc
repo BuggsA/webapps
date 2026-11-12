@@ -17,9 +17,9 @@
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "../../apps/tide",
-    // Unknown paths answer 404, not index.html with a 200 - see
-    // cloudflare/README.md on why the ip site needed a 404 page for this.
-    "not_found_handling": "none",
+    // Unknown paths answer apps/tide/404.html with a 404 status - never
+    // index.html with a 200, which search engines read as duplicate pages.
+    "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash"
   },
   "workers_dev": true,

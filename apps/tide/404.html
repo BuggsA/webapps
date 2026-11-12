@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+  The 404 for tide (Cloudflare Worker, static assets - cloudflare/tide).
+  wrangler.jsonc's not_found_handling "404-page" serves this, with a 404
+  status, for any path that is not a file. A wrong turn should look like
+  tide, not a stock error page: the same space behind the Earth, Fraunces,
+  cream words, one hairline. Paths are absolute because this is served at
+  whatever depth the wrong URL had.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<title>Nothing here — Tide</title>
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  @font-face {
+    font-family: "Fraunces";
+    src: url("/fonts/fraunces-latin-var.woff2") format("woff2");
+    font-weight: 300 600; font-display: swap;
+  }
+  :root { --bg: #0a1220; --chrome: rgba(243, 238, 228, 0.92); --chrome-soft: rgba(243, 238, 228, 0.66); --chrome-line: rgba(243, 238, 228, 0.28); }
+  html, body { margin: 0; height: 100%; background: var(--bg); }
+  body {
+    display: grid; place-items: center; padding: 24px; box-sizing: border-box;
+    font-family: "Fraunces", ui-serif, Georgia, serif; color: var(--chrome); text-align: center;
+  }
+  h1 { font-weight: 400; font-size: 2.441rem; margin: 0 0 .75rem; }
+  p { color: var(--chrome-soft); margin: 0 0 1.5rem; font-size: 1.25rem; }
+  a { color: var(--chrome); text-decoration: none; border-bottom: 1px solid var(--chrome-line); font-size: 1.25rem; }
+  a:hover, a:focus-visible { border-bottom-color: var(--chrome); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Nothing here</h1>
+  <p>Only open water at this address.</p>
+  <a href="/">Back to the tide</a>
+</main>
+</body>
+</html>

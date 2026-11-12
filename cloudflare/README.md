@@ -30,6 +30,13 @@ The assets directory is `../../apps/tide`, read in place - no copy step.
 | `cloudflare/tide/wrangler.jsonc` | the Worker: name `tide`, assets from `apps/tide`, unknown paths answer a real 404. |
 | `apps/tide/_headers` | `nosniff`, no Referer, long cache for `fonts/`, a day (+ a week stale) for `data/`. Geolocation is left allowed - "Use my location" needs it. |
 | `apps/tide/.assetsignore` | keeps `README.md` off the site. |
+| `apps/tide/404.html` | served with a 404 for any unknown path (`not_found_handling: "404-page"`), so crawlers never see index.html under a wrong URL. |
+| `robots.txt`, `sitemap.xml`, canonical + Open Graph + JSON-LD in `index.html` | search basics, at the domain **`tidehere.app`** (proposed 2026-11-12, not yet bought). It is written in full in those three files and `site.webmanifest`; if the domain changes, change all four. |
+| `favicon.ico`, `icon-*.png`, `apple-touch-icon.png`, `share.png` | real icon files and the 1200x630 link-preview image, rendered from the page's own favicon and globe by `node scripts/tide-build-icons.js`. |
+
+Once the custom domain is attached, turn the `workers.dev` address off
+(set `"workers_dev": false` in `wrangler.jsonc`) so the same site is not
+indexed twice.
 
 Connect it once in the dashboard (Workers & Pages -> Create -> Import a
 repository -> this repo):
