@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/old-port-tampa-fl/","url":"https://tidehere.app/tide-times/old-port-tampa-fl/","name":"Old Port Tampa, FL tide times","description":"High and low tide times for Old Port Tampa, Florida, from NOAA station 8726607. Mixed, mainly twice-daily tides, 2.5 ft on an average day. Biggest tides of 2027: Jul 4 and Aug 2.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Old Port Tampa","address":{"@type":"PostalAddress","addressRegion":"Florida","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":27.8578,"longitude":-82.5528}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Old Port Tampa","item":"https://tidehere.app/tide-times/old-port-tampa-fl/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#florida">Florida</a></p>
-<h1>Old Port Tampa tide times</h1>
-<p class="sub">Florida &middot; NOAA station <span class="n">8726607</span> &middot; <span class="n">27.858&deg;N 82.553&deg;W</span></p>
+<h1><span class="h1-place">Old Port Tampa</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8726607">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Old Port Tampa at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day, unequal</span></dd></div><div><dt>Typical range</dt><dd><span class="g">2.5 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">3.3 ft</span><span class="gs">Sun, Jul 4</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.1 ft</span><span class="gs">Thu, Jan 21</span></dd></div><div><dt>Record high</dt><dd><span class="g">9.3 ft</span><span class="gs">Sep 27, 2024</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">2 h 27 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Old Port Tampa</h2>
@@ -55,12 +72,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Florida, 27.858&deg;N 82.553&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8726607">8726607</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8726607","name":"Old Port Tampa","tz":"America/New_York","wt":false,"off":1.2959,"cons":[["M2",0.643,216.1],["S2",0.1969,234.0],["N2",0.1017,210.0],["K1",0.5577,57.2],["M4",0.0066,283.1],["O1",0.5052,43.9],["M6",0.0033,303.0],["MK3",0.0262,229.3],["S4",0.0033,1.2],["MN4",0.0033,225.3],["NU2",0.0361,215.0],["MU2",0.0427,22.1],["2N2",0.0098,227.1],["OO1",0.0197,130.8],["LAM2",0.0164,228.8],["S1",0.0558,143.5],["M1",0.0164,100.7],["J1",0.0295,101.9],["SSA",0.1214,58.9],["SA",0.3871,151.2],["MSF",0.0427,7.3],["RHO",0.0262,2.2],["Q1",0.0919,37.1],["T2",0.0131,220.3],["R2",0.0131,196.8],["2Q1",0.0066,4.4],["P1",0.1542,66.9],["2SM2",0.0098,87.1],["M3",0.0066,112.2],["L2",0.0361,235.6],["2MK3",0.0295,204.1],["K2",0.1017,230.1]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

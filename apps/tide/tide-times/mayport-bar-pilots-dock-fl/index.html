@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/mayport-bar-pilots-dock-fl/","url":"https://tidehere.app/tide-times/mayport-bar-pilots-dock-fl/","name":"Mayport (Bar Pilots Dock), FL tide times","description":"High and low tide times and live water temperature for Mayport (Bar Pilots Dock), Florida, from NOAA station 8720218. Twice-daily tides, 5.0 ft on an average day. Biggest tides of 2027: Oct 1 and Oct 29.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Mayport (Bar Pilots Dock)","address":{"@type":"PostalAddress","addressRegion":"Florida","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":30.398167,"longitude":-81.42789}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Mayport (Bar Pilots Dock)","item":"https://tidehere.app/tide-times/mayport-bar-pilots-dock-fl/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#florida">Florida</a></p>
-<h1>Mayport (Bar Pilots Dock) tide times</h1>
-<p class="sub">Florida &middot; NOAA station <span class="n">8720218</span> &middot; <span class="n">30.398&deg;N 81.428&deg;W</span></p>
+<h1><span class="h1-place">Mayport (Bar Pilots Dock)</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8720218">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Mayport (Bar Pilots Dock) at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">5.0 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">6.2 ft</span><span class="gs">Fri, Oct 1</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.3 ft</span><span class="gs">Sat, Jan 23</span></dd></div><div><dt>Record high</dt><dd><span class="g">8.4 ft</span><span class="gs">Nov 10, 2022</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">8 h 20 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Mayport (Bar Pilots Dock)</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Florida, 30.398&deg;N 81.428&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8720218">8720218</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8720218","name":"Mayport (Bar Pilots Dock)","tz":"America/New_York","wt":true,"off":2.4672,"cons":[["M2",2.1883,26.4],["S2",0.3445,49.9],["N2",0.4724,8.2],["K1",0.2756,204.3],["M4",0.1017,163.8],["O1",0.1903,211.0],["M6",0.0295,195.7],["MK3",0.0262,22.2],["S4",0.0131,288.9],["MN4",0.0328,161.2],["NU2",0.1017,5.8],["MU2",0.0492,30.9],["2N2",0.0591,349.2],["OO1",0.0098,245.5],["LAM2",0.0295,39.4],["S1",0.0394,170.8],["M1",0.0098,249.7],["J1",0.0164,209.2],["SSA",0.3051,52.8],["SA",0.374,188.2],["RHO",0.0066,240.4],["Q1",0.0394,207.6],["T2",0.0394,40.1],["R2",0.0197,285.7],["2Q1",0.0066,198.4],["P1",0.0951,201.0],["2SM2",0.0098,73.3],["M3",0.0262,155.8],["L2",0.0755,29.9],["2MK3",0.0164,44.8],["K2",0.0886,47.6],["M8",0.0098,353.1],["MS4",0.0394,179.7]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

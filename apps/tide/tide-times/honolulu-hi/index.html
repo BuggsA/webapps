@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/honolulu-hi/","url":"https://tidehere.app/tide-times/honolulu-hi/","name":"Honolulu, HI tide times","description":"High and low tide times and live water temperature for Honolulu, Hawaii, from NOAA station 1612340. Mixed, mainly twice-daily tides, 1.9 ft on an average day. Biggest tides of 2027: Jul 3 and Aug 1.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Honolulu","address":{"@type":"PostalAddress","addressRegion":"Hawaii","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":21.303333,"longitude":-157.86453}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Honolulu","item":"https://tidehere.app/tide-times/honolulu-hi/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#hawaii">Hawaii</a></p>
-<h1>Honolulu tide times</h1>
-<p class="sub">Hawaii &middot; NOAA station <span class="n">1612340</span> &middot; <span class="n">21.303&deg;N 157.865&deg;W</span></p>
+<h1><span class="h1-place">Honolulu</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=1612340">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Honolulu at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day, unequal</span></dd></div><div><dt>Typical range</dt><dd><span class="g">1.9 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">2.7 ft</span><span class="gs">Sat, Jul 3</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-0.4 ft</span><span class="gs">Wed, Jan 20</span></dd></div><div><dt>Record high</dt><dd><span class="g">3.4 ft</span><span class="gs">Feb 14, 1967</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">4 h 28 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Honolulu</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Hawaii, 21.303&deg;N 157.865&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=1612340">1612340</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"1612340","name":"Honolulu","tz":"Pacific/Honolulu","wt":true,"off":0.8235,"cons":[["M2",0.561,59.4],["S2",0.1837,54.7],["N2",0.1083,48.8],["K1",0.4888,226.8],["M4",0.0033,195.3],["O1",0.2657,215.9],["M6",0.0033,229.7],["MK3",0.0033,342.6],["MN4",0.0033,92.9],["NU2",0.023,56.0],["MU2",0.0131,7.8],["2N2",0.0131,39.9],["OO1",0.0164,251.7],["LAM2",0.0033,76.2],["S1",0.0066,210.0],["M1",0.0164,232.5],["J1",0.0328,238.3],["MM",0.0164,43.4],["SA",0.1575,177.7],["MF",0.0197,44.3],["RHO",0.0066,195.4],["Q1",0.0459,209.6],["T2",0.0131,43.6],["R2",0.0033,357.3],["2Q1",0.0033,231.0],["P1",0.1476,224.9],["2SM2",0.0033,199.8],["M3",0.0033,164.1],["L2",0.0131,49.3],["K2",0.0525,45.7],["MS4",0.0033,104.0]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

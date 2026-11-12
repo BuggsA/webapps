@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/bermuda-st-georges-island-bermuda/","url":"https://tidehere.app/tide-times/bermuda-st-georges-island-bermuda/","name":"Bermuda, St. Georges Island tide times","description":"High and low tide times for Bermuda, St. Georges Island, Bermuda, from NOAA station 2695540. Mixed, mainly twice-daily tides, 2.8 ft on an average day. Biggest tides of 2027: Oct 1 and Oct 29.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Bermuda, St. Georges Island","address":{"@type":"PostalAddress","addressRegion":"Bermuda","addressCountry":"BM"},"geo":{"@type":"GeoCoordinates","latitude":32.3734,"longitude":-64.7033}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Bermuda, St. Georges Island","item":"https://tidehere.app/tide-times/bermuda-st-georges-island-bermuda/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#bermuda">Bermuda</a></p>
-<h1>Bermuda, St. Georges Island tide times</h1>
-<p class="sub">Bermuda &middot; NOAA station <span class="n">2695540</span> &middot; <span class="n">32.373&deg;N 64.703&deg;W</span></p>
+<h1><span class="h1-place">Bermuda, St. Georges Island</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=2695540">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Bermuda, St. Georges Island at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day, unequal</span></dd></div><div><dt>Typical range</dt><dd><span class="g">2.8 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">3.7 ft</span><span class="gs">Fri, Oct 1</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-0.7 ft</span><span class="gs">Sun, Feb 21</span></dd></div><div><dt>Record high</dt><dd><span class="g">4.8 ft</span><span class="gs">Oct 26, 1995</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">8 h 22 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Bermuda, St. Georges Island</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Bermuda, 32.373&deg;N 64.703&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=2695540">2695540</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"2695540","name":"Bermuda, St. Georges Island","tz":"Atlantic/Bermuda","wt":false,"off":1.3353,"cons":[["M2",1.2041,358.6],["S2",0.2625,25.4],["N2",0.2789,336.9],["K1",0.2198,187.0],["M4",0.0033,268.7],["O1",0.1772,192.7],["M6",0.0033,155.4],["NU2",0.0525,336.6],["MU2",0.0427,342.5],["2N2",0.0427,320.5],["OO1",0.0131,194.6],["LAM2",0.0098,8.2],["S1",0.0066,249.1],["M1",0.0098,200.4],["J1",0.0164,205.9],["SSA",0.0394,38.0],["SA",0.3117,192.9],["RHO",0.0098,170.4],["Q1",0.0361,178.0],["T2",0.0197,12.5],["2Q1",0.0066,197.1],["P1",0.0689,188.2],["2SM2",0.0033,352.6],["M3",0.0033,74.8],["L2",0.0361,25.2],["2MK3",0.0033,83.9],["K2",0.0689,26.2],["MS4",0.0033,309.8]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

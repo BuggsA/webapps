@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/montauk-ny/","url":"https://tidehere.app/tide-times/montauk-ny/","name":"Montauk, NY tide times","description":"High and low tide times and live water temperature for Montauk, New York, from NOAA station 8510560. Mixed, mainly twice-daily tides, 2.5 ft on an average day. Biggest tides of 2027: Jul 3 and Aug 1.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Montauk","address":{"@type":"PostalAddress","addressRegion":"New York","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":41.048332,"longitude":-71.95944}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Montauk","item":"https://tidehere.app/tide-times/montauk-ny/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#new-york">New York</a></p>
-<h1>Montauk tide times</h1>
-<p class="sub">New York &middot; NOAA station <span class="n">8510560</span> &middot; <span class="n">41.048&deg;N 71.959&deg;W</span></p>
+<h1><span class="h1-place">Montauk</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8510560">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Montauk at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day, unequal</span></dd></div><div><dt>Typical range</dt><dd><span class="g">2.5 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">3.2 ft</span><span class="gs">Sat, Jul 3</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-0.6 ft</span><span class="gs">Sat, Jan 23</span></dd></div><div><dt>Record high</dt><dd><span class="g">8.4 ft</span><span class="gs">Aug 31, 1954</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">9 h 05 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Montauk</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+New York, 41.048&deg;N 71.959&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8510560">8510560</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8510560","name":"Montauk","tz":"America/New_York","wt":true,"off":1.2369,"cons":[["M2",0.9285,48.2],["S2",0.1936,58.6],["N2",0.2493,25.6],["K1",0.2297,178.9],["M4",0.0722,343.2],["O1",0.1575,207.6],["M6",0.0394,159.9],["MK3",0.0164,11.7],["S4",0.0098,343.7],["MN4",0.0427,310.0],["NU2",0.0394,29.1],["S6",0.0033,243.6],["MU2",0.0591,353.9],["2N2",0.0427,3.2],["OO1",0.0164,193.4],["LAM2",0.0131,146.6],["S1",0.0197,123.4],["M1",0.0164,245.9],["J1",0.0197,203.7],["SA",0.2133,148.7],["RHO",0.0098,199.9],["Q1",0.0427,201.6],["T2",0.0197,43.6],["R2",0.0066,206.4],["2Q1",0.0098,281.9],["P1",0.0787,191.6],["2SM2",0.0098,49.8],["M3",0.0098,21.8],["L2",0.023,142.1],["2MK3",0.023,358.7],["K2",0.0492,59.8],["M8",0.0033,217.9],["MS4",0.0066,15.8]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

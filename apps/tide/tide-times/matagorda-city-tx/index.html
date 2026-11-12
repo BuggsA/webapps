@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/matagorda-city-tx/","url":"https://tidehere.app/tide-times/matagorda-city-tx/","name":"Matagorda City, TX tide times","description":"High and low tide times and live water temperature for Matagorda City, Texas, from NOAA station 8773146. Once-daily tides, 0.5 ft on an average day. Biggest tides of 2027: Oct 21 and Sep 25.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Matagorda City","address":{"@type":"PostalAddress","addressRegion":"Texas","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":28.71,"longitude":-95.9139}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Matagorda City","item":"https://tidehere.app/tide-times/matagorda-city-tx/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#texas">Texas</a></p>
-<h1>Matagorda City tide times</h1>
-<p class="sub">Texas &middot; NOAA station <span class="n">8773146</span> &middot; <span class="n">28.710&deg;N 95.914&deg;W</span></p>
+<h1><span class="h1-place">Matagorda City</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8773146">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Matagorda City at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Once a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">0.5 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">1.0 ft</span><span class="gs">Thu, Oct 21</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-0.7 ft</span><span class="gs">Thu, Feb 4</span></dd></div><div><dt>Record high</dt><dd><span class="g">3.9 ft</span><span class="gs">Sep 22, 2020</span></dd></div></dl>
 </section>
 
 <h2>The tide at Matagorda City</h2>
@@ -55,12 +72,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Texas, 28.710&deg;N 95.914&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8773146">8773146</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8773146","name":"Matagorda City","tz":"America/Chicago","wt":true,"off":0.2723,"cons":[["M2",0.0427,316.8],["S2",0.0164,303.7],["N2",0.0098,300.5],["K1",0.1115,76.9],["M4",0.0066,168.0],["O1",0.1181,72.0],["MK3",0.0066,253.1],["S4",0.0033,219.6],["MN4",0.0033,134.0],["NU2",0.0033,314.2],["2N2",0.0033,229.0],["OO1",0.0131,88.4],["LAM2",0.0033,345.5],["S1",0.0098,144.7],["M1",0.0033,88.3],["J1",0.0066,78.6],["MM",0.0951,27.5],["SSA",0.3707,54.6],["SA",0.2854,148.8],["RHO",0.0033,81.2],["Q1",0.023,54.7],["T2",0.0033,201.8],["R2",0.0033,42.3],["2Q1",0.0033,288.4],["P1",0.0295,79.7],["M3",0.0033,128.1],["L2",0.0033,21.5],["2MK3",0.0066,232.5],["K2",0.0066,351.3],["MS4",0.0033,174.5]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

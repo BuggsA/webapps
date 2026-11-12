@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/wilmington-nc/","url":"https://tidehere.app/tide-times/wilmington-nc/","name":"Wilmington, NC tide times","description":"High and low tide times and live water temperature for Wilmington, North Carolina, from NOAA station 8658120. Twice-daily tides, 4.7 ft on an average day. Biggest tides of 2027: Oct 29 and Oct 1.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Wilmington","address":{"@type":"PostalAddress","addressRegion":"North Carolina","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":34.2267,"longitude":-77.9533}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Wilmington","item":"https://tidehere.app/tide-times/wilmington-nc/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#north-carolina">North Carolina</a></p>
-<h1>Wilmington tide times</h1>
-<p class="sub">North Carolina &middot; NOAA station <span class="n">8658120</span> &middot; <span class="n">34.227&deg;N 77.953&deg;W</span></p>
+<h1><span class="h1-place">Wilmington</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8658120">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Wilmington at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">4.7 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">5.6 ft</span><span class="gs">Fri, Oct 29</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.2 ft</span><span class="gs">Sat, Jan 23</span></dd></div><div><dt>Record high</dt><dd><span class="g">9.0 ft</span><span class="gs">Aug 4, 2020</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">9 h 28 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Wilmington</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+North Carolina, 34.227&deg;N 77.953&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8658120">8658120</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8658120","name":"Wilmington","tz":"America/New_York","wt":true,"off":2.4377,"cons":[["M2",2.1358,59.5],["S2",0.2723,96.2],["N2",0.4265,49.1],["K1",0.2789,227.2],["M4",0.1837,344.0],["O1",0.2165,231.6],["M6",0.1148,271.7],["MK3",0.0591,104.8],["S4",0.0164,127.5],["MN4",0.082,340.5],["NU2",0.0919,37.0],["S6",0.0033,125.5],["MU2",0.0853,139.7],["2N2",0.0525,52.8],["OO1",0.0131,265.7],["LAM2",0.0689,52.0],["S1",0.0689,194.6],["M1",0.0164,276.7],["J1",0.0164,242.1],["SSA",0.1936,56.1],["SA",0.2887,158.4],["RHO",0.0066,228.1],["Q1",0.0427,226.2],["T2",0.0295,74.2],["R2",0.0164,324.8],["2Q1",0.0098,209.1],["P1",0.0919,228.2],["2SM2",0.0066,180.0],["M3",0.023,139.8],["L2",0.1837,52.3],["2MK3",0.0591,89.1],["K2",0.0787,89.1],["M8",0.0164,229.7],["MS4",0.0656,17.4]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

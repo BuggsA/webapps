@@ -275,6 +275,7 @@ def facts(p, all_places):
     m2 = next((c for c in p['cons'] if c['name'] == 'M2'), None)
     if m2 and F < 1.5 and m2.get('phase_local') is not None:
         hwi = (m2['phase_local'] / 28.984104) % 12.4206
+        p['hwi'] = hwi
         out.append(('After the moon', f'High water comes about <span class="big">{hm(hwi)}</span> after the moon is '
                     'highest in the sky.'))
 
@@ -288,6 +289,7 @@ def year_tables(p):
     top = spaced(highs, key=lambda r: -r['v'])
     bot = spaced(lows, key=lambda r: r['v'])
     p['king'] = top
+    p['lowest'] = bot
     neg = sum(1 for r in lows if r['v'] < 0)
     day = [r for r in lows if sun_up(p, r)]
     dbot = spaced(day, key=lambda r: r['v'])
@@ -337,6 +339,32 @@ def records(p):
     except (ValueError, TypeError):
         pass
     return out
+
+
+def glance(p):
+    """The few numbers a hurried reader wants, big - the sentences are below."""
+    short = {'twice-daily': 'Twice a day', 'mixed, mainly twice-daily': 'Twice a day, unequal',
+             'mixed, mainly once-daily': 'Mostly once a day', 'once-daily': 'Once a day'}
+    items = [('Tides', short[p['kind']], '')]
+    if p.get('gt_ft'):
+        items.append(('Typical range', fft(p['gt_ft']), 'high to low'))
+    if p.get('king'):
+        k = p['king'][0]
+        items.append((f'Highest of {YEAR}', fft(k['v']), date_wd(k['date'])))
+    if p.get('lowest'):
+        k = p['lowest'][0]
+        items.append((f'Lowest of {YEAR}', fft(k['v']), date_wd(k['date'])))
+    m = p['meta']
+    try:
+        if m.get('max') is not None and m.get('maxdate'):
+            items.append(('Record high', fft((float(m['max']) - p['dat']['MLLW']) * M2FT), date_long(ymd(m['maxdate']))))
+    except (ValueError, TypeError):
+        pass
+    if p.get('hwi') is not None:
+        items.append(('High water after the moon', hm(p['hwi']), ''))
+    return '<dl class="glance">' + ''.join(
+        f'<div><dt>{esc(a)}</dt><dd><span class="g{"" if re.search(r"[0-9]", b) else " w"}">{esc(b)}</span>'
+        + (f'<span class="gs">{esc(c)}</span>' if c else '') + '</dd></div>' for a, b, c in items) + '</dl>'
 
 
 def dl(items):
@@ -406,17 +434,34 @@ def page(p, places, v):
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#{rid}">{esc(p['region'])}</a></p>
-<h1>{esc(p['name'])} tide times</h1>
-<p class="sub">{esc(p['region'])} &middot; NOAA station <span class="n">{p['id']}</span> &middot; <span class="n">{abs(p['lat']):.3f}&deg;{'N' if p['lat'] >= 0 else 'S'} {abs(p['lon']):.3f}&deg;{'E' if p['lon'] >= 0 else 'W'}</span></p>
+<h1><span class="h1-place">{esc(p['name'])}</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id={p['id']}">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">{esc(p['name'])} at a glance</h2>
+{glance(p)}
 </section>
 
 <h2>The tide at {esc(p['name'])}</h2>
@@ -433,6 +478,7 @@ def page(p, places, v):
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+{esc(p['region'])}, {abs(p['lat']):.3f}&deg;{'N' if p['lat'] >= 0 else 'S'} {abs(p['lon']):.3f}&deg;{'E' if p['lon'] >= 0 else 'W'}.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id={p['id']}">{p['id']}</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>

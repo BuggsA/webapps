@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/port-aransas-tx/","url":"https://tidehere.app/tide-times/port-aransas-tx/","name":"Port Aransas, TX tide times","description":"High and low tide times and live water temperature for Port Aransas, Texas, from NOAA station 8775237. Mixed, mainly once-daily tides, 1.0 ft on an average day. Biggest tides of 2027: Oct 21 and Sep 24.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Port Aransas","address":{"@type":"PostalAddress","addressRegion":"Texas","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":27.8397,"longitude":-97.0725}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Port Aransas","item":"https://tidehere.app/tide-times/port-aransas-tx/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#texas">Texas</a></p>
-<h1>Port Aransas tide times</h1>
-<p class="sub">Texas &middot; NOAA station <span class="n">8775237</span> &middot; <span class="n">27.840&deg;N 97.073&deg;W</span></p>
+<h1><span class="h1-place">Port Aransas</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8775237">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Port Aransas at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Mostly once a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">1.0 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">1.7 ft</span><span class="gs">Thu, Oct 21</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.0 ft</span><span class="gs">Thu, Jan 21</span></dd></div><div><dt>Record high</dt><dd><span class="g">6.2 ft</span><span class="gs">Aug 26, 2017</span></dd></div></dl>
 </section>
 
 <h2>The tide at Port Aransas</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Texas, 27.840&deg;N 97.073&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8775237">8775237</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8775237","name":"Port Aransas","tz":"America/Chicago","wt":true,"off":0.6463,"cons":[["M2",0.164,255.3],["S2",0.0492,262.0],["N2",0.0394,237.3],["K1",0.3084,38.7],["M4",0.0131,106.2],["O1",0.315,31.9],["MK3",0.0098,123.8],["S4",0.0066,251.7],["MN4",0.0066,70.7],["NU2",0.0066,246.1],["MU2",0.0066,204.7],["2N2",0.0066,200.7],["OO1",0.0131,74.3],["S1",0.0066,20.8],["M1",0.0164,46.7],["J1",0.0197,43.3],["SSA",0.374,55.1],["SA",0.2264,161.7],["RHO",0.0131,32.6],["Q1",0.0689,15.3],["T2",0.0066,267.3],["R2",0.0033,17.8],["2Q1",0.0066,354.5],["P1",0.0951,37.3],["M3",0.0066,47.4],["L2",0.0066,300.4],["2MK3",0.0098,98.2],["K2",0.0131,356.6],["MS4",0.0066,113.0]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

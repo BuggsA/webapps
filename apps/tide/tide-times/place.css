@@ -5,7 +5,11 @@
    than an instrument you hold: the space behind the Earth as the ground,
    Fraunces for words, Space Grotesk tabular numerals for every number,
    rows under hairlines - never cards, no rounded corners, no shadows.
-   The page scrolls (the globe's body does not), so nothing here is fixed.
+
+   Owner, 2026-11-12: "It matches but not nice to look at. Slow to receive
+   the information you actually need if you are in a rush." So the first
+   screen is the answer, large: rising or falling, the next turn and the
+   one after, today's curve, today's turns. Everything else is below it.
    Paths are absolute: these pages sit two levels below the root.
    ========================================================================== */
 @font-face {
@@ -23,12 +27,12 @@
   --bg: #0a1220;
   --serif: "Fraunces", ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --num:   "Space Grotesk", "Fraunces", ui-serif, Georgia, serif;
-  --chrome:      rgba(243, 238, 228, 0.92);
-  --chrome-soft: rgba(243, 238, 228, 0.66);
-  --chrome-faint: rgba(243, 238, 228, 0.42);
-  --chrome-line: rgba(243, 238, 228, 0.18);
-  --accent:      rgb(214, 190, 150);
-  --sea:         #5d7fae;
+  --chrome:       rgba(243, 238, 228, 0.92);
+  --chrome-soft:  rgba(243, 238, 228, 0.62);
+  --chrome-faint: rgba(243, 238, 228, 0.38);
+  --chrome-line:  rgba(243, 238, 228, 0.16);
+  --accent:       rgb(214, 190, 150);   /* the one accent - high water */
+  --sea:          #7d9cc6;              /* the sea hue, lifted to read as text - low water */
   --edge: max(1.25rem, env(safe-area-inset-left));
 }
 
@@ -41,65 +45,116 @@ body {
 :focus-visible { outline: 1px solid var(--chrome); outline-offset: 3px; }
 a { color: var(--chrome); text-decoration: none; border-bottom: 1px solid var(--chrome-line); }
 a:hover, a:focus-visible { border-bottom-color: var(--chrome); }
+.n, .num { font-family: var(--num); font-variant-numeric: tabular-nums; }
+.soft { color: var(--chrome-soft); }
 
-.page { max-width: 42rem; margin: 0 auto; padding: 1.5rem var(--edge) 4rem; }
+.page { max-width: 40rem; margin: 0 auto; padding: 1rem var(--edge) 4rem; }
 
-/* the way back: the name of the site, then where you are */
-.crumbs { font-size: 0.875rem; color: var(--chrome-soft); margin: 0 0 2.5rem; }
-.crumbs a { color: var(--chrome-soft); }
-.crumbs span[aria-hidden] { margin: 0 0.4em; color: var(--chrome-faint); }
+.crumbs { font-size: 0.8125rem; color: var(--chrome-faint); margin: 0 0 1.25rem; }
+.crumbs a { color: var(--chrome-soft); border-bottom-color: transparent; }
+.crumbs a:hover { border-bottom-color: var(--chrome-line); }
+.crumbs span[aria-hidden] { margin: 0 0.45em; }
 
-h1 { font-weight: 400; font-size: clamp(2rem, 7vw, 2.75rem); line-height: 1.1; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
-.sub { color: var(--chrome-soft); margin: 0 0 2rem; }
-h2 { font-weight: 400; font-size: 1.375rem; margin: 3rem 0 0.75rem; }
+/* the place's name is the headline; "tide times" sits under it, quietly */
+h1 { font-weight: 400; margin: 0 0 1.5rem; line-height: 1.05; }
+.h1-place { display: block; font-size: clamp(2rem, 8vw, 2.875rem); letter-spacing: -0.015em; }
+.h1-kind { display: block; font-size: 1rem; color: var(--chrome-soft); letter-spacing: 0.01em; margin-top: 0.35rem; }
+
+h2 { font-weight: 400; font-size: 1.25rem; margin: 3rem 0 0.75rem; }
 p { margin: 0 0 1rem; }
-.n, td.n, .num { font-family: var(--num); font-variant-numeric: tabular-nums; }
 
-/* now: the answer first */
-.now { border-top: 1px solid var(--chrome-line); padding-top: 1rem; }
-.now-state { font-size: 1.375rem; margin: 0 0 0.25rem; min-height: 2rem; }
-.now-state .n { font-size: 1.25rem; }
-.now-temp { margin: 0 0 0.25rem; }
-.now-src { font-size: 0.875rem; color: var(--chrome-soft); margin: 0 0 1.25rem; }
+/* ---- the answer ---------------------------------------------------------- */
+.dir { font-size: 1.0625rem; color: var(--chrome-soft); margin: 0 0 0.25rem; }
+.dir .arrow { font-family: var(--num); color: var(--chrome); margin-right: 0.4em; }
 
-/* the week: one row per day, its turns side by side */
-.week { width: 100%; border-collapse: collapse; }
-.week th { text-align: left; font-weight: 400; color: var(--chrome-soft); font-size: 0.9375rem;
-  padding: 0.6rem 0.75rem 0.6rem 0; vertical-align: top; white-space: nowrap; }
-.week td { padding: 0.6rem 0; vertical-align: top; }
-.week tr { border-top: 1px solid var(--chrome-line); }
-.week tr.today th { color: var(--chrome); }
-.turns { display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; margin: 0; padding: 0; list-style: none; }
-.turns li { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.9375rem; white-space: nowrap; }
-.turns .k { font-family: var(--serif); color: var(--chrome-soft); margin-right: 0.35em; }
-.turns .H .k { color: var(--accent); }
-.turns .past { color: var(--chrome-faint); }
-.turns .past .k { color: var(--chrome-faint); }
-.turns .v { color: var(--chrome-soft); margin-left: 0.35em; }
+.next { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1.25rem; margin: 0 0 1rem; }
+.nx { display: flex; flex-direction: column; min-width: 0; }
+.nx .lab { font-size: 0.875rem; color: var(--chrome-soft); }
+.nx .t { font-family: var(--num); font-variant-numeric: tabular-nums; font-weight: 400;
+  font-size: clamp(2.25rem, 11vw, 3.25rem); line-height: 1.05; letter-spacing: -0.02em; white-space: nowrap; }
+.nx .h { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.9375rem; color: var(--chrome-soft); white-space: nowrap; }
+.nx.then { padding-left: 1.25rem; border-left: 1px solid var(--chrome-line); }
+.nx.then .t { font-size: clamp(1.5rem, 7vw, 2rem); color: var(--chrome-soft); padding-top: 0.25em; }
 
-/* facts: label, then what it means */
+.now-temp { margin: 0 0 1rem; font-size: 1rem; }
+.now-temp .n { font-size: 1.125rem; }
+
+/* today, midnight to midnight */
+.cv { position: relative; margin-top: 0.5rem; }   /* the curve's dots are placed in % of this */
+.curve { display: block; width: 100%; height: 6.5rem; overflow: visible; }
+.c-fill { fill: rgba(93, 127, 174, 0.22); }
+.c-line { fill: none; stroke: rgba(243, 238, 228, 0.7); stroke-width: 1.5; }
+.c-tick { stroke: var(--chrome-line); stroke-width: 1; stroke-dasharray: 2 3; }
+.c-now  { stroke: var(--accent); stroke-width: 1; }
+.c-dot { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: var(--chrome); }
+.c-dot.H { background: var(--accent); }
+.c-dot.L { background: var(--sea); }
+.c-dot.now { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; background: var(--bg); border: 1px solid var(--accent); box-sizing: border-box; }
+.ticks { position: relative; height: 1rem; font-family: var(--num); font-size: 0.6875rem;
+  color: var(--chrome-faint); margin: 0.2rem 0 0.75rem; }
+.ticks span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.ticks span:nth-child(1) { left: 25%; }
+.ticks span:nth-child(2) { left: 50%; }
+.ticks span:nth-child(3) { left: 75%; }
+
+/* a day's turns: an aligned row of up to four */
+.wk { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 0.5rem; padding: 0.6rem 0;
+  border-top: 1px solid var(--chrome-line); }
+.wk.today { border-top: 0; padding-top: 0; }
+#week .wk { grid-template-columns: 3.25rem repeat(4, 1fr); }
+.wd { display: flex; flex-direction: column; font-size: 0.875rem; line-height: 1.25; color: var(--chrome); }
+.wd .md { color: var(--chrome-faint); font-size: 0.75rem; }
+.wt { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.wt .k { font-size: 0.75rem; color: var(--sea); }
+.wt.H .k { color: var(--accent); }
+.wt .t { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.9375rem; white-space: nowrap; }
+.wt .h { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.8125rem; color: var(--chrome-soft); }
+.wt.past { opacity: 0.45; }
+.wk.today .t { font-size: 1.0625rem; }
+
+.now-src { font-size: 0.8125rem; color: var(--chrome-faint); margin: 0.75rem 0 0; }
+.now-src a { color: var(--chrome-soft); }
+
+/* ---- at a glance: the numbers, big ------------------------------------------ */
+.glance { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5rem; margin: 0; }
+.glance > div { border-top: 1px solid var(--chrome-line); padding: 0.7rem 0 0.8rem; }
+.glance dt { font-size: 0.8125rem; color: var(--chrome-soft); }
+.glance dd { margin: 0; display: flex; flex-direction: column; }
+.glance .g { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 1.375rem; line-height: 1.2; }
+.glance .g.w { font-family: var(--serif); font-size: 1.25rem; }   /* a word, not a number */
+.glance .gs { font-size: 0.8125rem; color: var(--chrome-faint); }
+@media (min-width: 34rem) { .glance { grid-template-columns: 1fr 1fr 1fr; } }
+
+/* ---- the reading part -------------------------------------------------------- */
 .facts { margin: 0; }
 .facts > div { border-top: 1px solid var(--chrome-line); padding: 0.75rem 0; }
-.facts dt { color: var(--chrome-soft); font-size: 0.9375rem; margin: 0 0 0.2rem; }
-.facts dd { margin: 0; }
-.facts dd .big { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 1.25rem; }
+.facts dt { color: var(--chrome-soft); font-size: 0.875rem; margin: 0 0 0.2rem; }
+.facts dd { margin: 0; color: var(--chrome); }
+.facts dd .big { font-size: 1.125rem; }
 
-/* the year's extremes */
 .year { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
-.year caption { text-align: left; color: var(--chrome-soft); padding: 0 0 0.4rem; }
+/* fixed columns, so the three tables line up under each other */
+.year { table-layout: fixed; }
+.year td:nth-child(1) { width: 31%; }
+.year td:nth-child(2) { width: 21%; }
+.year td:nth-child(3) { width: 17%; }
+.year td.note { white-space: nowrap; }
+.year caption { text-align: left; color: var(--chrome-soft); padding: 0 0 0.4rem; font-size: 0.875rem; }
 .year td { padding: 0.45rem 0.75rem 0.45rem 0; border-top: 1px solid var(--chrome-line); }
 .year td.n { white-space: nowrap; }
 .year td.note { color: var(--chrome-soft); padding-right: 0; }
 .year + .year { margin-top: 1.5rem; }
+.year + p { margin-top: 1rem; }
 
-/* nearby, and the index */
 .places { list-style: none; margin: 0; padding: 0; }
 .places li { border-top: 1px solid var(--chrome-line); padding: 0.55rem 0; display: flex; justify-content: space-between; gap: 1rem; }
 .places .d { font-family: var(--num); font-variant-numeric: tabular-nums; color: var(--chrome-soft); font-size: 0.9375rem; white-space: nowrap; }
 .states { columns: 2 12rem; column-gap: 2rem; margin: 0 0 1rem; padding: 0; list-style: none; }
 .states li { padding: 0.15rem 0; }
+.sub { color: var(--chrome-soft); margin: 0 0 2rem; }
 
 .globe-link { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--chrome-line); }
-.fine { font-size: 0.875rem; color: var(--chrome-soft); margin-top: 2rem; }
-.fine strong { color: var(--chrome); font-weight: 500; }
+.fine { font-size: 0.8125rem; color: var(--chrome-faint); margin-top: 2rem; }
+.fine a { color: var(--chrome-soft); }
+.fine strong { color: var(--chrome-soft); font-weight: 500; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

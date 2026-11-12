@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/kings-bay-msf-pier-ga/","url":"https://tidehere.app/tide-times/kings-bay-msf-pier-ga/","name":"Kings Bay MSF Pier, GA tide times","description":"High and low tide times for Kings Bay MSF Pier, Georgia, from NOAA station 8679598. Twice-daily tides, 6.9 ft on an average day. Biggest tides of 2027: Oct 1 and Oct 29.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Kings Bay MSF Pier","address":{"@type":"PostalAddress","addressRegion":"Georgia","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":30.7781,"longitude":-81.4914}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Kings Bay MSF Pier","item":"https://tidehere.app/tide-times/kings-bay-msf-pier-ga/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#georgia">Georgia</a></p>
-<h1>Kings Bay MSF Pier tide times</h1>
-<p class="sub">Georgia &middot; NOAA station <span class="n">8679598</span> &middot; <span class="n">30.778&deg;N 81.491&deg;W</span></p>
+<h1><span class="h1-place">Kings Bay MSF Pier</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8679598">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Kings Bay MSF Pier at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">6.9 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">8.2 ft</span><span class="gs">Fri, Oct 1</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.4 ft</span><span class="gs">Sat, Jan 23</span></dd></div><div><dt>Record high</dt><dd><span class="g">10.7 ft</span><span class="gs">Nov 10, 2022</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">8 h 45 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Kings Bay MSF Pier</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Georgia, 30.778&deg;N 81.491&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8679598">8679598</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8679598","name":"Kings Bay MSF Pier","tz":"America/New_York","wt":false,"off":3.4908,"cons":[["M2",3.0217,38.6],["S2",0.4331,68.9],["N2",0.6004,25.6],["K1",0.3478,212.3],["M4",0.1181,222.4],["O1",0.2526,216.7],["M6",0.0492,176.8],["MK3",0.0427,43.9],["S4",0.023,1.6],["MN4",0.0459,226.0],["NU2",0.1444,11.9],["S6",0.0033,119.7],["MU2",0.105,83.0],["2N2",0.0886,27.6],["OO1",0.0066,212.3],["LAM2",0.0755,33.5],["S1",0.0427,170.6],["M1",0.0066,248.0],["J1",0.023,195.0],["SSA",0.2887,49.0],["SA",0.3642,184.8],["RHO",0.0098,185.4],["Q1",0.0558,214.8],["T2",0.0328,46.0],["R2",0.0394,277.9],["2Q1",0.0066,171.6],["P1",0.1115,211.5],["2SM2",0.0131,153.3],["M3",0.0394,180.7],["L2",0.1509,25.8],["2MK3",0.0361,41.4],["K2",0.1148,61.0],["M8",0.0098,315.8],["MS4",0.0525,249.2]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

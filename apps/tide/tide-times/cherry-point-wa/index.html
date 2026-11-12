@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/cherry-point-wa/","url":"https://tidehere.app/tide-times/cherry-point-wa/","name":"Cherry Point, WA tide times","description":"High and low tide times for Cherry Point, Washington, from NOAA station 9449424. Mixed, mainly twice-daily tides, 9.1 ft on an average day. Biggest tides of 2027: Jan 24 and Dec 16.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Cherry Point","address":{"@type":"PostalAddress","addressRegion":"Washington","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":48.862717,"longitude":-122.75858}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Cherry Point","item":"https://tidehere.app/tide-times/cherry-point-wa/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#washington">Washington</a></p>
-<h1>Cherry Point tide times</h1>
-<p class="sub">Washington &middot; NOAA station <span class="n">9449424</span> &middot; <span class="n">48.863&deg;N 122.759&deg;W</span></p>
+<h1><span class="h1-place">Cherry Point</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=9449424">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Cherry Point at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day, unequal</span></dd></div><div><dt>Typical range</dt><dd><span class="g">9.1 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">10.6 ft</span><span class="gs">Sun, Jan 24</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-3.5 ft</span><span class="gs">Sun, Jul 4</span></dd></div><div><dt>Record high</dt><dd><span class="g">12.8 ft</span><span class="gs">Dec 16, 1982</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">5 h 12 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Cherry Point</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Washington, 48.863&deg;N 122.759&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=9449424">9449424</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"9449424","name":"Cherry Point","tz":"America/Los_Angeles","wt":false,"off":5.2822,"cons":[["M2",2.3753,22.4],["S2",0.584,50.2],["N2",0.4987,354.7],["K1",2.6542,283.1],["M4",0.0197,158.5],["O1",1.4928,260.5],["M6",0.0098,59.4],["MK3",0.0066,12.7],["S4",0.0033,162.5],["MN4",0.0066,120.0],["NU2",0.0984,2.2],["MU2",0.0525,268.0],["2N2",0.0623,326.9],["OO1",0.1017,325.7],["LAM2",0.0328,56.7],["S1",0.0951,24.9],["M1",0.0689,309.3],["J1",0.1411,321.4],["MM",0.0427,141.5],["SSA",0.0919,227.1],["SA",0.2133,276.9],["RHO",0.0525,253.7],["Q1",0.2461,253.7],["T2",0.0394,42.4],["R2",0.0033,326.2],["2Q1",0.0295,253.8],["P1",0.8202,280.6],["2SM2",0.0098,278.2],["M3",0.0033,76.1],["L2",0.0787,60.4],["2MK3",0.0164,334.4],["K2",0.1608,50.8],["M8",0.0033,80.3],["MS4",0.0098,164.0]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

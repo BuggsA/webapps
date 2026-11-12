@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/calcasieu-pass-la/","url":"https://tidehere.app/tide-times/calcasieu-pass-la/","name":"Calcasieu Pass, LA tide times","description":"High and low tide times and live water temperature for Calcasieu Pass, Louisiana, from NOAA station 8768094. Mixed, mainly once-daily tides, 1.8 ft on an average day. Biggest tides of 2027: Oct 29 and Oct 1.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Calcasieu Pass","address":{"@type":"PostalAddress","addressRegion":"Louisiana","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":29.768167,"longitude":-93.34289}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Calcasieu Pass","item":"https://tidehere.app/tide-times/calcasieu-pass-la/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#louisiana">Louisiana</a></p>
-<h1>Calcasieu Pass tide times</h1>
-<p class="sub">Louisiana &middot; NOAA station <span class="n">8768094</span> &middot; <span class="n">29.768&deg;N 93.343&deg;W</span></p>
+<h1><span class="h1-place">Calcasieu Pass</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8768094">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Calcasieu Pass at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Mostly once a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">1.8 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">2.4 ft</span><span class="gs">Fri, Oct 29</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.4 ft</span><span class="gs">Thu, Jan 21</span></dd></div><div><dt>Record high</dt><dd><span class="g">11.9 ft</span><span class="gs">Sep 13, 2008</span></dd></div></dl>
 </section>
 
 <h2>The tide at Calcasieu Pass</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Louisiana, 29.768&deg;N 93.343&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8768094">8768094</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8768094","name":"Calcasieu Pass","tz":"America/Chicago","wt":true,"off":1.1155,"cons":[["M2",0.4462,254.4],["S2",0.1312,249.7],["N2",0.1181,233.8],["K1",0.4757,31.6],["M4",0.0295,343.1],["O1",0.4331,26.4],["M6",0.0066,259.8],["MK3",0.0295,96.3],["S4",0.0033,65.3],["MN4",0.0131,319.6],["NU2",0.023,243.6],["S6",0.0033,272.6],["MU2",0.0164,201.0],["2N2",0.0164,198.6],["OO1",0.023,57.6],["LAM2",0.0066,31.5],["S1",0.0197,281.2],["M1",0.023,52.7],["J1",0.0262,39.9],["SSA",0.2428,67.5],["SA",0.3609,143.9],["RHO",0.0131,12.4],["Q1",0.0951,7.8],["T2",0.0098,291.8],["R2",0.0033,325.2],["2Q1",0.0164,12.0],["P1",0.1411,25.6],["2SM2",0.0066,317.9],["M3",0.0098,209.5],["L2",0.0098,310.6],["2MK3",0.0295,102.7],["K2",0.0262,313.4],["MS4",0.0131,351.0]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

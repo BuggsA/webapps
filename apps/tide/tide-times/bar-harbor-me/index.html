@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/bar-harbor-me/","url":"https://tidehere.app/tide-times/bar-harbor-me/","name":"Bar Harbor, ME tide times","description":"High and low tide times and live water temperature for Bar Harbor, Maine, from NOAA station 8413320. Twice-daily tides, 11.4 ft on an average day. Biggest tides of 2027: Aug 4 and Jan 23.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Bar Harbor","address":{"@type":"PostalAddress","addressRegion":"Maine","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":44.392193,"longitude":-68.20428}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Bar Harbor","item":"https://tidehere.app/tide-times/bar-harbor-me/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#maine">Maine</a></p>
-<h1>Bar Harbor tide times</h1>
-<p class="sub">Maine &middot; NOAA station <span class="n">8413320</span> &middot; <span class="n">44.392&deg;N 68.204&deg;W</span></p>
+<h1><span class="h1-place">Bar Harbor</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8413320">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Bar Harbor at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">11.4 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">13.2 ft</span><span class="gs">Wed, Aug 4</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.9 ft</span><span class="gs">Sat, Jan 23</span></dd></div><div><dt>Record high</dt><dd><span class="g">15.6 ft</span><span class="gs">Jan 13, 2024</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">10 h 36 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Bar Harbor</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Maine, 44.392&deg;N 68.204&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8413320">8413320</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8413320","name":"Bar Harbor","tz":"America/New_York","wt":true,"off":5.6693,"cons":[["M2",5.1575,91.9],["S2",0.7808,128.1],["N2",1.1352,61.4],["K1",0.4626,193.8],["M4",0.0262,92.8],["O1",0.3609,174.4],["M6",0.0394,48.3],["MK3",0.0033,260.4],["MN4",0.0066,42.9],["NU2",0.2493,67.6],["MU2",0.0262,42.8],["2N2",0.1378,37.1],["OO1",0.0197,231.5],["LAM2",0.0886,125.3],["S1",0.0262,160.4],["M1",0.0197,210.0],["J1",0.0295,196.8],["SSA",0.0394,133.7],["SA",0.1017,135.8],["MSF",0.0394,86.4],["RHO",0.0131,143.0],["Q1",0.0656,155.2],["T2",0.0722,107.7],["R2",0.0164,335.2],["2Q1",0.0066,174.5],["P1",0.1575,190.6],["2SM2",0.0131,68.4],["M3",0.0033,141.4],["L2",0.2625,135.4],["2MK3",0.0131,259.9],["K2",0.21,128.7],["M8",0.0033,329.1],["MS4",0.0098,167.0]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

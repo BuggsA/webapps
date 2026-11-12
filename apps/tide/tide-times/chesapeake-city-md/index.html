@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/chesapeake-city-md/","url":"https://tidehere.app/tide-times/chesapeake-city-md/","name":"Chesapeake City, MD tide times","description":"High and low tide times and live water temperature for Chesapeake City, Maryland, from NOAA station 8573927. Twice-daily tides, 3.2 ft on an average day. Biggest tides of 2027: Sep 30 and Sep 3.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Chesapeake City","address":{"@type":"PostalAddress","addressRegion":"Maryland","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":39.52667,"longitude":-75.81}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Chesapeake City","item":"https://tidehere.app/tide-times/chesapeake-city-md/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#maryland">Maryland</a></p>
-<h1>Chesapeake City tide times</h1>
-<p class="sub">Maryland &middot; NOAA station <span class="n">8573927</span> &middot; <span class="n">39.527&deg;N 75.810&deg;W</span></p>
+<h1><span class="h1-place">Chesapeake City</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8573927">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Chesapeake City at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">3.2 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">3.7 ft</span><span class="gs">Thu, Sep 30</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-0.6 ft</span><span class="gs">Sat, Jan 23</span></dd></div><div><dt>Record high</dt><dd><span class="g">8.7 ft</span><span class="gs">Sep 19, 2003</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">10 h 37 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Chesapeake City</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Maryland, 39.527&deg;N 75.810&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8573927">8573927</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8573927","name":"Chesapeake City","tz":"America/New_York","wt":true,"off":1.5551,"cons":[["M2",1.355,92.4],["S2",0.1804,129.8],["N2",0.2231,72.2],["K1",0.1083,348.4],["M4",0.0722,140.0],["O1",0.0525,7.3],["M6",0.0295,103.9],["MK3",0.0262,280.4],["S4",0.0066,204.9],["MN4",0.023,127.1],["NU2",0.0656,73.3],["MU2",0.0558,214.7],["2N2",0.0295,62.8],["OO1",0.0066,320.0],["LAM2",0.0427,99.5],["S1",0.0295,248.6],["M1",0.0066,111.9],["J1",0.0098,358.6],["SSA",0.128,56.2],["SA",0.4035,131.2],["Q1",0.023,336.0],["T2",0.023,123.0],["R2",0.0033,323.4],["2Q1",0.0098,309.2],["P1",0.023,337.4],["2SM2",0.0066,9.3],["M3",0.0066,283.1],["L2",0.128,112.5],["2MK3",0.023,259.9],["K2",0.0623,139.5],["M8",0.0098,94.5],["MS4",0.0197,179.9]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/texas-point-sabine-pass-tx/","url":"https://tidehere.app/tide-times/texas-point-sabine-pass-tx/","name":"Texas Point, Sabine Pass, TX tide times","description":"High and low tide times and live water temperature for Texas Point, Sabine Pass, Texas, from NOAA station 8770822. Mixed, mainly twice-daily tides, 1.9 ft on an average day. Biggest tides of 2027: Oct 1 and Oct 29.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Texas Point, Sabine Pass","address":{"@type":"PostalAddress","addressRegion":"Texas","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":29.6893,"longitude":-93.8418}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Texas Point, Sabine Pass","item":"https://tidehere.app/tide-times/texas-point-sabine-pass-tx/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#texas">Texas</a></p>
-<h1>Texas Point, Sabine Pass tide times</h1>
-<p class="sub">Texas &middot; NOAA station <span class="n">8770822</span> &middot; <span class="n">29.689&deg;N 93.842&deg;W</span></p>
+<h1><span class="h1-place">Texas Point, Sabine Pass</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8770822">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Texas Point, Sabine Pass at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day, unequal</span></dd></div><div><dt>Typical range</dt><dd><span class="g">1.9 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">2.6 ft</span><span class="gs">Fri, Oct 1</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.5 ft</span><span class="gs">Thu, Jan 21</span></dd></div><div><dt>Record high</dt><dd><span class="g">5.1 ft</span><span class="gs">Aug 27, 2020</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">3 h 10 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Texas Point, Sabine Pass</h2>
@@ -55,12 +72,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Texas, 29.689&deg;N 93.842&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8770822">8770822</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8770822","name":"Texas Point, Sabine Pass","tz":"America/Chicago","wt":true,"off":1.1549,"cons":[["M2",0.4626,265.6],["S2",0.1542,267.5],["N2",0.1214,244.8],["K1",0.479,34.0],["M4",0.0164,326.6],["O1",0.4429,26.4],["MK3",0.0262,128.4],["MN4",0.0066,299.6],["NU2",0.0197,254.9],["S6",0.0033,185.3],["MU2",0.0197,193.5],["2N2",0.0197,219.6],["OO1",0.0262,57.8],["LAM2",0.0033,353.3],["S1",0.0164,279.0],["M1",0.0262,33.6],["J1",0.0295,42.8],["SSA",0.3478,47.0],["SA",0.3379,135.1],["RHO",0.0164,15.9],["Q1",0.0984,10.4],["T2",0.0131,293.5],["R2",0.0098,104.6],["2Q1",0.0131,335.3],["P1",0.1476,28.0],["2SM2",0.0098,330.5],["M3",0.0066,212.2],["L2",0.0098,358.3],["2MK3",0.0262,121.3],["K2",0.0197,337.3],["MS4",0.0098,345.2]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

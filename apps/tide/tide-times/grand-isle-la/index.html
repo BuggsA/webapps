@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/grand-isle-la/","url":"https://tidehere.app/tide-times/grand-isle-la/","name":"Grand Isle, LA tide times","description":"High and low tide times and live water temperature for Grand Isle, Louisiana, from NOAA station 8761724. Once-daily tides, 1.1 ft on an average day. Biggest tides of 2027: Oct 20 and Sep 23.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Grand Isle","address":{"@type":"PostalAddress","addressRegion":"Louisiana","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":29.2633,"longitude":-89.9567}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Grand Isle","item":"https://tidehere.app/tide-times/grand-isle-la/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#louisiana">Louisiana</a></p>
-<h1>Grand Isle tide times</h1>
-<p class="sub">Louisiana &middot; NOAA station <span class="n">8761724</span> &middot; <span class="n">29.263&deg;N 89.957&deg;W</span></p>
+<h1><span class="h1-place">Grand Isle</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8761724">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Grand Isle at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Once a day</span></dd></div><div><dt>Typical range</dt><dd><span class="g">1.1 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">1.8 ft</span><span class="gs">Wed, Oct 20</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-1.1 ft</span><span class="gs">Wed, Jan 20</span></dd></div><div><dt>Record high</dt><dd><span class="g">5.7 ft</span><span class="gs">Aug 29, 2021</span></dd></div></dl>
 </section>
 
 <h2>The tide at Grand Isle</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Louisiana, 29.263&deg;N 89.957&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8761724">8761724</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8761724","name":"Grand Isle","tz":"America/Chicago","wt":true,"off":0.5348,"cons":[["M2",0.0558,160.9],["S2",0.0295,147.8],["N2",0.0164,169.2],["K1",0.4003,34.8],["M4",0.0098,1.6],["O1",0.3937,27.9],["M6",0.0033,16.0],["MK3",0.0066,205.0],["S4",0.0033,115.7],["MN4",0.0066,335.2],["NU2",0.0033,190.3],["MU2",0.0033,137.3],["2N2",0.0033,161.6],["OO1",0.0131,40.9],["S1",0.0131,344.8],["M1",0.0164,60.1],["J1",0.0197,24.4],["SSA",0.2198,57.1],["SA",0.315,150.7],["RHO",0.0164,17.9],["Q1",0.0919,11.4],["T2",0.0033,78.0],["R2",0.0033,304.1],["2Q1",0.0131,351.2],["P1",0.128,34.4],["2SM2",0.0033,94.8],["2MK3",0.0066,202.2],["K2",0.0033,146.2],["MS4",0.0066,6.4]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/sand-point-ak/","url":"https://tidehere.app/tide-times/sand-point-ak/","name":"Sand Point, AK tide times","description":"High and low tide times and live water temperature for Sand Point, Alaska, from NOAA station 9459450. Mixed, mainly twice-daily tides, 7.2 ft on an average day. Biggest tides of 2027: Jan 22 and Dec 14.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Sand Point","address":{"@type":"PostalAddress","addressRegion":"Alaska","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":55.331722,"longitude":-160.50433}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Sand Point","item":"https://tidehere.app/tide-times/sand-point-ak/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#alaska">Alaska</a></p>
-<h1>Sand Point tide times</h1>
-<p class="sub">Alaska &middot; NOAA station <span class="n">9459450</span> &middot; <span class="n">55.332&deg;N 160.504&deg;W</span></p>
+<h1><span class="h1-place">Sand Point</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=9459450">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Sand Point at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day, unequal</span></dd></div><div><dt>Typical range</dt><dd><span class="g">7.2 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">9.2 ft</span><span class="gs">Fri, Jan 22</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-2.7 ft</span><span class="gs">Sun, Jul 4</span></dd></div><div><dt>Record high</dt><dd><span class="g">11.9 ft</span><span class="gs">Dec 23, 2022</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">2 h 07 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Sand Point</h2>
@@ -55,12 +72,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Alaska, 55.332&deg;N 160.504&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=9459450">9459450</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"9459450","name":"Sand Point","tz":"America/Anchorage","wt":true,"off":3.8747,"cons":[["M2",2.4049,322.2],["S2",0.7972,349.4],["N2",0.5217,299.3],["K1",1.3615,285.1],["M4",0.0098,276.1],["O1",0.8727,270.3],["M6",0.0295,26.4],["MK3",0.0033,118.4],["S4",0.0066,200.8],["MN4",0.0033,264.9],["NU2",0.1017,303.0],["S6",0.0066,282.8],["MU2",0.0591,276.2],["2N2",0.0623,273.8],["OO1",0.0459,315.6],["LAM2",0.0164,335.6],["S1",0.0295,65.0],["M1",0.0492,293.7],["J1",0.082,297.6],["SA",0.4659,266.4],["RHO",0.0328,262.2],["Q1",0.1575,263.3],["T2",0.0492,340.2],["2Q1",0.0164,269.0],["P1",0.4265,281.7],["2SM2",0.0066,173.9],["M3",0.0066,226.1],["L2",0.0525,343.7],["2MK3",0.0033,359.7],["K2",0.2165,343.1],["M8",0.0033,36.6],["MS4",0.0098,301.8]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>

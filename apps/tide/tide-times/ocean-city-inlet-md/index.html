@@ -20,23 +20,40 @@
 <meta property="og:image" content="https://tidehere.app/share.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/tide-times/place.css?v=6766dacbb3">
+<link rel="stylesheet" href="/tide-times/place.css?v=48a5da1e11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/tide-times/ocean-city-inlet-md/","url":"https://tidehere.app/tide-times/ocean-city-inlet-md/","name":"Ocean City Inlet, MD tide times","description":"High and low tide times and live water temperature for Ocean City Inlet, Maryland, from NOAA station 8570283. Mixed, mainly twice-daily tides, 2.5 ft on an average day. Biggest tides of 2027: Oct 1 and Oct 29.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"},"about":{"@type":"Place","name":"Ocean City Inlet","address":{"@type":"PostalAddress","addressRegion":"Maryland","addressCountry":"US"},"geo":{"@type":"GeoCoordinates","latitude":38.32833,"longitude":-75.09167}}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Tide times","item":"https://tidehere.app/tide-times/"},{"@type":"ListItem","position":3,"name":"Ocean City Inlet","item":"https://tidehere.app/tide-times/ocean-city-inlet-md/"}]}]}</script>
 </head>
 <body>
 <main class="page">
 <p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span><a href="/tide-times/">Tide times</a><span aria-hidden="true">/</span><a href="/tide-times/#maryland">Maryland</a></p>
-<h1>Ocean City Inlet tide times</h1>
-<p class="sub">Maryland &middot; NOAA station <span class="n">8570283</span> &middot; <span class="n">38.328&deg;N 75.092&deg;W</span></p>
+<h1><span class="h1-place">Ocean City Inlet</span> <span class="h1-kind">tide times</span></h1>
 
-<section class="now" aria-labelledby="h-now">
-<h2 id="h-now" class="visually-hidden">High and low tides this week</h2>
-<p class="now-state" id="now-state" aria-live="polite">Loading the tide&hellip;</p>
+<!-- The answer first: rising or falling, the next turn and the one after,
+     today's curve. Filled at once from the page's own prediction, then
+     replaced by NOAA's official times when they arrive (place.js). -->
+<section class="now" aria-label="The tide now">
+<p class="dir" id="dir" aria-live="polite">&nbsp;</p>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">Next</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">Then</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
 <p class="now-temp" id="now-temp" hidden></p>
+<div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
+<div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
+<div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
 <p class="now-src" id="now-src"></p>
-<table class="week" id="week"></table>
-<noscript><p>The week&rsquo;s tide times need JavaScript. NOAA&rsquo;s official table for this station:
+<noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=8570283">tidesandcurrents.noaa.gov</a>.</p></noscript>
+</section>
+
+<section aria-labelledby="h-week">
+<h2 id="h-week">The next 7 days</h2>
+<div id="week"></div>
+</section>
+
+<section aria-labelledby="h-glance">
+<h2 id="h-glance">Ocean City Inlet at a glance</h2>
+<dl class="glance"><div><dt>Tides</dt><dd><span class="g w">Twice a day, unequal</span></dd></div><div><dt>Typical range</dt><dd><span class="g">2.5 ft</span><span class="gs">high to low</span></dd></div><div><dt>Highest of 2027</dt><dd><span class="g">3.1 ft</span><span class="gs">Fri, Oct 1</span></dd></div><div><dt>Lowest of 2027</dt><dd><span class="g">-0.8 ft</span><span class="gs">Sat, Jan 23</span></dd></div><div><dt>Record high</dt><dd><span class="g">6.1 ft</span><span class="gs">Feb 5, 1998</span></dd></div><div><dt>High water after the moon</dt><dd><span class="g">7 h 43 min</span></dd></div></dl>
 </section>
 
 <h2>The tide at Ocean City Inlet</h2>
@@ -56,12 +73,13 @@
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+Maryland, 38.328&deg;N 75.092&deg;W.
 Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8570283">8570283</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
 <script type="application/json" id="station">{"id":"8570283","name":"Ocean City Inlet","tz":"America/New_York","wt":true,"off":1.2697,"cons":[["M2",0.9974,8.6],["S2",0.1804,31.5],["N2",0.2297,348.5],["K1",0.1804,210.5],["M4",0.0656,171.6],["O1",0.1706,200.0],["M6",0.0066,268.2],["MK3",0.0197,359.5],["S4",0.0098,210.9],["MN4",0.0295,152.5],["NU2",0.0459,346.0],["MU2",0.0295,342.0],["2N2",0.0328,333.4],["OO1",0.0066,203.7],["LAM2",0.0098,20.4],["S1",0.0098,153.8],["M1",0.0033,249.8],["J1",0.0098,197.8],["MM",0.0886,69.5],["SSA",0.1476,69.2],["SA",0.2887,147.2],["RHO",0.0098,181.6],["Q1",0.0262,191.3],["T2",0.0197,6.9],["R2",0.0098,249.8],["P1",0.0623,198.9],["2SM2",0.0033,28.4],["M3",0.0066,13.0],["L2",0.0394,28.2],["2MK3",0.023,0.9],["K2",0.0492,30.5],["M8",0.0066,346.3],["MS4",0.0131,187.9]]}</script>
 <script src="/lib/harmonics.js?v=42541804cf"></script>
-<script src="/tide-times/place.js?v=2c76f52964"></script>
+<script src="/tide-times/place.js?v=b798d7dae7"></script>
 </body>
 </html>
