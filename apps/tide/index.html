@@ -3,11 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tide</title>
-<meta name="description" content="The moon moving the ocean, on a globe seen from the moon — and the next high and low water where you are.">
+<meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0a1220">
 <meta name="app" content="tide">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a1220'/%3E%3Ccircle cx='16' cy='17' r='10' fill='%23223a5e'/%3E%3Cpath d='M6 17c3-2 5 2 8 0s5-2 8 0 4 2 4 2v4H6z' fill='%235d7fae'/%3E%3Ccircle cx='24' cy='6' r='2' fill='%23f2ede4'/%3E%3C/svg%3E">
+<!-- Search and sharing (2026-11-12). The tab title and description name what
+     people type - "tide times", "next high tide" - because "Tide" alone
+     tells a search engine nothing. The page itself is unchanged.
+     The domain is written out in full here and in robots.txt, sitemap.xml and
+     site.webmanifest; if it changes, change all four. -->
+<title>Tide times near me: next high &amp; low tide, anywhere — tidehere</title>
+<meta name="description" content="Tide times for any coast: the next high and low tide, today’s tide chart and the week ahead. Official NOAA predictions where there’s a station, a global model everywhere else. No ads, no tracking.">
+<link rel="canonical" href="https://tidehere.app/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a1220'/%3E%3Ccircle cx='16' cy='17' r='10' fill='%23223a5e'/%3E%3Cpath d='M6 17c3-2 5 2 8 0s5-2 8 0 4 2 4 2v4H6z' fill='%235d7fae'/%3E%3Ccircle cx='24' cy='6' r='2' fill='%23f2ede4'/%3E%3C/svg%3E">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="tidehere">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Tide times, and the moon moving the ocean — tidehere">
+<meta property="og:description" content="The next high and low water where you are, on a globe seen from the moon. Free, no ads, and your place stays on your device.">
+<meta property="og:url" content="https://tidehere.app/">
+<meta property="og:image" content="https://tidehere.app/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Tide - the Earth seen from the moon, its oceans lit by the tide">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[
+{"@type":"WebSite","@id":"https://tidehere.app/#site","url":"https://tidehere.app/","name":"tidehere","inLanguage":"en"},
+{"@type":"WebApplication","@id":"https://tidehere.app/#app","url":"https://tidehere.app/","name":"Tide","isPartOf":{"@id":"https://tidehere.app/#site"},
+ "description":"Tide times for any coast: the next high and low tide, the tide curve for today and the week ahead, moon and sun times, on a globe seen from the moon.",
+ "applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript and WebGL",
+ "isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
+ "image":"https://tidehere.app/share.png"}
+]}</script>
 <link rel="preload" href="fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/spacegrotesk-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="tide.css">

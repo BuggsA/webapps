@@ -18,3 +18,10 @@
 # cached copy while a newer one is fetched in the background.
 /data/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# The icons and share image are rebuilt rarely (scripts/tide-build-icons.js).
+/*.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/favicon.ico
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
