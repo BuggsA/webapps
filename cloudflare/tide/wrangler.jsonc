@@ -9,8 +9,7 @@
 // the README off the site; apps/tide/_headers sets the response headers.
 //
 // Workers Builds settings (dashboard): root directory `cloudflare/tide`,
-// build command empty, deploy command `npx wrangler deploy`, non-production
-// branch deploy command `npx wrangler versions upload`.
+// build command empty, deploy command `npx wrangler deploy`.
 {
   "$schema": "https://unpkg.com/wrangler@4.160.1/config-schema.json",
   "name": "tide",
@@ -22,7 +21,11 @@
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash"
   },
-  "workers_dev": true,
-  "preview_urls": true,
+  // Served only at https://tidehere.app/ (owner, 2026-11-12: "turn off
+  // workers.dev too") so the same site is not indexed at two addresses.
+  // Preview URLs live on workers.dev, so branch previews go with it: check a
+  // branch locally with `npx wrangler dev` before merging.
+  "workers_dev": false,
+  "preview_urls": false,
   "observability": { "enabled": true }
 }

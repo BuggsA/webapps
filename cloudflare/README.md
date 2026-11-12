@@ -34,9 +34,10 @@ The assets directory is `../../apps/tide`, read in place - no copy step.
 | `robots.txt`, `sitemap.xml`, canonical + Open Graph + JSON-LD in `index.html` | search basics, at the domain **`tidehere.app`** (owner, 2026-11-12: bought through Cloudflare, attached to the `tide` Worker). It is written in full in those three files and `site.webmanifest`; if the domain changes, change all four. |
 | `favicon.ico`, `icon-*.png`, `apple-touch-icon.png`, `share.png` | real icon files and the 1200x630 link-preview image, rendered from the page's own favicon and globe by `node scripts/tide-build-icons.js`. |
 
-Once the custom domain is attached, turn the `workers.dev` address off
-(set `"workers_dev": false` in `wrangler.jsonc`) so the same site is not
-indexed twice.
+The `workers.dev` address is off (`"workers_dev": false`, owner,
+2026-11-12) so the site is indexed only at tidehere.app. Preview URLs live
+on workers.dev, so tide has no branch previews: try a branch with
+`npx wrangler dev` in `cloudflare/tide`.
 
 Connect it once in the dashboard (Workers & Pages -> Create -> Import a
 repository -> this repo):
@@ -48,11 +49,9 @@ repository -> this repo):
 | Root directory (Advanced) | `cloudflare/tide` |
 | Build command | *(empty)* |
 | Deploy command | `npx wrangler deploy` |
-| Non-production branch builds | on, deploy command `npx wrangler versions upload` |
+| Non-production branch builds | off - with workers.dev off there is no preview URL to upload to |
 
-As with Pages, a merge to `master` is the production deploy. Other
-branches upload a version with its own preview URL
-(`<branch>-tide.<account>.workers.dev`); it is not live traffic.
+As with Pages, a merge to `master` is the production deploy.
 
 Try it locally (Node required):
 
