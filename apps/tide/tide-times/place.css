@@ -1,0 +1,104 @@
+/* ==========================================================================
+   Tide times - the place pages (/tide-times/<place>/) and their index.
+
+   The same material as the globe (tide.css), set as a page you read rather
+   than an instrument you hold: the space behind the Earth as the ground,
+   Fraunces for words, Space Grotesk tabular numerals for every number,
+   rows under hairlines - never cards, no rounded corners, no shadows.
+   The page scrolls (the globe's body does not), so nothing here is fixed.
+   Paths are absolute: these pages sit two levels below the root.
+   ========================================================================== */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-latin-var.woff2") format("woff2");
+  font-weight: 300 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/spacegrotesk-latin-var.woff2") format("woff2");
+  font-weight: 300 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  --bg: #0a1220;
+  --serif: "Fraunces", ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --num:   "Space Grotesk", "Fraunces", ui-serif, Georgia, serif;
+  --chrome:      rgba(243, 238, 228, 0.92);
+  --chrome-soft: rgba(243, 238, 228, 0.66);
+  --chrome-faint: rgba(243, 238, 228, 0.42);
+  --chrome-line: rgba(243, 238, 228, 0.18);
+  --accent:      rgb(214, 190, 150);
+  --sea:         #5d7fae;
+  --edge: max(1.25rem, env(safe-area-inset-left));
+}
+
+html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+body {
+  margin: 0; background: var(--bg); color: var(--chrome);
+  font-family: var(--serif); font-size: 1.0625rem; line-height: 1.5;
+  -webkit-font-smoothing: antialiased; font-optical-sizing: auto; font-synthesis: none;
+}
+:focus-visible { outline: 1px solid var(--chrome); outline-offset: 3px; }
+a { color: var(--chrome); text-decoration: none; border-bottom: 1px solid var(--chrome-line); }
+a:hover, a:focus-visible { border-bottom-color: var(--chrome); }
+
+.page { max-width: 42rem; margin: 0 auto; padding: 1.5rem var(--edge) 4rem; }
+
+/* the way back: the name of the site, then where you are */
+.crumbs { font-size: 0.875rem; color: var(--chrome-soft); margin: 0 0 2.5rem; }
+.crumbs a { color: var(--chrome-soft); }
+.crumbs span[aria-hidden] { margin: 0 0.4em; color: var(--chrome-faint); }
+
+h1 { font-weight: 400; font-size: clamp(2rem, 7vw, 2.75rem); line-height: 1.1; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
+.sub { color: var(--chrome-soft); margin: 0 0 2rem; }
+h2 { font-weight: 400; font-size: 1.375rem; margin: 3rem 0 0.75rem; }
+p { margin: 0 0 1rem; }
+.n, td.n, .num { font-family: var(--num); font-variant-numeric: tabular-nums; }
+
+/* now: the answer first */
+.now { border-top: 1px solid var(--chrome-line); padding-top: 1rem; }
+.now-state { font-size: 1.375rem; margin: 0 0 0.25rem; min-height: 2rem; }
+.now-state .n { font-size: 1.25rem; }
+.now-src { font-size: 0.875rem; color: var(--chrome-soft); margin: 0 0 1.25rem; }
+
+/* the week: one row per day, its turns side by side */
+.week { width: 100%; border-collapse: collapse; }
+.week th { text-align: left; font-weight: 400; color: var(--chrome-soft); font-size: 0.9375rem;
+  padding: 0.6rem 0.75rem 0.6rem 0; vertical-align: top; white-space: nowrap; }
+.week td { padding: 0.6rem 0; vertical-align: top; }
+.week tr { border-top: 1px solid var(--chrome-line); }
+.week tr.today th { color: var(--chrome); }
+.turns { display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; margin: 0; padding: 0; list-style: none; }
+.turns li { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.9375rem; white-space: nowrap; }
+.turns .k { font-family: var(--serif); color: var(--chrome-soft); margin-right: 0.35em; }
+.turns .H .k { color: var(--accent); }
+.turns .past { color: var(--chrome-faint); }
+.turns .past .k { color: var(--chrome-faint); }
+.turns .v { color: var(--chrome-soft); margin-left: 0.35em; }
+
+/* facts: label, then what it means */
+.facts { margin: 0; }
+.facts > div { border-top: 1px solid var(--chrome-line); padding: 0.75rem 0; }
+.facts dt { color: var(--chrome-soft); font-size: 0.9375rem; margin: 0 0 0.2rem; }
+.facts dd { margin: 0; }
+.facts dd .big { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 1.25rem; }
+
+/* the year's extremes */
+.year { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.year caption { text-align: left; color: var(--chrome-soft); padding: 0 0 0.4rem; }
+.year td { padding: 0.45rem 0.75rem 0.45rem 0; border-top: 1px solid var(--chrome-line); }
+.year td.n { white-space: nowrap; }
+.year td.note { color: var(--chrome-soft); padding-right: 0; }
+.year + .year { margin-top: 1.5rem; }
+
+/* nearby, and the index */
+.places { list-style: none; margin: 0; padding: 0; }
+.places li { border-top: 1px solid var(--chrome-line); padding: 0.55rem 0; display: flex; justify-content: space-between; gap: 1rem; }
+.places .d { font-family: var(--num); font-variant-numeric: tabular-nums; color: var(--chrome-soft); font-size: 0.9375rem; white-space: nowrap; }
+.states { columns: 2 12rem; column-gap: 2rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.states li { padding: 0.15rem 0; }
+
+.globe-link { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--chrome-line); }
+.fine { font-size: 0.875rem; color: var(--chrome-soft); margin-top: 2rem; }
+.fine strong { color: var(--chrome); font-weight: 500; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
