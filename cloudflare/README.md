@@ -11,12 +11,46 @@ symbols turned to `-`, and **cut to 28 characters** (so
 
 | Project | Root directory | Build command | Output directory |
 |---|---|---|---|
-| tide | `apps/tide` | *(none)* | `.` |
 | tonight | `apps/tonight` | *(none)* | `.` |
 | until | `apps/until` | *(none)* | `.` |
 | ip | `cloudflare/ip` | `rm -rf public && cp -r ../../apps/ip public` | `public` |
 
-The apps are self-contained folders, so three of them publish as they are.
+The apps are self-contained folders, so they publish as they are.
+
+## tide is a Worker, not a Pages project (owner, 2026-11-12)
+
+*"I'd prefer to use a worker."* `cloudflare/tide/wrangler.jsonc` is a
+Worker with static assets and **no script**: tide is pure static (every API
+call goes from the browser to Open-Meteo, NOAA or BigDataCloud), so the
+Worker only serves files, and static asset requests are free and unmetered.
+The assets directory is `../../apps/tide`, read in place - no copy step.
+
+| file | why |
+|---|---|
+| `cloudflare/tide/wrangler.jsonc` | the Worker: name `tide`, assets from `apps/tide`, unknown paths answer a real 404. |
+| `apps/tide/_headers` | `nosniff`, no Referer, long cache for `fonts/`, a day (+ a week stale) for `data/`. Geolocation is left allowed - "Use my location" needs it. |
+| `apps/tide/.assetsignore` | keeps `README.md` off the site. |
+
+Connect it once in the dashboard (Workers & Pages -> Create -> Import a
+repository -> this repo):
+
+| setting | value |
+|---|---|
+| Project name | `tide` (must match `name` in `wrangler.jsonc`) |
+| Production branch | `master` |
+| Root directory (Advanced) | `cloudflare/tide` |
+| Build command | *(empty)* |
+| Deploy command | `npx wrangler deploy` |
+| Non-production branch builds | on, deploy command `npx wrangler versions upload` |
+
+As with Pages, a merge to `master` is the production deploy. Other
+branches upload a version with its own preview URL
+(`<branch>-tide.<account>.workers.dev`); it is not live traffic.
+
+Try it locally (Node required):
+
+    cd cloudflare/tide
+    npx wrangler dev
 
 `ip` is the exception: it needs a server answer for the visitor's address.
 On AWS that is the CloudFront Function `hosting/edge/ip-whoami.js` at
