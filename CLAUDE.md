@@ -46,9 +46,13 @@ Cloudflare Pages project. The current work is **`apps/ip`**, a beautiful
   repo. **AWS is dormant:** do not edit `hosting/` or `hosting/edge/`, do not
   maintain the AWS twin of anything, do not prepare `aws`/`cdk`/`deploy-*.ps1`
   commands. They are kept, not deleted, and not to be relied on.
-- **Deploy is human-run, always.** Merging to `master` IS the production
-  deploy: Cloudflare rebuilds every project from it. Claude never pushes to,
-  merges into or opens anything that auto-merges to `master`. Any other
+- **Claude may merge to `master` when the owner asks** (owner, 2026-11-13:
+  *"It shouldn't be very restrictive"*). Merging to `master` IS the
+  production deploy: Cloudflare rebuilds every project from it. When the
+  owner says "merge", "merge if ready" or similar, merge the PR - after
+  checking that the Cloudflare build for the app it touches passed. No
+  separate per-merge approval record is needed. Still: go through a PR (no
+  direct pushes to `master`), and don't merge without being asked. Any other
   branch builds a preview at `<branch>.<project>.pages.dev`, which Cloudflare
   marks `noindex` - push there freely and check it live.
 - **Phase-gated building: one phase, then stop and show it.**
