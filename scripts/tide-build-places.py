@@ -78,6 +78,7 @@ DROP = {
     '8551910': 'Reedy Point - 1.9 mi from Delaware City',
     '8775241': 'Aransas, Aransas Pass - 2.1 mi from Port Aransas',
     '8779749': 'SPI Brazos Santiago - 0.9 mi from South Padre Island CG Station',
+    '8722832': 'Deerfield Beach - 2.3 mi from Boca Raton (Batch A, both extra stations)',
 }
 
 

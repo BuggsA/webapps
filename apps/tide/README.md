@@ -58,7 +58,9 @@ never sent anywhere except as the coordinates of the sea-level request.
 Telemetry (`telemetry.js`) ships dormant — `ENDPOINT = ''`.
 
 **Place pages** (`tide-times/`, 2026-11-12): one page per NOAA tidal
-station, built from NOAA data, and rebuilt every January:
+water-level station, plus (2026-11-16, Batch A) 173 NOAA harmonic prediction
+stations with no live gauge listed in `scripts/tide-extra-stations.json`;
+built from NOAA data, and rebuilt every January:
 
     python scripts/tide-fetch-places.py 2028
     python scripts/tide-build-places.py 2028
