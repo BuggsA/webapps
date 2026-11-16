@@ -189,9 +189,14 @@ def load():
             continue
         try:
             st = json.load(open(os.path.join(d, 'station.json')))
-            dm = json.load(open(os.path.join(d, 'datums.json')))
-            hc = json.load(open(os.path.join(d, 'harcon.json')))
+            sub = st.get('sub', False)
+            # a subordinate station: the REFERENCE station's datums and constants
+            # (for the page's own first answer), plus NOAA's corrections
+            pre = 'ref-' if sub else ''
+            dm = json.load(open(os.path.join(d, pre + 'datums.json')))
+            hc = json.load(open(os.path.join(d, pre + 'harcon.json')))
             hl = json.load(open(os.path.join(d, f'hilo-{YEAR}.json')))
+            off = json.load(open(os.path.join(d, 'offsets.json'))) if sub else None
         except (OSError, ValueError):
             continue
         dat = {x['name']: x['value'] for x in (dm.get('datums') or []) if x.get('value') is not None}
@@ -213,6 +218,14 @@ def load():
             dt = p['t']
             rows.append({'date': ymd(dt[:10]), 'time': dt[11:16], 'v': float(p['v']), 'type': p['type']})
         gauge = st.get('gauge', True)
+        subinfo = None
+        if sub:
+            if off.get('heightAdjustedType') not in ('R', 'F'):
+                print('skip (correction type)', sid, st['name'])
+                continue
+            subinfo = {'hiT': off['timeOffsetHighTide'], 'loT': off['timeOffsetLowTide'],
+                       'hiH': off['heightOffsetHighTide'], 'loH': off['heightOffsetLowTide'],
+                       'adj': off['heightAdjustedType'], 'ref': st['ref'], 'refname': st.get('refname', st['ref'])}
         try:
             wtemp = gauge and bool(json.load(open(os.path.join(d, 'watertemp.json'))))
         except (OSError, ValueError):
@@ -221,12 +234,16 @@ def load():
         nm = NAMES.get(sid)
         name = nm['place'] if nm and (nm.get('approved') or PREVIEW_NAMES) else noaa_name
         places.append({
-            'wtemp': wtemp, 'noaa_name': noaa_name, 'gauge': gauge,
+            'wtemp': wtemp, 'noaa_name': noaa_name, 'gauge': gauge, 'sub': subinfo,
+            'off': (dat['MSL'] - dat['MLLW']) * M2FT,
             'id': sid, 'name': name, 'state': st['state'], 'region': region,
             'lat': float(st['lat']), 'lon': float(st['lng']), 'tz': tz,
-            'dat': dat, 'meta': dm, 'cons': cons, 'amp': amp, 'rows': rows,
+            # a subordinate station's own datums are unknown: it has none of its own
+            'dat': {} if sub else dat, 'meta': {} if sub else dm, 'cons': cons, 'amp': amp, 'rows': rows,
             'engine': [[c['name'], round(c['amplitude'] * M2FT, 4), c['phase_GMT']] for c in cons if c['name'] in names],
         })
+    for p in places:
+        p['gt_m'] = p['dat'].get('GT') if not p['sub'] else daily_range(p['rows']) / M2FT
     for i, a in enumerate(places):
         for b in places[i + 1:]:
             if dist(a, b)[0] < 2.5:
@@ -245,7 +262,75 @@ def load():
     return places
 
 
+def daily_range(rows):
+    """The average day's range, highest high to lowest low, from a year of
+    NOAA's predicted turns - for places with no datums of their own."""
+    days = {}
+    for r in rows:
+        days.setdefault(r['date'], []).append(r)
+    rs = [max(x['v'] for x in v if x['type'] == 'H') - min(x['v'] for x in v if x['type'] == 'L')
+          for v in days.values() if any(x['type'] == 'H' for x in v) and any(x['type'] == 'L' for x in v)]
+    return sum(rs) / len(rs)
+
+
+def rank_line(p, all_places):
+    gts = sorted(x['gt_m'] for x in all_places if x.get('gt_m'))
+    pct = round(100 * sum(1 for g in gts if g < p['gt_m']) / len(gts))
+    if pct >= 50:
+        return f'a bigger range than {pct}% of the {len(gts)} places on this site'
+    return f'a smaller range than {100 - pct}% of the {len(gts)} places on this site'
+
+
+def facts_sub(p, all_places):
+    """A subordinate station: everything from NOAA's own predictions for the
+    place, and how NOAA makes them - no datums or constants of its own."""
+    rows, out = p['rows'], []
+    highs = [r for r in rows if r['type'] == 'H']
+    days = {}
+    for r in highs:
+        days.setdefault(r['date'], []).append(r['v'])
+    hpd = len(highs) / max(1, len({r['date'] for r in rows}))
+    ineq = [abs(v[0] - v[1]) for v in days.values() if len(v) == 2]
+    ineq = sum(ineq) / len(ineq) if ineq else 0
+    gt = p['gt_m'] * M2FT
+    if hpd >= 1.85 and ineq < 0.15 * gt:
+        kind, text = 'twice-daily', (f'Two high tides and two low tides a day, about 12 h 25 min apart. The two highs '
+                                     f'are close: on average just {fft(ineq)} apart.')
+    elif hpd >= 1.85:
+        kind, text = 'mixed, mainly twice-daily', (f'Two highs and two lows on most days, but unequal ones: on average '
+                                                   f'the two highs of a day differ by {fft(ineq)}.')
+    elif hpd >= 1.3:
+        kind, text = 'mixed, mainly once-daily', ('Mostly one large high and one large low a day; on some days a '
+                                                  'small second high and low appear between them.')
+    else:
+        kind = 'once-daily'
+        text = 'Usually just one high tide and one low tide a day, about 24 h 50 min apart'
+        text += ' - the pattern of most of the Gulf of Mexico.' if p['state'] in GULF else '.'
+    p['kind'] = kind
+    out.append(('Pattern', f'<span class="big">{kind[0].upper() + kind[1:]}</span><br>{text} '
+                f'<span style="color:var(--chrome-soft)">From NOAA&rsquo;s {len(highs)} predicted high tides of {YEAR}.</span>'))
+    out.append(('Typical range', f'<span class="big">{fft(gt)}</span> from the day&rsquo;s highest high to its lowest low '
+                f'on an average day of {YEAR} ({fm(gt)}) - {rank_line(p, all_places)}.'))
+    p['gt_ft'] = gt
+    u = p['sub']
+    ref = next((q for q in all_places if q['id'] == u['ref']), None)
+    rname = f'<a href="/tide-times/{ref["slug"]}/">{esc(ref["name"])}</a>' if ref else esc(u['refname'])
+
+    def shift(m):
+        return 'at the same time' if m == 0 else f'{hm(abs(m) / 60)} {"earlier" if m < 0 else "later"}'
+    line = (f'NOAA predicts the tide here from the tide at {rname}: high water comes {shift(u["hiT"])} and low '
+            f'water {shift(u["loT"])}')
+    if u['adj'] == 'R':
+        line += (f'; high tides reach {u["hiH"] * 100:.0f}% of the height there and low tides {u["loH"] * 100:.0f}%.')
+    else:
+        line += '.'
+    out.append(('Predicted from', line))
+    return out
+
+
 def facts(p, all_places):
+    if p['sub']:
+        return facts_sub(p, all_places)
     dat, a = p['dat'], p['amp']
     mllw = dat['MLLW']
     F = (a.get('K1', 0) + a.get('O1', 0)) / (a.get('M2', 0) + a.get('S2', 0))
@@ -278,12 +363,7 @@ def facts(p, all_places):
     # -- range
     gt, mn = dat.get('GT'), dat.get('MN')
     if gt:
-        gts = sorted(x['dat']['GT'] for x in all_places if x['dat'].get('GT'))
-        pct = round(100 * sum(1 for g in gts if g < gt) / len(gts))
-        if pct >= 50:
-            rank = f'a bigger range than {pct}% of the {len(gts)} places on this site'
-        else:
-            rank = f'a smaller range than {100 - pct}% of the {len(gts)} places on this site'
+        rank = rank_line(p, all_places)
         line = f'<span class="big">{fft(gt * M2FT)}</span> from the higher high to the lower low on an average day ({fm(gt * M2FT)}) - {rank}.'
         if mn and F >= 0.25:
             line += f' The mean range, high to low, is {fft(mn * M2FT)}.'
@@ -336,6 +416,8 @@ def year_tables(p):
 
 
 def records(p):
+    if p['sub']:
+        return []
     m, dat = p['meta'], p['dat']
     mllw = dat['MLLW']
     out = []
@@ -426,8 +508,8 @@ def page(p, places, v):
     title = next((t for t in titles if len(t) <= 65), titles[-1])
     king = p['king']
     kind = p['kind'].split(',')[0]
-    kind = {'twice-daily': 'Two tides a day', 'mixed': 'Two unequal tides a day' if p['F'] < 1.5 else 'Mostly one tide a day',
-            'once-daily': 'One tide a day'}[kind]
+    kind = {'twice-daily': 'Two tides a day', 'mixed, mainly twice-daily': 'Two unequal tides a day',
+            'mixed, mainly once-daily': 'Mostly one tide a day', 'once-daily': 'One tide a day'}[p['kind']]
     rng = f', {fft(p["gt_ft"])} range' if p.get('gt_ft') else ''
     kt = (f' Biggest tides of {YEAR}: {king[0]["date"].strftime("%b")} {king[0]["date"].day}'
           + (f' and {king[1]["date"].strftime("%b")} {king[1]["date"].day}' if len(king) > 1 else '') + '.') if king else ''
@@ -439,7 +521,9 @@ def page(p, places, v):
     desc = next((heads[h] + tails[t] for h, t in order if len(heads[h] + tails[t]) <= 158), heads[-1])
     url = f'{SITE}/tide-times/{p["slug"]}/'
     station = {'id': p['id'], 'name': p['name'], 'tz': p['tz'], 'wt': p['wtemp'],
-               'off': round((p['dat']['MSL'] - p['dat']['MLLW']) * M2FT, 4), 'cons': p['engine']}
+               'off': round(p['off'], 4), 'cons': p['engine']}
+    if p['sub']:
+        station['sub'] = {k: p['sub'][k] for k in ('hiT', 'loT', 'hiH', 'loH', 'adj')}
     ld = {'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebPage', '@id': url, 'url': url, 'name': f'{title_place} tide times',
          'description': desc, 'inLanguage': 'en', 'isPartOf': {'@id': SITE + '/#site'},
@@ -527,9 +611,9 @@ def page(p, places, v):
 <p class="globe-link"><a href="/">See the moon move the ocean</a> - the same tide, on a globe seen from the moon.</p>
 <p class="fine">Heights are above mean lower low water (MLLW), the zero of US charts; times are local.
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
-Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
+{'' if p['sub'] else 'Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.'}
 {esc(p['region'])}, {abs(p['lat']):.3f}&deg;{'N' if p['lat'] >= 0 else 'S'} {abs(p['lon']):.3f}&deg;{'E' if p['lon'] >= 0 else 'W'}.
-{'' if p['gauge'] else 'This station has no live gauge: its times are NOAA&rsquo;s predictions from its harmonic constants. '}Predictions{' and records' if p['gauge'] else ''}: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id={p['id']}">{p['id']}</a>.
+{'' if p['gauge'] else ('This station has no live gauge or constants of its own: NOAA predicts it from a nearby station, with corrections for this place. ' if p['sub'] else 'This station has no live gauge: its times are NOAA&rsquo;s predictions from its harmonic constants. ')}Predictions{' and records' if p['gauge'] else ''}: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id={p['id']}">{p['id']}</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>

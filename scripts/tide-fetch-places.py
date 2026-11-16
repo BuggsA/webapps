@@ -18,7 +18,10 @@ scripts/.tide-places-cache/<id>/:
                    temperature (and says so in its title). Delete it to recheck.
 
 Then the extra stations in scripts/tide-extra-stations.json - NOAA harmonic
-prediction stations with no live gauge, at towns people search for. Same
+(batch-a) and subordinate (batch-b) prediction stations with no live gauge,
+at towns people search for. A subordinate station also gets offsets.json
+(NOAA's time and height corrections) and its reference station's
+ref-harcon.json and ref-datums.json. Same
 files, except watertemp.json is always {} (no gauge, no thermometer), and
 station.json is built from NOAA's prediction-station list with "gauge":
 false. That list has no daylight-saving flag, so it is set from the state.
@@ -70,27 +73,43 @@ def fetch_preds(d, sid):
 
 def extras():
     want = json.load(open(os.path.join(ROOT, 'scripts', 'tide-extra-stations.json')))
-    ids = sorted({i for k, v in want.items() if not k.startswith('_') for i in v})
+    ids = sorted({i for k, v in want.items() if k.startswith('batch-') for i in v})
+    state_fix = {i: st for k, v in want.items() if k.startswith('state-') for i, st in v.items()}
     lst = save(os.path.join(CACHE, 'prediction-stations.json'), MD + '/stations.json?type=tidepredictions')
     by = {s['id']: s for s in lst['stations']}
     bad = []
     for sid in ids:
         s = by.get(sid)
-        if not s or s.get('type') != 'R':
-            bad.append((sid, 'not a harmonic prediction station'))
+        if not s or s.get('type') not in ('R', 'S'):
+            bad.append((sid, 'not a NOAA tide prediction station'))
             continue
         d = os.path.join(CACHE, sid)
         os.makedirs(d, exist_ok=True)
-        st = {'id': sid, 'name': s['name'], 'state': s['state'], 'lat': s['lat'], 'lng': s['lng'],
-              'timezonecorr': s['timezonecorr'], 'observedst': s['state'] not in NO_DST, 'gauge': False}
+        state = s['state'] or state_fix.get(sid, '')
+        st = {'id': sid, 'name': s['name'], 'state': state, 'lat': s['lat'], 'lng': s['lng'],
+              'timezonecorr': s['timezonecorr'], 'observedst': state not in NO_DST, 'gauge': False}
+        try:
+            if s['type'] == 'S':
+                # A subordinate station has no constants of its own: NOAA predicts
+                # it from a reference station's highs and lows, shifted and scaled
+                # by these corrections. The page does the same, so it needs the
+                # reference's constants and datums too.
+                off = save(os.path.join(d, 'offsets.json'), f'{MD}/stations/{sid}/tidepredoffsets.json')
+                ref = off['refStationId']
+                st.update({'sub': True, 'ref': ref, 'refname': (by.get(ref) or {}).get('name', ref)})
+                save(os.path.join(d, 'ref-datums.json'), f'{MD}/stations/{ref}/datums.json?units=metric')
+                save(os.path.join(d, 'ref-harcon.json'), f'{MD}/stations/{ref}/harcon.json?units=metric')
+                save(os.path.join(d, f'hilo-{YEAR}.json'),
+                     f'{DG}?product=predictions&station={sid}&begin_date={YEAR}0101&end_date={YEAR}1231'
+                     '&datum=MLLW&units=english&time_zone=lst_ldt&interval=hilo&format=json')
+            else:
+                fetch_preds(d, sid)
+        except Exception as e:
+            bad.append((sid, str(e)[:80]))
         with open(os.path.join(d, 'station.json'), 'w') as f:
             json.dump(st, f)
         with open(os.path.join(d, 'watertemp.json'), 'w') as f:
             json.dump({}, f)
-        try:
-            fetch_preds(d, sid)
-        except Exception as e:
-            bad.append((sid, str(e)[:80]))
     print(len(ids), 'extra stations;', len(bad), 'failed')
     for b in bad:
         print('  ', *b)

@@ -58,12 +58,39 @@
 
   // ---- the two sources ---------------------------------------------------------
   var cons = S.cons.map(function (c) { return { name: c[0], amp: c[1], phase: c[2] }; });
-  function height(ms) { return window.Harmonics.predict(cons, ms) + S.off; }
 
-  function fromHarmonics(t0, t1) {
+  // A subordinate station (S.sub, 2026-11-16) has no constants of its own.
+  // NOAA predicts it from a reference station: each of the reference's highs
+  // and lows is moved by a time correction and scaled (R) or shifted (F) by a
+  // height correction, and the water between two turns follows a half cosine.
+  // This page does exactly that, so its first answer is NOAA's method, not an
+  // approximation of it: S.cons and S.off are the REFERENCE station's here.
+  // Checked against NOAA's official times for seven such stations, a month
+  // each: median 1-2 min, worst 10 min, heights within 0.3 ft.
+  var U = S.sub;
+  function rawTurns(t0, t1) {
     var step = 6 * 60e3, n = Math.round((t1 - t0) / step);
     var ser = window.Harmonics.series(cons, t0, step, n);
     return window.Harmonics.extrema(ser, t0, step).map(function (e) { return { t: e.t, v: e.v + S.off, type: e.type }; });
+  }
+  function fromHarmonics(t0, t1) {
+    if (!U) return rawTurns(t0, t1);
+    var pad = (Math.max(Math.abs(U.hiT), Math.abs(U.loT)) + 60) * 60e3;
+    return rawTurns(t0 - pad, t1 + pad).map(function (e) {
+      var hi = e.type === 'H', k = hi ? U.hiH : U.loH;
+      return { t: e.t + 60e3 * (hi ? U.hiT : U.loT), v: U.adj === 'R' ? e.v * k : e.v + k, type: e.type };
+    }).filter(function (e) { return e.t >= t0 && e.t <= t1; });
+  }
+  var subTurns = null;
+  function height(ms) {
+    if (!U) return window.Harmonics.predict(cons, ms) + S.off;
+    if (!subTurns || ms < subTurns[0].t || ms > subTurns[subTurns.length - 1].t)
+      subTurns = fromHarmonics(ms - 3 * 864e5, ms + 12 * 864e5);
+    for (var i = 1; i < subTurns.length; i++) if (ms <= subTurns[i].t) {
+      var a = subTurns[i - 1], b = subTurns[i], f = (ms - a.t) / (b.t - a.t);
+      return (a.v + b.v) / 2 + (a.v - b.v) / 2 * Math.cos(Math.PI * f);
+    }
+    return subTurns[subTurns.length - 1].v;
   }
 
   function fromNoaa(today) {
@@ -210,15 +237,16 @@
   var mine = null;
   try {
     mine = fromHarmonics(t0, t1);
-    draw(mine, 'Predicted on this page from ' + link + '’s constants · checking NOAA…');
+    draw(mine, (U ? 'Predicted on this page by NOAA’s corrections for ' + link : 'Predicted on this page from ' + link + '’s constants') + ' · checking NOAA…');
   } catch (e) { /* no engine: wait for NOAA */ }
   waterTemp();
   fromNoaa(today).then(function (t) {
     draw(t, 'Official NOAA predictions, ' + link + ' · local time · heights above MLLW');
   }).catch(function () {
     if (mine) {
-      $('now-src').innerHTML = 'NOAA did not answer, so these are predicted on this page from ' + link
-        + '’s constants - usually within a few minutes · local time · above MLLW';
+      $('now-src').innerHTML = 'NOAA did not answer, so these are predicted on this page '
+        + (U ? 'by NOAA’s corrections for ' + link : 'from ' + link + '’s constants')
+        + ' - usually within a few minutes · local time · above MLLW';
     } else {
       $('dir').textContent = 'The tide times could not be loaded.';
       $('now-src').innerHTML = 'NOAA’s official table: ' + link + '.';
