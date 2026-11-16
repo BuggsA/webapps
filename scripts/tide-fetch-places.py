@@ -10,6 +10,8 @@ scripts/.tide-places-cache/<id>/:
     datums.json    tidal datums, observed records, HAT/LAT, HWI/LWI (metric)
     harcon.json    harmonic constants (metric) - shipped to each page so it
                    can predict for itself if NOAA does not answer
+    hilo-lead-YEAR.json  the same from three days before the fetch to the
+                   start of YEAR - so the page carries NOAA's turns for today
     hilo-YEAR.json a whole year of official high/low predictions, MLLW, feet,
                    local standard/daylight time - the year's biggest and
                    smallest tides are read from these, never computed
@@ -63,12 +65,26 @@ def save(path, url):
 NO_DST = {'HI', 'PR', 'VI', 'AS', 'GU'}
 
 
+def fetch_lead(d, sid):
+    """The official turns from a few days before today to the start of YEAR:
+    with hilo-YEAR.json they are written into the page, so its first answer
+    is NOAA's own (2026-11-16). Nothing to fetch once today is in YEAR."""
+    start = datetime.date.today() - datetime.timedelta(days=3)
+    end = datetime.date(YEAR - 1, 12, 31)
+    if start > end:
+        return
+    save(os.path.join(d, f'hilo-lead-{YEAR}.json'),
+         f'{DG}?product=predictions&station={sid}&begin_date={start:%Y%m%d}&end_date={end:%Y%m%d}'
+         '&datum=MLLW&units=english&time_zone=lst_ldt&interval=hilo&format=json')
+
+
 def fetch_preds(d, sid):
     save(os.path.join(d, 'datums.json'), f'{MD}/stations/{sid}/datums.json?units=metric')
     save(os.path.join(d, 'harcon.json'), f'{MD}/stations/{sid}/harcon.json?units=metric')
     save(os.path.join(d, f'hilo-{YEAR}.json'),
          f'{DG}?product=predictions&station={sid}&begin_date={YEAR}0101&end_date={YEAR}1231'
          '&datum=MLLW&units=english&time_zone=lst_ldt&interval=hilo&format=json')
+    fetch_lead(d, sid)
 
 
 def extras():
@@ -102,6 +118,7 @@ def extras():
                 save(os.path.join(d, f'hilo-{YEAR}.json'),
                      f'{DG}?product=predictions&station={sid}&begin_date={YEAR}0101&end_date={YEAR}1231'
                      '&datum=MLLW&units=english&time_zone=lst_ldt&interval=hilo&format=json')
+                fetch_lead(d, sid)
             else:
                 fetch_preds(d, sid)
         except Exception as e:
