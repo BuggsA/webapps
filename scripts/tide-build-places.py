@@ -587,7 +587,7 @@ The number beside each place is its range on an average day; the largest here is
 
 
 def sitemap(places):
-    urls = [SITE + '/', SITE + '/tide-times/'] + [f'{SITE}/tide-times/{p["slug"]}/' for p in sorted(places, key=lambda p: p['slug'])]
+    urls = [SITE + '/', SITE + '/tide-times/', SITE + '/moon/'] + [f'{SITE}/tide-times/{p["slug"]}/' for p in sorted(places, key=lambda p: p['slug'])]
     body = ''.join(f'  <url>\n    <loc>{u}</loc>\n    <lastmod>{TODAY}</lastmod>\n  </url>\n' for u in urls)
     return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{body}</urlset>\n'
 

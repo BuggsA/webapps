@@ -1,0 +1,68 @@
+/* ==========================================================================
+   The moon page (/moon/) - only what the place pages' sheet does not have.
+   Loaded after /tide-times/place.css, which sets the ground, the type and
+   the rows. Same rules: hairlines, never cards, no rounded corners (the
+   moon is the one round thing on the page), no shadows.
+
+   The disc uses the globe's moon colours (tide.js paintMoon): the dark
+   side a faint lift off the ground, the lit side the chrome colour.
+   ========================================================================== */
+
+/* ---- the answer: the disc and its name ---------------------------------- */
+.phase { display: flex; align-items: center; gap: 1.25rem; margin: 0 0 1.5rem; }
+.disc { flex: none; width: clamp(5.5rem, 26vw, 8rem); height: auto; display: block; }
+/* every disc on the page - the big one, the phase rows, the calendar */
+svg .dark { fill: rgba(243, 238, 228, 0.12); }
+svg .lit  { fill: rgba(243, 238, 228, 0.92); }
+.phase-words p { margin: 0; }
+.ph-name { font-size: clamp(1.625rem, 7vw, 2.25rem); line-height: 1.1; letter-spacing: -0.01em; }
+.ph-lit { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 1.0625rem; margin-top: 0.3rem !important; }
+.ph-way { color: var(--chrome-soft); font-size: 0.9375rem; }
+.next .t { font-size: clamp(1.75rem, 8.5vw, 2.5rem) !important; }
+.next .h { white-space: normal !important; }   /* "12:28 pm · in 29 days" wraps on a phone */
+.next .then .t { font-size: clamp(1.25rem, 6vw, 1.75rem) !important; }
+
+/* ---- words that act ------------------------------------------------------ */
+.word { font: inherit; color: var(--chrome-soft); background: none; border: 0; padding: 0;
+  border-bottom: 1px solid var(--chrome-line); cursor: pointer; }
+.word:hover, .word:focus-visible { color: var(--chrome); border-bottom-color: var(--chrome); }
+
+/* ---- your place ------------------------------------------------------------ */
+#here-name { color: var(--chrome-soft); }
+.here-now { margin: 0 0 0.75rem; }
+#here-times { grid-template-columns: repeat(3, 1fr); }
+#here-times .k { color: var(--chrome-soft); }
+.locate { margin: 0; }
+.locate input { width: 100%; box-sizing: border-box; font: inherit; color: var(--chrome);
+  background: transparent; border: 0; border-bottom: 1px solid var(--chrome-line); border-radius: 0;
+  padding: 0.5rem 0; margin: 0 0 0.75rem; -webkit-appearance: none; appearance: none; }
+.locate input:focus { outline: none; border-bottom-color: var(--chrome); }
+.locate input::placeholder { color: var(--chrome-faint); }
+.results { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.results li { border-top: 1px solid var(--chrome-line); }
+.results button { font: inherit; color: var(--chrome); background: none; border: 0; padding: 0.55rem 0;
+  width: 100%; text-align: left; cursor: pointer; }
+.results .p-sub { color: var(--chrome-soft); font-size: 0.875rem; margin-left: 0.4em; }
+.loc-msg { color: var(--chrome-soft); font-size: 0.9375rem; margin: 0.75rem 0 0; }
+
+/* ---- the next phases: a row each ------------------------------------------- */
+.ph-row { display: grid; grid-template-columns: 1.75rem 1fr auto; align-items: center; gap: 0 0.75rem;
+  border-top: 1px solid var(--chrome-line); padding: 0.55rem 0; }
+.ph-row svg { width: 1.375rem; height: 1.375rem; display: block; }
+.ph-row .when { font-family: var(--num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ph-row .in { font-family: var(--num); font-variant-numeric: tabular-nums; color: var(--chrome-soft);
+  font-size: 0.875rem; white-space: nowrap; }
+.ph-row.big .nm { color: var(--accent); }   /* new and full: the spring tides */
+
+/* ---- the month --------------------------------------------------------------- */
+.cal-nav { display: flex; justify-content: space-between; font-size: 0.875rem; margin: 0 0 0.5rem; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal .dow { font-size: 0.6875rem; color: var(--chrome-faint); text-align: center; padding: 0 0 0.35rem; }
+.cal .d { display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+  border-top: 1px solid var(--chrome-line); padding: 0.45rem 0 0.4rem; min-width: 0; }
+.cal .d svg { width: 62%; max-width: 2rem; height: auto; display: block; }
+.cal .d .n { font-size: 0.75rem; color: var(--chrome-soft); line-height: 1; }
+.cal .d .q { font-size: 0.625rem; color: var(--accent); line-height: 1; height: 0.625rem; white-space: nowrap; }
+.cal .d .q.small { color: var(--chrome-soft); }
+.cal .d.today .n { color: var(--bg); background: var(--chrome); padding: 0.1rem 0.25rem; }
+.cal .d.blank { border-top-color: transparent; }
