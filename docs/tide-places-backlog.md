@@ -33,6 +33,12 @@ Order is by what we expect to bring the most searches for the least work.
 
 ## Batch two: more places
 
+**Started 2026-11-16 (owner: "yes do 1 and 2"): Batch A** - 175 NOAA *harmonic*
+prediction stations with no live gauge, at towns and beaches people search for
+(`scripts/tide-extra-stations.json`). ~620 more such stations exist, mostly
+creeks and remote Alaska. Watch indexing before adding more. Item 5 below
+(subordinate stations) is still NOT approved.
+
 5. **NOAA subordinate stations (~2,200).** These are mostly town and beach
    names, which is what people type. NOAA publishes official high/low
    predictions for them but no harmonic constants or datums. Their pages
