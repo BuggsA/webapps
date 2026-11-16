@@ -397,8 +397,18 @@ def page(p, places, v):
     yt = year_tables(p)
     rec = records(p)
     tail = p['state'] if len(p['state']) == 2 else p['region']
+    # The bracket in a name ("Hilton Head Island (Skull Creek)") tells two
+    # stations in one town apart. Where no other page in the state shares the
+    # town, the title drops it: it cost the title "tide chart", the words
+    # people search with, by pushing it past 65 characters (owner, 2026-11-16).
+    # The headline and address keep the full name.
+    tname = p['name']
+    base = re.sub(r'\s*\([^)]*\)\s*$', '', tname)
+    if base != tname and not any(q is not p and q['state'] == p['state']
+                                 and re.sub(r'\s*\([^)]*\)\s*$', '', q['name']).lower() == base.lower() for q in places):
+        tname = base
     # whole word, exact case: a substring test read "hi" in "Hilo" as Hawaii
-    title_place = p['name'] if re.search(r'\b' + re.escape(tail) + r'\b', p['name']) else f'{p["name"]}, {tail}'
+    title_place = tname if re.search(r'\b' + re.escape(tail) + r'\b', tname) else f'{tname}, {tail}'
     # Titles and descriptions: the first candidate that fits wins - Google cuts
     # titles at ~65 characters and descriptions at ~158, and a cut one loses
     # exactly the words that differ from page to page. "Water temperature" is
