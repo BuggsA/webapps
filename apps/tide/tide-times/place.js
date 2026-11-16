@@ -81,11 +81,17 @@
       return { t: e.t + 60e3 * (hi ? U.hiT : U.loT), v: U.adj === 'R' ? e.v * k : e.v + k, type: e.type };
     }).filter(function (e) { return e.t >= t0 && e.t <= t1; });
   }
+  // A page with no constants (S.cons empty) makes no answer of its own: its
+  // station failed scripts/tide-test-subordinates.js, where the method drew
+  // turns NOAA does not list. It waits for NOAA, and its curve is the half
+  // cosine between NOAA's own turns.
+  var own = cons.length > 0;
   var subTurns = null;
   function height(ms) {
-    if (!U) return window.Harmonics.predict(cons, ms) + S.off;
-    if (!subTurns || ms < subTurns[0].t || ms > subTurns[subTurns.length - 1].t)
+    if (own && !U) return window.Harmonics.predict(cons, ms) + S.off;
+    if (own && (!subTurns || ms < subTurns[0].t || ms > subTurns[subTurns.length - 1].t))
       subTurns = fromHarmonics(ms - 3 * 864e5, ms + 12 * 864e5);
+    if (!subTurns || !subTurns.length) return S.off;
     for (var i = 1; i < subTurns.length; i++) if (ms <= subTurns[i].t) {
       var a = subTurns[i - 1], b = subTurns[i], f = (ms - a.t) / (b.t - a.t);
       return (a.v + b.v) / 2 + (a.v - b.v) / 2 * Math.cos(Math.PI * f);
@@ -95,7 +101,8 @@
 
   function fromNoaa(today) {
     var url = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions'
-      + '&station=' + S.id + '&begin_date=' + today.replace(/-/g, '') + '&range=' + (DAYS * 24 + 12)
+      // from yesterday: the curve needs the turn before midnight (week() skips past days)
+      + '&station=' + S.id + '&begin_date=' + key(dayStart(today) - 3600e3).replace(/-/g, '') + '&range=' + (DAYS * 24 + 36)
       + '&datum=MLLW&units=english&time_zone=lst_ldt&interval=hilo&format=json&application=tidehere';
     return fetch(url).then(function (r) { if (!r.ok) throw new Error('noaa ' + r.status); return r.json(); })
       .then(function (j) {
@@ -235,12 +242,13 @@
   var t0 = dayStart(today) - 14 * 3600e3, t1 = dayStart(today) + (DAYS * 24 + 14) * 3600e3;
   var link = '<a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=' + S.id + '">NOAA ' + S.id + '</a>';
   var mine = null;
-  try {
+  if (own) try {
     mine = fromHarmonics(t0, t1);
     draw(mine, (U ? 'Predicted on this page by NOAA’s corrections for ' + link : 'Predicted on this page from ' + link + '’s constants') + ' · checking NOAA…');
   } catch (e) { /* no engine: wait for NOAA */ }
   waterTemp();
   fromNoaa(today).then(function (t) {
+    if (!own) subTurns = t;
     draw(t, 'Official NOAA predictions, ' + link + ' · local time · heights above MLLW');
   }).catch(function () {
     if (mine) {

@@ -18,11 +18,15 @@ const YEAR = process.argv[2] || String(new Date().getFullYear() + 1);
 const CACHE = path.join(__dirname, '.tide-places-cache'), M2FT = 3.28084;
 const rd = f => JSON.parse(fs.readFileSync(f, 'utf8'));
 const q = (a, f) => a.slice().sort((x, y) => x - y)[Math.floor(f * (a.length - 1))];
+// only the stations the site lists - the ones left out stay in the cache
+const want = rd(path.join(__dirname, 'tide-extra-stations.json'));
+const listed = new Set(Object.keys(want).filter(k => k.startsWith('batch-')).flatMap(k => want[k]));
+const noaaOnly = new Set(want['noaa-only'] || []);    // pages that make no answer of their own
 let pass = 0, fail = 0;
 for (const id of fs.readdirSync(CACHE).sort()) {
   const d = path.join(CACHE, id);
   let st; try { st = rd(path.join(d, 'station.json')); } catch (e) { continue; }
-  if (!st.sub) continue;
+  if (!st.sub || !listed.has(id) || noaaOnly.has(id)) continue;
   let o, hc, dm, hl;
   try { o = rd(path.join(d, 'offsets.json')); hc = rd(path.join(d, 'ref-harcon.json')); dm = rd(path.join(d, 'ref-datums.json')); hl = rd(path.join(d, `hilo-${YEAR}.json`)); }
   catch (e) { console.log('MISSING', id, st.name); fail++; continue; }
@@ -48,12 +52,23 @@ for (const id of fs.readdirSync(CACHE).sort()) {
     for (const e of list) { const dd = Math.min(Math.abs(e.t - loc), Math.abs(e.t - (loc - 3600e3))); if (dd < bd) { bd = dd; best = e; } }
     dt.push(bd / 60e3); dv.push(Math.abs(best.v - +p.v));
   }
-  const ok = q(dt, .5) <= 6 && q(dv, .5) <= 0.25 && q(dt, .95) <= 20 && Math.max(...dv) <= 1;
+  // The other way round: every turn the page would show must be one NOAA
+  // shows. Matching only NOAA's turns to ours missed Lahaina, where the page
+  // drew a near-flat extra low and high (0.7 ft, 0.7 ft) that NOAA leaves out.
+  const official = preds.map(p => ({ t: Date.parse(p.t.replace(' ', 'T') + 'Z') - tzms, type: p.type }));
+  const y0 = official[0].t, y1 = official[official.length - 1].t;
+  let extra = 0, mine = 0;
+  for (const e of ex) {
+    if (e.t < y0 + 864e5 || e.t > y1 - 864e5) continue;
+    mine++;
+    if (!official.some(o => o.type === e.type && (Math.abs(o.t - e.t) < 3600e3 || Math.abs(o.t - 3600e3 - e.t) < 3600e3))) extra++;
+  }
+  const ok = extra === 0 && q(dt, .5) <= 6 && q(dv, .5) <= 0.25 && q(dt, .95) <= 20 && Math.max(...dv) <= 1;
   ok ? pass++ : fail++;
   if (!ok || process.argv.includes('-v'))
     console.log(ok ? 'ok  ' : 'FAIL', id, st.name, `(${o.heightAdjustedType}, ref ${o.refStationId})`,
       `time median ${q(dt, .5).toFixed(0)} / 95% ${q(dt, .95).toFixed(0)} / worst ${Math.max(...dt).toFixed(0)} min,`,
-      `height median ${q(dv, .5).toFixed(2)} / worst ${Math.max(...dv).toFixed(2)} ft`);
+      `height median ${q(dv, .5).toFixed(2)} / worst ${Math.max(...dv).toFixed(2)} ft,`, `${extra} of ${mine} turns not NOAA's`);
 }
 console.log(`${pass} pass, ${fail} fail`);
 process.exitCode = fail ? 1 : 0;

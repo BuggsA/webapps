@@ -5,7 +5,8 @@
   "They have harmonic constants and tidal datums but no live gauge, so their pages carry no water temperature and no",
   "observed records. Read by scripts/tide-fetch-places.py; names for them live in tide-place-names.json like any other.",
   "Add stations in batches and watch Search Console indexing between them (docs/tide-places-backlog.md).",
-  "batch-b (owner, 2026-11-16: \"after merge, start batch B\"): NOAA SUBORDINATE stations - no constants of their own; NOAA predicts them from a reference station with time and height corrections, and so do the pages. state-b gives the state where NOAA's list has none."
+  "batch-b (owner, 2026-11-16: \"after merge, start batch B\"): NOAA SUBORDINATE stations - no constants of their own; NOAA predicts them from a reference station with time and height corrections, and so do the pages. state-b gives the state where NOAA's list has none.",
+  "noaa-only: stations whose page makes NO answer of its own - scripts/tide-test-subordinates.js found the subordinate method too far from NOAA (Baltimore and St. Petersburg references) or drawing turns NOAA does not list (Hawaii, Ventura, San Clemente, Port Townsend, Clearwater, Destin). Their pages wait for NOAA; every number written on them is from NOAA's official predictions as before. 2026-11-16."
  ],
  "batch-a": [
   "1611347",
@@ -281,11 +282,36 @@
  "state-b": {
   "TWC0777": "CA",
   "TWC0419": "CA",
-  "TEC4271": "FL",
   "TPT2799": "HI",
   "TPT2797": "HI",
   "TEC2789": "NC",
   "TEC3127": "SC",
-  "TEC3047": "SC"
- }
+  "TEC3047": "SC",
+  "TEC4271": "FL"
+ },
+ "noaa-only": [
+  "1611683",
+  "1612301",
+  "1612668",
+  "1615395",
+  "1617846",
+  "8572108",
+  "8572342",
+  "8576363",
+  "8725744",
+  "8726089",
+  "8726217",
+  "8726247",
+  "8726282",
+  "8726761",
+  "8726905",
+  "8729511",
+  "9411189",
+  "9448794",
+  "9449211",
+  "TEC4271",
+  "TPT2797",
+  "TPT2799",
+  "TWC0419"
+ ]
 }

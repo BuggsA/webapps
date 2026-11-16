@@ -49,6 +49,7 @@ PREVIEW_NAMES = '--preview-names' in sys.argv
 NAMES = {k: v for k, v in json.load(open(os.path.join(ROOT, 'scripts', 'tide-place-names.json'))).items()
          if not k.startswith('_')}
 TODAY = datetime.date.today().isoformat()
+NOAA_ONLY = set(json.load(open(os.path.join(ROOT, 'scripts', 'tide-extra-stations.json'))).get('noaa-only', []))
 M2FT = 3.28084
 
 REGIONS = {
@@ -230,6 +231,8 @@ def load():
             wtemp = gauge and bool(json.load(open(os.path.join(d, 'watertemp.json'))))
         except (OSError, ValueError):
             wtemp = False
+        # no answer of its own on the page: NOAA's official times only (see
+        # tide-extra-stations.json, noaa-only)
         noaa_name = st['name'].strip()
         nm = NAMES.get(sid)
         name = nm['place'] if nm and (nm.get('approved') or PREVIEW_NAMES) else noaa_name
@@ -240,7 +243,7 @@ def load():
             'lat': float(st['lat']), 'lon': float(st['lng']), 'tz': tz,
             # a subordinate station's own datums are unknown: it has none of its own
             'dat': {} if sub else dat, 'meta': {} if sub else dm, 'cons': cons, 'amp': amp, 'rows': rows,
-            'engine': [[c['name'], round(c['amplitude'] * M2FT, 4), c['phase_GMT']] for c in cons if c['name'] in names],
+            'engine': [] if sid in NOAA_ONLY else [[c['name'], round(c['amplitude'] * M2FT, 4), c['phase_GMT']] for c in cons if c['name'] in names],
         })
     for p in places:
         p['gt_m'] = p['dat'].get('GT') if not p['sub'] else daily_range(p['rows']) / M2FT
@@ -522,7 +525,7 @@ def page(p, places, v):
     url = f'{SITE}/tide-times/{p["slug"]}/'
     station = {'id': p['id'], 'name': p['name'], 'tz': p['tz'], 'wt': p['wtemp'],
                'off': round(p['off'], 4), 'cons': p['engine']}
-    if p['sub']:
+    if p['sub'] and p['engine']:
         station['sub'] = {k: p['sub'][k] for k in ('hiT', 'loT', 'hiH', 'loH', 'adj')}
     ld = {'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebPage', '@id': url, 'url': url, 'name': f'{title_place} tide times',
