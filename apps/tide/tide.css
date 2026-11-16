@@ -417,6 +417,9 @@ body {
 .locate-actions { display: flex; gap: var(--sp-5); flex-wrap: wrap; }
 .locate-msg { color: var(--chrome-soft); font-size: 0.92rem; }
 .locate-msg[hidden] { display: none; }
+.locate .locate-more { font-size: 0.9rem; }
+.locate-more a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--chrome-line); }
+.locate-more a:hover, .locate-more a:focus-visible { color: var(--chrome); border-bottom-color: var(--chrome); outline: none; }
 
 /* --- about ---------------------------------------------------------- */
 .about {

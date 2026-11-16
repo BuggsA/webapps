@@ -58,7 +58,9 @@ never sent anywhere except as the coordinates of the sea-level request.
 Telemetry (`telemetry.js`) ships dormant — `ENDPOINT = ''`.
 
 **Place pages** (`tide-times/`, 2026-11-12): one page per NOAA tidal
-station, built from NOAA data, and rebuilt every January:
+water-level station, plus (2026-11-16, Batch A) 173 NOAA harmonic prediction
+stations with no live gauge listed in `scripts/tide-extra-stations.json`;
+built from NOAA data, and rebuilt every January:
 
     python scripts/tide-fetch-places.py 2028
     python scripts/tide-build-places.py 2028
@@ -66,6 +68,16 @@ station, built from NOAA data, and rebuilt every January:
 The generated `tide-times/<place>/` folders and `sitemap.xml` are output;
 edit the script, not them. `tide-times/place.js` fills in the live week.
 What could come next: `../../docs/tide-places-backlog.md`.
+
+**Moon page** (`moon/`, 2026-11-16): *moon phase today* - the phase drawn
+and named, % lit, the next full and new moon, then moonrise/moonset and
+where the moon is now for your place (the globe's saved place, shared via
+`localStorage`), the next eight phases, a month calendar, the spring/neap
+link, and a short FAQ. All computed in the browser from `lib/astronomy.js`;
+only the place search touches the network. Hand-written, not generated:
+after changing `moon.css`, `moon.js` or `lib/astronomy.js`, run
+`python scripts/tide-stamp.py` to refresh the `?v=` stamps. `?t=<ISO time>`
+renders another moment, for checking.
 
 **Hosting:** a Cloudflare Worker with static assets, no script —
 `../../cloudflare/tide/wrangler.jsonc` serves this folder as it is.

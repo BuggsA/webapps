@@ -24,6 +24,14 @@ What each page states, and where it comes from (all NOAA CO-OPS):
   - records: the datums' observed max/min water level, and HAT/LAT.
   - nearby: the other pages, by great-circle distance.
 The live week at the top is filled in the browser by tide-times/place.js.
+
+Two kinds of station (2026-11-16): the live water-level gauges, and the extra
+harmonic prediction stations in tide-extra-stations.json ("gauge": false in
+their station.json). An extra station's datums come from a survey that ran
+months, not decades, so its observed highest/lowest water is NOT a record and
+is left out; it has no thermometer either. Its pattern, ranges, the moon's
+clock, the year's tides and its highest astronomical tide are as sound as a
+gauge's - they are what NOAA's own predictions for it are made from.
 """
 import datetime, hashlib, html, json, math, os, re, subprocess, sys
 from zoneinfo import ZoneInfo
@@ -70,6 +78,7 @@ DROP = {
     '8551910': 'Reedy Point - 1.9 mi from Delaware City',
     '8775241': 'Aransas, Aransas Pass - 2.1 mi from Port Aransas',
     '8779749': 'SPI Brazos Santiago - 0.9 mi from South Padre Island CG Station',
+    '8722832': 'Deerfield Beach - 2.3 mi from Boca Raton (Batch A, both extra stations)',
 }
 
 
@@ -203,15 +212,16 @@ def load():
         for p in preds:
             dt = p['t']
             rows.append({'date': ymd(dt[:10]), 'time': dt[11:16], 'v': float(p['v']), 'type': p['type']})
+        gauge = st.get('gauge', True)
         try:
-            wtemp = bool(json.load(open(os.path.join(d, 'watertemp.json'))))
+            wtemp = gauge and bool(json.load(open(os.path.join(d, 'watertemp.json'))))
         except (OSError, ValueError):
             wtemp = False
         noaa_name = st['name'].strip()
         nm = NAMES.get(sid)
         name = nm['place'] if nm and (nm.get('approved') or PREVIEW_NAMES) else noaa_name
         places.append({
-            'wtemp': wtemp, 'noaa_name': noaa_name,
+            'wtemp': wtemp, 'noaa_name': noaa_name, 'gauge': gauge,
             'id': sid, 'name': name, 'state': st['state'], 'region': region,
             'lat': float(st['lat']), 'lon': float(st['lng']), 'tz': tz,
             'dat': dat, 'meta': dm, 'cons': cons, 'amp': amp, 'rows': rows,
@@ -330,13 +340,14 @@ def records(p):
     mllw = dat['MLLW']
     out = []
     try:
-        if m.get('max') is not None and m.get('maxdate'):
+        # observed extremes only where a gauge has watched for years (see the top)
+        if p['gauge'] and m.get('max') is not None and m.get('maxdate'):
             v = (float(m['max']) - mllw) * M2FT
             extra = ''
             if dat.get('MHHW'):
                 extra = f' - {fft(v - (dat["MHHW"] - mllw) * M2FT)} above the average higher high'
             out.append(('Highest water recorded', f'{both(v)} on {date_long(ymd(m["maxdate"]))}{extra}.'))
-        if m.get('min') is not None and m.get('mindate'):
+        if p['gauge'] and m.get('min') is not None and m.get('mindate'):
             v = (float(m['min']) - mllw) * M2FT
             out.append(('Lowest water recorded', f'{both(v)} on {date_long(ymd(m["mindate"]))}.'))
         if m.get('HAT') is not None and m.get('HATdate'):
@@ -365,7 +376,7 @@ def glance(p):
         items.append((f'Lowest of {YEAR}', fft(k['v']), date_wd(k['date'])))
     m = p['meta']
     try:
-        if m.get('max') is not None and m.get('maxdate'):
+        if p['gauge'] and m.get('max') is not None and m.get('maxdate'):
             items.append(('Record high', fft((float(m['max']) - p['dat']['MLLW']) * M2FT), date_long(ymd(m['maxdate']))))
     except (ValueError, TypeError):
         pass
@@ -387,8 +398,18 @@ def page(p, places, v):
     yt = year_tables(p)
     rec = records(p)
     tail = p['state'] if len(p['state']) == 2 else p['region']
+    # The bracket in a name ("Hilton Head Island (Skull Creek)") tells two
+    # stations in one town apart. Where no other page in the state shares the
+    # town, the title drops it: it cost the title "tide chart", the words
+    # people search with, by pushing it past 65 characters (owner, 2026-11-16).
+    # The headline and address keep the full name.
+    tname = p['name']
+    base = re.sub(r'\s*\([^)]*\)\s*$', '', tname)
+    if base != tname and not any(q is not p and q['state'] == p['state']
+                                 and re.sub(r'\s*\([^)]*\)\s*$', '', q['name']).lower() == base.lower() for q in places):
+        tname = base
     # whole word, exact case: a substring test read "hi" in "Hilo" as Hawaii
-    title_place = p['name'] if re.search(r'\b' + re.escape(tail) + r'\b', p['name']) else f'{p["name"]}, {tail}'
+    title_place = tname if re.search(r'\b' + re.escape(tail) + r'\b', tname) else f'{tname}, {tail}'
     # Titles and descriptions: the first candidate that fits wins - Google cuts
     # titles at ~65 characters and descriptions at ~158, and a cut one loses
     # exactly the words that differ from page to page. "Water temperature" is
@@ -508,7 +529,7 @@ def page(p, places, v):
 The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pressure can move the real water a foot or more.
 Form number: (K1+O1)/(M2+S2) from NOAA&rsquo;s harmonic constants - below 0.25 twice-daily, above 3 once-daily.
 {esc(p['region'])}, {abs(p['lat']):.3f}&deg;{'N' if p['lat'] >= 0 else 'S'} {abs(p['lon']):.3f}&deg;{'E' if p['lon'] >= 0 else 'W'}.
-Predictions and records: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id={p['id']}">{p['id']}</a>.
+{'' if p['gauge'] else 'This station has no live gauge: its times are NOAA&rsquo;s predictions from its harmonic constants. '}Predictions{' and records' if p['gauge'] else ''}: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id={p['id']}">{p['id']}</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
 </main>
@@ -587,7 +608,7 @@ The number beside each place is its range on an average day; the largest here is
 
 
 def sitemap(places):
-    urls = [SITE + '/', SITE + '/tide-times/'] + [f'{SITE}/tide-times/{p["slug"]}/' for p in sorted(places, key=lambda p: p['slug'])]
+    urls = [SITE + '/', SITE + '/tide-times/', SITE + '/moon/'] + [f'{SITE}/tide-times/{p["slug"]}/' for p in sorted(places, key=lambda p: p['slug'])]
     body = ''.join(f'  <url>\n    <loc>{u}</loc>\n    <lastmod>{TODAY}</lastmod>\n  </url>\n' for u in urls)
     return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{body}</urlset>\n'
 
@@ -621,7 +642,7 @@ def main():
         f.write(index(places, v))
     with open(os.path.join(APP, 'sitemap.xml'), 'w') as f:
         f.write(sitemap(places))
-    print(len(places), 'place pages,', len({p['region'] for p in places}), 'regions; sitemap', len(places) + 2, 'URLs')
+    print(len(places), 'place pages,', len({p['region'] for p in places}), 'regions; sitemap', len(places) + 3, 'URLs')
 
 
 main()

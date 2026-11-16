@@ -17,6 +17,12 @@ scripts/.tide-places-cache/<id>/:
                    has none - decides whether the page offers live water
                    temperature (and says so in its title). Delete it to recheck.
 
+Then the extra stations in scripts/tide-extra-stations.json - NOAA harmonic
+prediction stations with no live gauge, at towns people search for. Same
+files, except watertemp.json is always {} (no gauge, no thermometer), and
+station.json is built from NOAA's prediction-station list with "gauge":
+false. That list has no daylight-saving flag, so it is set from the state.
+
 All keyless and public. Files already present are not fetched again;
 delete the folder to refresh. scripts/tide-build-places.py reads the cache.
 """
@@ -51,6 +57,45 @@ def save(path, url):
     return d
 
 
+NO_DST = {'HI', 'PR', 'VI', 'AS', 'GU'}
+
+
+def fetch_preds(d, sid):
+    save(os.path.join(d, 'datums.json'), f'{MD}/stations/{sid}/datums.json?units=metric')
+    save(os.path.join(d, 'harcon.json'), f'{MD}/stations/{sid}/harcon.json?units=metric')
+    save(os.path.join(d, f'hilo-{YEAR}.json'),
+         f'{DG}?product=predictions&station={sid}&begin_date={YEAR}0101&end_date={YEAR}1231'
+         '&datum=MLLW&units=english&time_zone=lst_ldt&interval=hilo&format=json')
+
+
+def extras():
+    want = json.load(open(os.path.join(ROOT, 'scripts', 'tide-extra-stations.json')))
+    ids = sorted({i for k, v in want.items() if not k.startswith('_') for i in v})
+    lst = save(os.path.join(CACHE, 'prediction-stations.json'), MD + '/stations.json?type=tidepredictions')
+    by = {s['id']: s for s in lst['stations']}
+    bad = []
+    for sid in ids:
+        s = by.get(sid)
+        if not s or s.get('type') != 'R':
+            bad.append((sid, 'not a harmonic prediction station'))
+            continue
+        d = os.path.join(CACHE, sid)
+        os.makedirs(d, exist_ok=True)
+        st = {'id': sid, 'name': s['name'], 'state': s['state'], 'lat': s['lat'], 'lng': s['lng'],
+              'timezonecorr': s['timezonecorr'], 'observedst': s['state'] not in NO_DST, 'gauge': False}
+        with open(os.path.join(d, 'station.json'), 'w') as f:
+            json.dump(st, f)
+        with open(os.path.join(d, 'watertemp.json'), 'w') as f:
+            json.dump({}, f)
+        try:
+            fetch_preds(d, sid)
+        except Exception as e:
+            bad.append((sid, str(e)[:80]))
+    print(len(ids), 'extra stations;', len(bad), 'failed')
+    for b in bad:
+        print('  ', *b)
+
+
 def main():
     os.makedirs(CACHE, exist_ok=True)
     lst = save(os.path.join(CACHE, 'stations.json'), MD + '/stations.json?type=waterlevels')
@@ -64,11 +109,7 @@ def main():
         with open(os.path.join(d, 'station.json'), 'w') as f:
             json.dump(s, f)
         try:
-            save(os.path.join(d, 'datums.json'), f'{MD}/stations/{sid}/datums.json?units=metric')
-            save(os.path.join(d, 'harcon.json'), f'{MD}/stations/{sid}/harcon.json?units=metric')
-            save(os.path.join(d, f'hilo-{YEAR}.json'),
-                 f'{DG}?product=predictions&station={sid}&begin_date={YEAR}0101&end_date={YEAR}1231'
-                 '&datum=MLLW&units=english&time_zone=lst_ldt&interval=hilo&format=json')
+            fetch_preds(d, sid)
         except Exception as e:
             bad.append((sid, s['name'], str(e)[:80]))
         wt = os.path.join(d, 'watertemp.json')
@@ -86,6 +127,7 @@ def main():
     print('done;', len(bad), 'failed')
     for b in bad:
         print('  ', *b)
+    extras()
 
 
 main()

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!-- The moon page (/moon/). Hand-written; after changing moon.css, moon.js
+     or lib/astronomy.js run `python scripts/tide-stamp.py` to refresh ?v=. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a1220">
+<title>Moon phase today: moonrise, moonset &amp; next full moon | tidehere</title>
+<meta name="description" content="Tonight's moon phase and how much is lit, moonrise and moonset where you are, the next full and new moon, and the month's moon calendar. Free, no ads.">
+<link rel="canonical" href="https://tidehere.app/moon/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/icon-96.png" type="image/png" sizes="96x96">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="tidehere">
+<meta property="og:title" content="Moon phase today">
+<meta property="og:description" content="Tonight's moon phase, moonrise and moonset where you are, and the next full moon.">
+<meta property="og:url" content="https://tidehere.app/moon/">
+<meta property="og:image" content="https://tidehere.app/share.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/tide-times/place.css?v=1573081202">
+<link rel="stylesheet" href="/moon/moon.css?v=3f26dbb740">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tidehere.app/moon/","url":"https://tidehere.app/moon/","name":"Moon phase today","description":"Tonight's moon phase and how much is lit, moonrise and moonset where you are, the next full and new moon, and the month's moon calendar.","inLanguage":"en","isPartOf":{"@id":"https://tidehere.app/#site"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Tide","item":"https://tidehere.app/"},{"@type":"ListItem","position":2,"name":"Moon","item":"https://tidehere.app/moon/"}]}]}</script>
+</head>
+<body>
+<main class="page">
+<p class="crumbs"><a href="/">Tide</a><span aria-hidden="true">/</span>Moon</p>
+<h1><span class="h1-place">The moon today</span> <span class="h1-kind">moon phase, moonrise and moonset</span></h1>
+
+<!-- The answer first: the phase, drawn and named, and when the next full
+     and new moon come. None of it needs a place, so it is drawn at once. -->
+<section class="now" aria-label="The moon now">
+<div class="phase">
+  <svg class="disc" id="disc" viewBox="-50 -50 100 100" role="img" aria-label="Today&rsquo;s moon"></svg>
+  <div class="phase-words">
+    <p class="ph-name" id="ph-name" aria-live="polite">&nbsp;</p>
+    <p class="ph-lit" id="ph-lit">&nbsp;</p>
+    <p class="ph-way" id="ph-way">&nbsp;</p>
+  </div>
+</div>
+<div class="next" id="next">
+  <div class="nx"><span class="lab">&nbsp;</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+  <div class="nx then"><span class="lab">&nbsp;</span><span class="t">&ndash;</span><span class="h">&nbsp;</span></div>
+</div>
+<noscript><p>The moon&rsquo;s phase is worked out in your browser and needs JavaScript.</p></noscript>
+</section>
+
+<!-- Your place: rise, set, where it is now. Uses the place the globe saved
+     (localStorage "tide.places", same origin), or asks for one. -->
+<section aria-labelledby="h-here">
+<h2 id="h-here">Moonrise and moonset <span id="here-name"></span></h2>
+<div id="here" hidden>
+  <p class="here-now" id="here-now"></p>
+  <div class="wk today" id="here-times" role="list" aria-label="The moon today where you are"></div>
+  <p class="now-src"><button class="word" type="button" id="here-change">Change place</button></p>
+</div>
+<form class="locate" id="locate" hidden autocomplete="off">
+  <label class="visually-hidden" for="loc-q">Town or city</label>
+  <input id="loc-q" type="search" placeholder="Town or city" enterkeyhint="search">
+  <button class="word" type="button" id="loc-device">Use my location</button>
+  <ul class="results" id="loc-results" hidden></ul>
+  <p class="loc-msg" id="loc-msg" hidden></p>
+</form>
+</section>
+
+<section aria-labelledby="h-phases">
+<h2 id="h-phases">The next phases</h2>
+<div id="phases"></div>
+</section>
+
+<section aria-labelledby="h-cal">
+<h2 id="h-cal"><span id="cal-title">Moon calendar</span></h2>
+<p class="cal-nav"><button class="word" type="button" id="cal-prev" aria-label="Previous month">&larr; <span></span></button>
+<button class="word" type="button" id="cal-next" aria-label="Next month"><span></span> &rarr;</button></p>
+<div class="cal" id="cal" role="grid"></div>
+</section>
+
+<section aria-labelledby="h-tide">
+<h2 id="h-tide">The moon and the tide</h2>
+<p>The moon pulls the sea under it toward it and leaves the sea on the far
+side behind, so the ocean stands in two bulges that the Earth turns through
+each day. At new and full moon the sun pulls in line with the moon, and the
+tides run biggest: <em>spring tides</em>, which on most coasts come a day or
+two after. At the quarter moons the sun pulls across the moon, and the tides
+are smallest: <em>neap tides</em>.</p>
+<p id="tide-next"></p>
+<p><a href="/">See the moon move the ocean</a> on a globe seen from the moon, or
+find <a href="/tide-times/">tide times by place</a>.</p>
+</section>
+
+<section aria-labelledby="h-faq">
+<h2 id="h-faq">Questions</h2>
+<dl class="facts">
+<div><dt>Why does the moon change shape?</dt>
+<dd>Half of the moon is always lit by the sun. As it goes round the Earth
+we see different amounts of that lit half: none at new moon, all of it at
+full moon, half of it at the quarters. One round of phases takes 29.5 days.</dd></div>
+<div><dt>Why can I see the moon in the daytime?</dt>
+<dd>For most of the month the moon is up for part of the day. Only near
+new moon, when it is close to the sun, is it lost in the glare. A first
+quarter moon rises around midday; a last quarter moon is still up in the
+morning.</dd></div>
+<div><dt>Why is a full moon up all night?</dt>
+<dd>A full moon sits opposite the sun, so it rises around sunset and sets
+around sunrise. A new moon does the reverse and is up only with the sun.</dd></div>
+<div><dt>Is the moon the same shape everywhere?</dt>
+<dd>The same amount is lit everywhere on Earth at the same moment, but from
+the southern hemisphere the moon is seen the other way up, so a waxing moon
+is lit on the left instead of the right. This page draws it for your
+hemisphere.</dd></div>
+</dl>
+</section>
+
+<p class="fine">Worked out in your browser with astronomy-engine (MIT); nothing
+is fetched to do it. Rise and set are for the top edge of the moon at a level
+horizon, and can be a few minutes off behind hills or buildings. The phases
+are moments - the same instant everywhere - shown in your place&rsquo;s time.
+Your place stays on this device. No ads, no tracking.</p>
+</main>
+<script src="/lib/astronomy.js?v=c5e4e5d5c1"></script>
+<script src="/moon/moon.js?v=2c20214184"></script>
+</body>
+</html>
