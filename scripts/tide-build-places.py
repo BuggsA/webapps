@@ -233,7 +233,7 @@ def load():
                 continue
             seen.add(p['t'])
             loc = datetime.datetime.strptime(p['t'], '%Y-%m-%d %H:%M').replace(tzinfo=zi)
-            ship.append((int(loc.timestamp() // 60), round(float(p['v']) * 100), p['type']))
+            ship.append((int(loc.timestamp() // 60), round(float(p['v']) * 1000), p['type']))   # 0.001 ft: NOAA's own precision - 0.01 rounded 0.149 to 0.15, shown as 0.2 against NOAA's 0.1
         ship.sort()
         gauge = st.get('gauge', True)
         subinfo = None
@@ -545,7 +545,7 @@ def page(p, places, v):
     if p['sub'] and p['engine']:
         station['sub'] = {k: p['sub'][k] for k in ('hiT', 'loT', 'hiH', 'loH', 'adj')}
     # NOAA's official turns, packed: [first turn in UTC minutes, the types as
-    # one string, then minutes-since-previous and height in 0.01 ft, paired]
+    # one string, then minutes-since-previous and height in 0.001 ft, paired]
     sh = p['ship']
     flat = []
     for i, (mins, hund, _) in enumerate(sh):

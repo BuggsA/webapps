@@ -63,13 +63,13 @@
   //    scripts/tide-test-pages.js found it wrong over a year at 177 of 408
   //    stations - small turns NOAA does not list, loose times on the Gulf's
   //    near-flat tide, Anchorage. Packed as [first turn in UTC minutes, the
-  //    types, then minutes-since-previous and height in 0.01 ft, paired].
+  //    types, then minutes-since-previous and height in 0.001 ft, paired].
   var saved = [];
   if (S.turns) {
     var m = S.turns[0], ty = S.turns[1], fl = S.turns[2];
     for (var k = 0; k < ty.length; k++) {
       m += fl[2 * k];
-      saved.push({ t: m * 60e3, v: fl[2 * k + 1] / 100, type: ty[k] });
+      saved.push({ t: m * 60e3, v: fl[2 * k + 1] / 1000, type: ty[k] });
     }
   }
   function fromSaved(t0, t1) {

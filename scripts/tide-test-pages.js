@@ -7,7 +7,7 @@
 // written by tide-build-places.py) and shows them first. Each page's saved
 // turns must decode - in its own time zone, as tide-times/place.js decodes
 // them - to exactly NOAA's official predictions in the cache (hilo-lead and
-// hilo-YEAR: same minute, same height to 0.01 ft, same kind), from the day
+// hilo-YEAR: same minute, same height to 0.001 ft, same kind), from the day
 // before the build to the end of YEAR.
 //
 // --engine: the harmonic engine's own answer, which a page uses only once it
@@ -48,8 +48,8 @@ for (const slug of fs.readdirSync(PAGES).sort()) {
   const want = new Map();
   for (const p of lead.concat(preds)) want.set(localToMs(p.t, S.tz), p);
   const got = [];
-  if (S.turns) { let mm = S.turns[0]; for (let k = 0; k < S.turns[1].length; k++) { mm += S.turns[2][2 * k]; got.push({ t: mm * 60e3, v: S.turns[2][2 * k + 1] / 100, type: S.turns[1][k] }); } }
-  const bad = got.length !== want.size || got.some(g => { const p = want.get(g.t); return !p || p.type !== g.type || Math.abs(+p.v - g.v) > 0.0051; });
+  if (S.turns) { let mm = S.turns[0]; for (let k = 0; k < S.turns[1].length; k++) { mm += S.turns[2][2 * k]; got.push({ t: mm * 60e3, v: S.turns[2][2 * k + 1] / 1000, type: S.turns[1][k] }); } }
+  const bad = got.length !== want.size || got.some(g => { const p = want.get(g.t); return !p || p.type !== g.type || Math.abs(+p.v - g.v) > 0.00051; });
   if (bad) { gateBad.push(slug); console.log('GATE FAIL', S.id, slug, `saved ${got.length} turns, NOAA ${want.size}`); } else gate++;
   if (!ENGINE) continue;
 
