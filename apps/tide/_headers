@@ -19,6 +19,11 @@
 /data/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
+# The scripts the place pages and the moon page share (harmonics, astronomy):
+# every link to them carries ?v=<content hash>, so a changed file is a new URL.
+/lib/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
 # The icons and share image are rebuilt rarely (scripts/tide-build-icons.js).
 /*.png
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800

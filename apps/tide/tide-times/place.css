@@ -77,6 +77,9 @@ p { margin: 0 0 1rem; }
 .nx.then .t { font-size: clamp(1.5rem, 7vw, 2rem); color: var(--chrome-soft); padding-top: 0.25em; }
 
 .now-temp { margin: 0 0 1rem; font-size: 1rem; }
+/* the moon line under today's turns (place.js): quiet, but the way to /moon/ */
+.now-moon { margin: 0.75rem 0 0; font-size: 0.9375rem; color: var(--chrome-soft); }
+.now-moon a { color: var(--chrome); }
 .now-temp .n { font-size: 1.125rem; }
 
 /* today, midnight to midnight */

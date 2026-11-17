@@ -267,6 +267,43 @@
     });
   }
 
+  // ---- the moon ------------------------------------------------------------------
+  // One line under today's tides: the phase, how much is lit, and moonrise and
+  // moonset at this station, in its time - asked for alongside the tide by
+  // anyone fishing or tide-pooling, and the way to /moon/ (2026-11-17). The
+  // astronomy library is 47 KB gzipped, five times this page, so it loads
+  // only once the tide is drawn and the browser is idle: the tide is never
+  // slower for it. The same file the moon page uses, so it is cached once.
+  var QN = ['New moon', 'First quarter', 'Full moon', 'Last quarter'];
+  function moonLine() {
+    var el = $('now-moon');
+    if (!el || !S.astro || S.lat == null) return;
+    (window.requestIdleCallback || function (f) { setTimeout(f, 1200); })(function () {
+      var sc = document.createElement('script');
+      sc.src = S.astro; sc.async = true;
+      sc.onload = function () { try { fillMoon(el); } catch (e) { /* no moon line */ } };
+      document.head.appendChild(sc);
+    });
+  }
+  function fillMoon(el) {
+    var A = window.Astronomy, now = Date.now(), t = A.MakeTime(new Date(now));
+    var d0 = dayStart(key(now)), d1 = dayStart(key(d0 + 36 * 3600e3));
+    var P = A.MoonPhase(t), lit = Math.round(A.Illumination(A.Body.Moon, t).phase_fraction * 100);
+    // a principal phase names the day it falls on, as on a printed moon calendar
+    var q = A.SearchMoonQuarter(new Date(d0));
+    var name = q.time.date.getTime() < d1 ? QN[q.quarter].toLowerCase() + ' today'
+      : P < 90 ? 'waxing crescent' : P < 180 ? 'waxing gibbous' : P < 270 ? 'waning gibbous' : 'waning crescent';
+    var obs = new A.Observer(S.lat, S.lon, 0);
+    // the moon misses a rise or a set about one day in thirty: say so
+    function ev(dir, word, none) {
+      var e = A.SearchRiseSet(A.Body.Moon, obs, dir, new Date(d0), 1.2);
+      return e && e.date.getTime() < d1 ? word + ' ' + time(e.date.getTime()) : none;
+    }
+    el.innerHTML = '<a href="/moon/">Moon</a> · ' + name + ', <span class="n">' + lit + '</span>% lit · '
+      + ev(+1, 'rises', 'no moonrise today') + ' · ' + ev(-1, 'sets', 'no moonset today');
+    el.hidden = false;
+  }
+
   // ---- go ------------------------------------------------------------------------
   var now = Date.now(), today = key(now);
   var t0 = dayStart(today) - 14 * 3600e3, t1 = dayStart(today) + (DAYS * 24 + 14) * 3600e3;
@@ -278,6 +315,7 @@
   if (how === 'saved') draw(mine, 'Official NOAA predictions, ' + link + ', saved with this page · checking for updates…');
   else if (how === 'engine') draw(mine, engineSrc[0].toUpperCase() + engineSrc.slice(1) + ' · checking NOAA…');
   waterTemp();
+  moonLine();
   fromNoaa(today).then(function (t) {
     if (!own) subTurns = t;
     draw(t, 'Official NOAA predictions, ' + link + ' · local time · heights above MLLW');

@@ -552,6 +552,10 @@ def page(p, places, v):
         flat += [mins - (sh[i - 1][0] if i else mins), hund]
     station['turns'] = [sh[0][0], ''.join(t for _, _, t in sh), flat]
     station['saved'] = TODAY
+    # the moon line (place.js): today's phase, rise and set at the station,
+    # computed by lib/astronomy.js, which loads after the tide is drawn
+    station['lat'], station['lon'] = round(p['lat'], 4), round(p['lon'], 4)
+    station['astro'] = f"/lib/astronomy.js?v={v['astro']}"
     ld = {'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebPage', '@id': url, 'url': url, 'name': f'{title_place} tide times',
          'description': desc, 'inLanguage': 'en', 'isPartOf': {'@id': SITE + '/#site'},
@@ -611,6 +615,7 @@ def page(p, places, v):
 <div class="cv"><svg class="curve" id="curve" viewBox="0 0 360 120" preserveAspectRatio="none" role="img" aria-label="Today&rsquo;s tide, midnight to midnight"></svg></div>
 <div class="ticks" aria-hidden="true"><span>6 am</span><span>noon</span><span>6 pm</span></div>
 <div class="wk today" id="today" role="list" aria-label="Today&rsquo;s high and low tides"></div>
+<p class="now-moon" id="now-moon" hidden></p>
 <p class="now-src" id="now-src"></p>
 <noscript><p>The tide times need JavaScript. NOAA&rsquo;s official table for this station:
 <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id={p['id']}">tidesandcurrents.noaa.gov</a>.</p></noscript>
@@ -733,13 +738,13 @@ def main():
             facts(p, places)
         for p in sorted(places, key=lambda p: p['slug']):
             if p['name'] != p['noaa_name']:
-                v = {'css': '', 'js': '', 'harm': ''}
+                v = {'css': '', 'js': '', 'harm': '', 'astro': ''}
                 h = page(p, places, v)
                 t = re.search(r'<title>(.*?)</title>', h).group(1)
                 print(f'{p["noaa_name"][:38]:38} -> /tide-times/{p["slug"]}/  {html.unescape(t)} ({len(html.unescape(t))})')
         return
     v = {'css': vhash(os.path.join(OUT, 'place.css')), 'js': vhash(os.path.join(OUT, 'place.js')),
-         'harm': vhash(os.path.join(APP, 'lib', 'harmonics.js'))}
+         'harm': vhash(os.path.join(APP, 'lib', 'harmonics.js')), 'astro': vhash(os.path.join(APP, 'lib', 'astronomy.js'))}
     keep = {'place.css', 'place.js', 'index.html'}
     live = {p['slug'] for p in places}
     for name in os.listdir(OUT):   # drop pages for stations that have gone
