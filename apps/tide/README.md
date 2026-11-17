@@ -74,6 +74,9 @@ saved turns run out falls back to the engine, so rebuild before the year ends.
 
 The generated `tide-times/<place>/` folders and `sitemap.xml` are output;
 edit the script, not them. `tide-times/place.js` fills in the live week.
+Under today's tides each page has a moon line - phase, % lit, moonrise and
+moonset at the station, linking to `/moon/` - from `lib/astronomy.js`, loaded
+only once the tide is drawn (2026-11-17, backlog item 4).
 What could come next: `../../docs/tide-places-backlog.md`.
 
 **Moon page** (`moon/`, 2026-11-16): *moon phase today* - the phase drawn
