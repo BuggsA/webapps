@@ -489,6 +489,14 @@ def glance(p):
         + (f'<span class="gs">{esc(c)}</span>' if c else '') + '</dd></div>' for a, b, c in items) + '</dl>'
 
 
+def footer(here):
+    """The same three ways round the site at the foot of every page (2026-11-17):
+    before it, the place pages never linked to /moon/ and the index only to /."""
+    links = [('/', 'Tide'), ('/tide-times/', 'Tide times by place'), ('/moon/', 'Moon phase today')]
+    return ('<nav class="site-nav" aria-label="tidehere">' + '<span aria-hidden="true"> &middot; </span>'.join(
+        f'<a href="{u}"{" aria-current=\"page\"" if u == here else ""}>{t}</a>' for u, t in links) + '</nav>')
+
+
 def dl(items):
     return '<dl class="facts">' + ''.join(f'<div><dt>{esc(k)}</dt><dd>{v}</dd></div>' for k, v in items) + '</dl>'
 
@@ -649,6 +657,7 @@ The year&rsquo;s tides are NOAA&rsquo;s official predictions - wind and air pres
 {'' if p['gauge'] else ('This station has no live gauge or constants of its own: NOAA predicts it from a nearby station, with corrections for this place. ' if p['sub'] else 'This station has no live gauge: its times are NOAA&rsquo;s predictions from its harmonic constants. ')}Predictions{' and records' if p['gauge'] else ''}: NOAA CO-OPS, station <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id={p['id']}">{p['id']}</a>.
 <strong>Not for navigation or safety.</strong> For a boat, a crossing of sand that floods, or a swim, use the official
 tables and local advice. No ads, no tracking.</p>
+{footer(None)}
 </main>
 <script type="application/json" id="station">{json.dumps(station, separators=(',', ':'))}</script>
 <script src="/lib/harmonics.js?v={v['harm']}"></script>
@@ -718,6 +727,7 @@ The number beside each place is its range on an average day; the largest here is
 {''.join(sec)}
 <p class="globe-link"><a href="/">See the moon move the ocean</a> - and find the tide for any coast in the world.</p>
 <p class="fine">Data: NOAA CO-OPS. <strong>Not for navigation or safety.</strong></p>
+{footer('/tide-times/')}
 </main>
 </body>
 </html>

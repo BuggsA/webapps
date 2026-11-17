@@ -1339,7 +1339,7 @@ function updateReadout(force) {
   try {
     const mr = riseSet(A.Body.Moon, state.lat, state.lon, dayStart), sr = riseSet(A.Body.Sun, state.lat, state.lon, dayStart);
     const tt = ms => ms == null ? '—' : `<span class="n">${tf.format(new Date(ms))}</span>`;
-    el.roMoon.innerHTML = `Moon <span class="n">${Math.round(mi.frac * 100)}</span>% · rises ${tt(mr.rise)} · sets ${tt(mr.set)}`;
+    el.roMoon.innerHTML = `<a href="/moon/">Moon</a> <span class="n">${Math.round(mi.frac * 100)}</span>% · rises ${tt(mr.rise)} · sets ${tt(mr.set)}`;
     el.roSun.innerHTML = `Sun rises ${tt(sr.rise)} · sets ${tt(sr.set)}`;
   } catch (_) { el.roMoon.textContent = ''; el.roSun.textContent = ''; }
   if (s) {
