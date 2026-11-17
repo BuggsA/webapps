@@ -162,3 +162,9 @@ p { margin: 0 0 1rem; }
 .fine a { color: var(--chrome-soft); }
 .fine strong { color: var(--chrome-soft); font-weight: 500; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- the foot of every page: the three ways round the site ---------------- */
+.site-nav { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--chrome-line);
+  font-size: 0.875rem; color: var(--chrome-faint); }
+.site-nav a { color: var(--chrome-soft); }
+.site-nav a[aria-current] { color: var(--chrome); border-bottom-color: transparent; }

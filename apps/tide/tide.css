@@ -180,7 +180,11 @@ body {
   position: fixed;
   left: var(--edge);
   top: var(--ceil);
-  z-index: 11;
+  /* 12, level with the moon button and later in the page, so the readout's
+     own controls win where they cross it - the moon's hit target follows the
+     moon over the screen and sat on the readout's Moon link (2026-11-17).
+     Taps on the inert rest of the readout still fall through to the moon. */
+  z-index: 12;
   width: min(21rem, calc(100vw - 2 * var(--edge)));
   display: grid;
   gap: 0.15em;
@@ -312,6 +316,11 @@ body {
 }
 .ro-line:first-of-type { margin-top: 0.4em; }
 .ro-line .n { font-family: var(--num); }
+/* "Moon" in the moon line is the way to /moon/ for someone who comes back
+   (the first-screen links only show before a place is chosen). The readout
+   is inert so the globe can be dragged through it; this link opts back in. */
+.ro-line a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--chrome-line); pointer-events: auto; }
+.ro-line a:hover, .ro-line a:focus-visible { color: var(--chrome); border-bottom-color: var(--chrome); outline: none; }
 .ro-src {
   font-size: 0.8rem;
   color: var(--chrome-soft);
