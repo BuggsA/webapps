@@ -218,6 +218,23 @@ def load():
         for p in preds:
             dt = p['t']
             rows.append({'date': ymd(dt[:10]), 'time': dt[11:16], 'v': float(p['v']), 'type': p['type']})
+        # NOAA's official turns from just before the build to the end of YEAR,
+        # written into the page as its first answer (2026-11-16): the harmonic
+        # engine's own answer failed scripts/tide-test-pages.js at 177 of 408
+        # stations over a year - extra small turns, loose times on the Gulf's
+        # near-flat tide, Anchorage's missing shallow-water constituents.
+        try:
+            lead = json.load(open(os.path.join(d, f'hilo-lead-{YEAR}.json'))).get('predictions') or []
+        except (OSError, ValueError):
+            lead = []
+        zi, ship, seen = ZoneInfo(tz), [], set()
+        for p in lead + preds:
+            if p['t'] in seen:
+                continue
+            seen.add(p['t'])
+            loc = datetime.datetime.strptime(p['t'], '%Y-%m-%d %H:%M').replace(tzinfo=zi)
+            ship.append((int(loc.timestamp() // 60), round(float(p['v']) * 1000), p['type']))   # 0.001 ft: NOAA's own precision - 0.01 rounded 0.149 to 0.15, shown as 0.2 against NOAA's 0.1
+        ship.sort()
         gauge = st.get('gauge', True)
         subinfo = None
         if sub:
@@ -237,7 +254,7 @@ def load():
         nm = NAMES.get(sid)
         name = nm['place'] if nm and (nm.get('approved') or PREVIEW_NAMES) else noaa_name
         places.append({
-            'wtemp': wtemp, 'noaa_name': noaa_name, 'gauge': gauge, 'sub': subinfo,
+            'wtemp': wtemp, 'noaa_name': noaa_name, 'gauge': gauge, 'sub': subinfo, 'ship': ship,
             'off': (dat['MSL'] - dat['MLLW']) * M2FT,
             'id': sid, 'name': name, 'state': st['state'], 'region': region,
             'lat': float(st['lat']), 'lon': float(st['lng']), 'tz': tz,
@@ -527,6 +544,14 @@ def page(p, places, v):
                'off': round(p['off'], 4), 'cons': p['engine']}
     if p['sub'] and p['engine']:
         station['sub'] = {k: p['sub'][k] for k in ('hiT', 'loT', 'hiH', 'loH', 'adj')}
+    # NOAA's official turns, packed: [first turn in UTC minutes, the types as
+    # one string, then minutes-since-previous and height in 0.001 ft, paired]
+    sh = p['ship']
+    flat = []
+    for i, (mins, hund, _) in enumerate(sh):
+        flat += [mins - (sh[i - 1][0] if i else mins), hund]
+    station['turns'] = [sh[0][0], ''.join(t for _, _, t in sh), flat]
+    station['saved'] = TODAY
     ld = {'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebPage', '@id': url, 'url': url, 'name': f'{title_place} tide times',
          'description': desc, 'inLanguage': 'en', 'isPartOf': {'@id': SITE + '/#site'},

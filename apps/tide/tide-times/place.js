@@ -56,7 +56,28 @@
     return h ? h + ' h ' + String(m % 60).padStart(2, '0') + ' min' : (m % 60) + ' min';
   }
 
-  // ---- the two sources ---------------------------------------------------------
+  // ---- the sources ----------------------------------------------------------------
+  // 1. NOAA's official turns, written into the page at build (S.turns,
+  //    2026-11-16): the first answer, and the whole answer if NOAA does not
+  //    reply. Before this the first answer was the harmonic engine's, and
+  //    scripts/tide-test-pages.js found it wrong over a year at 177 of 408
+  //    stations - small turns NOAA does not list, loose times on the Gulf's
+  //    near-flat tide, Anchorage. Packed as [first turn in UTC minutes, the
+  //    types, then minutes-since-previous and height in 0.001 ft, paired].
+  var saved = [];
+  if (S.turns) {
+    var m = S.turns[0], ty = S.turns[1], fl = S.turns[2];
+    for (var k = 0; k < ty.length; k++) {
+      m += fl[2 * k];
+      saved.push({ t: m * 60e3, v: fl[2 * k + 1] / 1000, type: ty[k] });
+    }
+  }
+  function fromSaved(t0, t1) {
+    if (!saved.length || saved[0].t > t0 || saved[saved.length - 1].t < t1) return null;   // ran out: rebuild due
+    return saved.filter(function (x) { return x.t >= t0 && x.t <= t1; });
+  }
+  // 2. NOAA live (fromNoaa, below): the same predictions, fetched to confirm.
+  // 3. The harmonic engine: only for a page that has outlived its saved turns.
   var cons = S.cons.map(function (c) { return { name: c[0], amp: c[1], phase: c[2] }; });
 
   // A subordinate station (S.sub, 2026-11-16) has no constants of its own.
@@ -82,22 +103,30 @@
     }).filter(function (e) { return e.t >= t0 && e.t <= t1; });
   }
   // A page with no constants (S.cons empty) makes no answer of its own: its
-  // station failed scripts/tide-test-subordinates.js, where the method drew
+  // station failed scripts/tide-test-pages.js --engine, where the method drew
   // turns NOAA does not list. It waits for NOAA, and its curve is the half
   // cosine between NOAA's own turns.
   var own = cons.length > 0;
   var subTurns = null;
+  // The water between turns: a half cosine between the turns being shown
+  // (NOAA's method for subordinate stations), set by draw(). The engine's own
+  // curve only when there are no turns to draw between.
   function height(ms) {
+    if (shown && shown.length > 1 && ms >= shown[0].t && ms <= shown[shown.length - 1].t) return cosine(shown, ms);
     if (own && !U) return window.Harmonics.predict(cons, ms) + S.off;
     if (own && (!subTurns || ms < subTurns[0].t || ms > subTurns[subTurns.length - 1].t))
       subTurns = fromHarmonics(ms - 3 * 864e5, ms + 12 * 864e5);
     if (!subTurns || !subTurns.length) return S.off;
-    for (var i = 1; i < subTurns.length; i++) if (ms <= subTurns[i].t) {
-      var a = subTurns[i - 1], b = subTurns[i], f = (ms - a.t) / (b.t - a.t);
+    return cosine(subTurns, ms);
+  }
+  function cosine(turns, ms) {
+    for (var i = 1; i < turns.length; i++) if (ms <= turns[i].t) {
+      var a = turns[i - 1], b = turns[i], f = Math.max(0, (ms - a.t) / (b.t - a.t));
       return (a.v + b.v) / 2 + (a.v - b.v) / 2 * Math.cos(Math.PI * f);
     }
-    return subTurns[subTurns.length - 1].v;
+    return turns[turns.length - 1].v;
   }
+  var shown = null;
 
   function fromNoaa(today) {
     var url = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions'
@@ -209,6 +238,7 @@
 
   function draw(turns, source) {
     var now = Date.now();
+    shown = turns;
     hero(turns, now);
     curve(turns, now);
     week(turns, now);
@@ -241,19 +271,22 @@
   var now = Date.now(), today = key(now);
   var t0 = dayStart(today) - 14 * 3600e3, t1 = dayStart(today) + (DAYS * 24 + 14) * 3600e3;
   var link = '<a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=' + S.id + '">NOAA ' + S.id + '</a>';
-  var mine = null;
-  if (own) try {
-    mine = fromHarmonics(t0, t1);
-    draw(mine, (U ? 'Predicted on this page by NOAA’s corrections for ' + link : 'Predicted on this page from ' + link + '’s constants') + ' · checking NOAA…');
-  } catch (e) { /* no engine: wait for NOAA */ }
+  var mine = fromSaved(t0, t1), how = mine ? 'saved' : null;
+  if (!mine && own) try { mine = fromHarmonics(t0, t1); how = 'engine'; } catch (e) { /* no engine: wait for NOAA */ }
+  var engineSrc = U ? 'predicted on this page by NOAA’s corrections for ' + link : 'predicted on this page from ' + link + '’s constants';
+  var savedOn = S.saved ? ' on ' + fMd.format(new Date(S.saved + 'T12:00:00Z')) + ', ' + S.saved.slice(0, 4) : '';
+  if (how === 'saved') draw(mine, 'Official NOAA predictions, ' + link + ', saved with this page · checking for updates…');
+  else if (how === 'engine') draw(mine, engineSrc[0].toUpperCase() + engineSrc.slice(1) + ' · checking NOAA…');
   waterTemp();
   fromNoaa(today).then(function (t) {
     if (!own) subTurns = t;
     draw(t, 'Official NOAA predictions, ' + link + ' · local time · heights above MLLW');
   }).catch(function () {
-    if (mine) {
-      $('now-src').innerHTML = 'NOAA did not answer, so these are predicted on this page '
-        + (U ? 'by NOAA’s corrections for ' + link : 'from ' + link + '’s constants')
+    if (how === 'saved') {
+      $('now-src').innerHTML = 'Official NOAA predictions, ' + link + ', saved with this page' + savedOn
+        + ' - NOAA did not answer just now · local time · heights above MLLW';
+    } else if (how === 'engine') {
+      $('now-src').innerHTML = 'NOAA did not answer, so these are ' + engineSrc
         + ' - usually within a few minutes · local time · above MLLW';
     } else {
       $('dir').textContent = 'The tide times could not be loaded.';

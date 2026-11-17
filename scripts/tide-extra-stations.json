@@ -6,7 +6,7 @@
   "observed records. Read by scripts/tide-fetch-places.py; names for them live in tide-place-names.json like any other.",
   "Add stations in batches and watch Search Console indexing between them (docs/tide-places-backlog.md).",
   "batch-b (owner, 2026-11-16: \"after merge, start batch B\"): NOAA SUBORDINATE stations - no constants of their own; NOAA predicts them from a reference station with time and height corrections, and so do the pages. state-b gives the state where NOAA's list has none.",
-  "noaa-only: stations whose page makes NO answer of its own - scripts/tide-test-subordinates.js found the subordinate method too far from NOAA (Baltimore and St. Petersburg references) or drawing turns NOAA does not list (Hawaii, Ventura, San Clemente, Port Townsend, Clearwater, Destin). Their pages wait for NOAA; every number written on them is from NOAA's official predictions as before. 2026-11-16."
+  "noaa-only: stations whose page makes NO answer of its own - scripts/tide-test-pages.js --engine (then tide-test-subordinates.js) found the subordinate method too far from NOAA (Baltimore and St. Petersburg references) or drawing turns NOAA does not list (Hawaii, Ventura, San Clemente, Port Townsend, Clearwater, Destin). Their pages wait for NOAA; every number written on them is from NOAA's official predictions as before. 2026-11-16."
  ],
  "batch-a": [
   "1611347",

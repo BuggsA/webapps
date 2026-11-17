@@ -65,6 +65,13 @@ built from NOAA data, and rebuilt every January:
     python scripts/tide-fetch-places.py 2028
     python scripts/tide-build-places.py 2028
 
+Each page carries NOAA's official high and low predictions from just before
+the build to the end of the year, and shows them first (2026-11-17): the
+harmonic engine's own answer was wrong over a year at 177 of 408 stations.
+`node scripts/tide-test-pages.js YEAR` checks every page carries exactly
+NOAA's turns (`--engine` also reports the engine). A page shown after its
+saved turns run out falls back to the engine, so rebuild before the year ends.
+
 The generated `tide-times/<place>/` folders and `sitemap.xml` are output;
 edit the script, not them. `tide-times/place.js` fills in the live week.
 What could come next: `../../docs/tide-places-backlog.md`.
